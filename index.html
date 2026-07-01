@@ -1,270 +1,2019 @@
-<!doctype html>
-<html lang="en">
-
+<!DOCTYPE html>
+<html lang="en" style="background: #191919; color: #ffffff;">
 	<head>
-		<meta charset="utf-8">
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+		/>
+		<meta name="theme-color" content="#191919" />
 
-		<title>reveal.js - The HTML Presentation Framework</title>
+		<title>Jeopardy</title>
 
-		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
-		<meta name="author" content="Hakim El Hattab">
+		<link rel="stylesheet" href="dist/reset.css" />
+		<link rel="stylesheet" href="dist/reveal.css" />
+		<link rel="stylesheet" href="dist/theme/black.css" />
+		<link rel="stylesheet" href="dist/plugin/highlight/monokai.css" />
 
-		<meta name="apple-mobile-web-app-capable" content="yes" />
-		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-		<link rel="stylesheet" href="css/reveal.min.css">
-		<link rel="stylesheet" href="css/theme/sky-jeopardy.css" id="theme">
-
-		<!-- For syntax highlighting -->
-		<link rel="stylesheet" href="lib/css/zenburn.css">
-
-		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
-		<script>
-			if( window.location.search.match( /print-pdf/gi ) ) {
-				var link = document.createElement( 'link' );
-				link.rel = 'stylesheet';
-				link.type = 'text/css';
-				link.href = 'css/print/pdf.css';
-				document.getElementsByTagName( 'head' )[0].appendChild( link );
+		<style>
+			:root {
+				--jeopardy-blue: #071fc2;
+				--jeopardy-blue-dark: #02106e;
+				--jeopardy-gold: #ffd348;
+				--jeopardy-line: #ffffff;
+				--jeopardy-red: #c92f2f;
+				--jeopardy-green: #188f54;
+				--category-count: 6;
+				--question-count: 6;
+				--team-count: 3;
+				color-scheme: dark;
 			}
-		</script>
 
-		<!--[if lt IE 9]>
-		<script src="lib/js/html5shiv.js"></script>
-		<![endif]-->
+			html,
+			body,
+			.reveal-viewport,
+			.reveal,
+			.reveal .backgrounds {
+				background: #191919;
+				background-color: #191919;
+				color: #ffffff;
+			}
+
+			.reveal .slides section {
+				box-sizing: border-box;
+			}
+
+			.reveal h1,
+			.reveal h2,
+			.reveal h3,
+			.reveal p {
+				margin-left: 0;
+				margin-right: 0;
+			}
+
+			.home-slide {
+				text-align: left;
+			}
+
+			.home-slide h1 {
+				color: var(--jeopardy-gold);
+				font-size: clamp(0.78em, 4vw, 1.15em);
+				line-height: 1;
+				margin: 0 0 18px;
+				text-transform: uppercase;
+			}
+
+			.home-layout {
+				display: grid;
+				grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+				gap: 18px;
+				height: calc(100% - 78px);
+				min-height: 0;
+			}
+
+			.home-panel {
+				border: 2px solid rgba(255, 255, 255, 0.74);
+				background: rgba(255, 255, 255, 0.06);
+				padding: 18px;
+				min-height: 0;
+				overflow: auto;
+			}
+
+			.home-panel h2 {
+				color: #ffffff;
+				font-size: 0.5em;
+				line-height: 1.05;
+				margin: 0 0 14px;
+			}
+
+			.home-panel label,
+			.home-panel legend {
+				color: #dddddd;
+				display: block;
+				font-size: 0.32em;
+				font-weight: 800;
+				line-height: 1.2;
+				margin-bottom: 8px;
+				text-transform: uppercase;
+			}
+
+			.home-panel select,
+			.home-panel input {
+				border: 2px solid rgba(255, 255, 255, 0.85);
+				background: #111111;
+				box-sizing: border-box;
+				color: #ffffff;
+				font: inherit;
+				font-size: 0.34em;
+				line-height: 1.15;
+				margin-bottom: 12px;
+				padding: 10px 12px;
+				width: 100%;
+			}
+
+			.game-list {
+				display: grid;
+				gap: 10px;
+				margin: 14px 0;
+			}
+
+			.game-card {
+				border: 2px solid rgba(255, 255, 255, 0.7);
+				color: #ffffff;
+				display: block;
+				padding: 12px;
+				text-decoration: none;
+			}
+
+			.game-card.active {
+				border-color: var(--jeopardy-gold);
+				background: rgba(255, 211, 72, 0.12);
+			}
+
+			.game-card strong,
+			.game-card span {
+				display: block;
+			}
+
+			.game-card strong {
+				color: var(--jeopardy-gold);
+				font-size: 0.36em;
+				line-height: 1.15;
+				text-transform: uppercase;
+			}
+
+			.game-card span,
+			.game-meta,
+			.settings-note {
+				color: #d8d8d8;
+				font-size: 0.28em;
+				line-height: 1.28;
+			}
+
+			.game-meta {
+				display: grid;
+				gap: 8px;
+				margin-top: 14px;
+			}
+
+			.team-field-list {
+				display: grid;
+				gap: 8px;
+				margin-bottom: 14px;
+			}
+
+			.team-field-list label {
+				margin-bottom: 4px;
+				text-transform: none;
+			}
+
+			.home-actions {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+				margin-top: 12px;
+			}
+
+			.home-actions .game-button {
+				font-size: 0.31em;
+			}
+
+			.board-slide {
+				display: flex !important;
+				flex-direction: column;
+				gap: 8px;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+			}
+
+			.board-header {
+				display: flex;
+				align-items: flex-start;
+				justify-content: space-between;
+				gap: 18px;
+				margin-bottom: 4px;
+			}
+
+			.board-header h1 {
+				margin: 0;
+				color: var(--jeopardy-gold);
+				flex: 1 1 auto;
+				font-size: clamp(0.58em, 3.6vw, 0.95em);
+				letter-spacing: 0;
+				line-height: 1.02;
+				max-width: 58%;
+				text-transform: uppercase;
+			}
+
+			.scoreboard {
+				display: grid;
+				grid-template-columns: repeat(var(--team-count), minmax(92px, 1fr));
+				gap: 8px;
+				width: min(48%, 620px);
+				font-size: 0.38em;
+			}
+
+			.score-card {
+				border: 2px solid var(--jeopardy-line);
+				background: #111111;
+				padding: 8px 10px;
+				text-align: center;
+			}
+
+			.score-card strong {
+				display: block;
+				color: #ffffff;
+				font-size: 0.9em;
+				line-height: 1.1;
+			}
+
+			.score-card span {
+				display: block;
+				color: var(--jeopardy-gold);
+				font-size: 1.35em;
+				font-weight: 800;
+				line-height: 1.1;
+				margin-top: 4px;
+			}
+
+			.board-wrap {
+				display: flex;
+				flex-direction: column;
+				gap: 7px;
+				flex: 1 1 auto;
+				min-height: 0;
+			}
+
+			.category-row,
+			.jeopardy-board {
+				display: grid;
+				grid-template-columns: repeat(var(--category-count), minmax(0, 1fr));
+				gap: 7px;
+				width: 100%;
+			}
+
+			.jeopardy-board {
+				flex: 1 1 auto;
+				min-height: 0;
+				grid-template-rows: repeat(var(--question-count), minmax(0, 1fr));
+			}
+
+			.category,
+			.points {
+				border: 3px solid var(--jeopardy-line);
+				background: var(--jeopardy-blue);
+				color: #ffffff;
+				font-weight: 800;
+				text-align: center;
+				text-transform: uppercase;
+				box-sizing: border-box;
+			}
+
+			.category {
+				min-height: 48px;
+				padding: 8px 6px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background: var(--jeopardy-blue-dark);
+				font-size: 0.34em;
+				line-height: 1.12;
+			}
+
+			.points {
+				min-height: 0;
+				padding: 0;
+				transition: opacity 160ms ease, transform 160ms ease;
+			}
+
+			.points a {
+				width: 100%;
+				height: 100%;
+				min-height: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				color: var(--jeopardy-gold);
+				font-size: 0.58em;
+				font-weight: 900;
+				line-height: 1;
+				text-decoration: none;
+			}
+
+			.points:not(.used):hover,
+			.points:not(.used):focus-within {
+				transform: translateY(-2px);
+				background: #0a2aee;
+			}
+
+			.points.used {
+				background: #171717;
+				border-color: #777777;
+				opacity: 0.72;
+			}
+
+			.points.used a {
+				color: #bdbdbd;
+				font-size: 0.38em;
+				letter-spacing: 0;
+			}
+
+			.points.used:hover,
+			.points.used:focus-within {
+				transform: translateY(-2px);
+				background: #292929;
+			}
+
+			.board-actions {
+				margin-top: 4px;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				flex: 0 0 auto;
+			}
+
+			.game-name {
+				color: #cfcfcf;
+				font-size: 0.3em;
+				line-height: 1.2;
+				min-width: 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.game-button {
+				border: 2px solid #ffffff;
+				background: #161616;
+				color: #ffffff;
+				padding: 10px 16px;
+				font-size: 0.35em;
+				font-weight: 800;
+				line-height: 1;
+				cursor: pointer;
+			}
+
+			.game-button:hover,
+			.game-button:focus {
+				background: #2a2a2a;
+			}
+
+			.game-button.primary {
+				background: var(--jeopardy-blue);
+				color: var(--jeopardy-gold);
+			}
+
+			.game-button.correct {
+				background: var(--jeopardy-green);
+			}
+
+			.game-button.wrong {
+				background: var(--jeopardy-red);
+			}
+
+			.game-button.reset {
+				background: #3a1111;
+				flex: 0 0 auto;
+				white-space: nowrap;
+			}
+
+			.game-button.secondary {
+				background: #222222;
+			}
+
+			.question-slide {
+				display: flex !important;
+				flex-direction: column;
+				height: 100%;
+				overflow: hidden;
+				text-align: left;
+			}
+
+			.question-slide h2 {
+				flex: 0 0 auto;
+				margin: 0 0 12px;
+				color: var(--jeopardy-gold);
+				font-size: clamp(0.5em, 3vw, 0.78em);
+				line-height: 1.08;
+				text-transform: uppercase;
+			}
+
+			.question-layout {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) minmax(230px, 300px);
+				gap: 18px;
+				flex: 1 1 auto;
+				min-height: 0;
+			}
+
+			.question-main,
+			.question-sidebar {
+				min-height: 0;
+			}
+
+			.question-main {
+				overflow: auto;
+				padding-right: 4px;
+			}
+
+			.question-sidebar {
+				border: 2px solid rgba(255, 255, 255, 0.74);
+				background: rgba(0, 0, 0, 0.58);
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				overflow: hidden;
+				padding: 12px;
+			}
+
+			.question-points {
+				border: 2px solid var(--jeopardy-gold);
+				color: var(--jeopardy-gold);
+				font-size: 0.66em;
+				font-weight: 900;
+				line-height: 1;
+				padding: 12px;
+				text-align: center;
+			}
+
+			.question-text {
+				font-size: clamp(0.44em, 2.2vw, 0.62em);
+				line-height: 1.25;
+				margin-bottom: 14px;
+			}
+
+			.question-text p,
+			.question-text ul,
+			.question-text ol,
+			.question-text table,
+			.answer p,
+			.answer ul,
+			.answer ol,
+			.answer table {
+				margin-bottom: 0.6em;
+			}
+
+			.question-text img,
+			.answer img {
+				max-height: 42vh;
+				max-width: 100%;
+				object-fit: contain;
+			}
+
+			.question-text video,
+			.question-text iframe,
+			.answer video,
+			.answer iframe {
+				aspect-ratio: 16 / 9;
+				background: #000000;
+				border: 0;
+				display: block;
+				max-height: min(42vh, 420px);
+				max-width: 100%;
+				width: min(100%, 680px);
+			}
+
+			.question-text pre,
+			.answer pre {
+				font-size: 0.54em;
+				line-height: 1.18;
+				margin: 0.8em 0;
+			}
+
+			.question-text table,
+			.answer table {
+				font-size: 0.75em;
+				width: 100%;
+			}
+
+			.question-text .media-row {
+				align-items: center;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 22px;
+			}
+
+			.question-text .pokemon-sprite {
+				image-rendering: pixelated;
+				width: min(32vw, 220px);
+			}
+
+			.question-text .feature-label {
+				color: var(--jeopardy-gold);
+				font-size: 0.58em;
+				font-weight: 800;
+				letter-spacing: 0;
+				margin-bottom: 0.45em;
+				text-transform: uppercase;
+			}
+
+			.question-hints {
+				margin-top: 0.9em;
+			}
+
+			.hint-cue {
+				color: #ffffff;
+				font-size: 0.72em;
+				font-weight: 700;
+				margin-bottom: 0.45em;
+				opacity: 0.82;
+			}
+
+			.question-hints p {
+				color: var(--jeopardy-gold);
+				font-weight: 800;
+			}
+
+			.answer {
+				display: none;
+				border-left: 8px solid var(--jeopardy-gold);
+				background: rgba(0, 0, 0, 0.9);
+				box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+				color: #ffffff;
+				font-size: clamp(0.38em, 1.9vw, 0.52em);
+				line-height: 1.22;
+				margin: 12px 0 0;
+				padding: 14px 18px;
+				text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+			}
+
+			.answer.visible {
+				display: block;
+			}
+
+			.question-actions {
+				display: flex;
+				flex: 0 0 auto;
+				gap: 12px;
+				margin: 10px 0 0;
+			}
+
+			.score-controls {
+				display: grid;
+				gap: 8px;
+				min-height: 0;
+				overflow: auto;
+			}
+
+			.team-score-row {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) 58px 58px;
+				align-items: center;
+				gap: 8px;
+				border: 2px solid rgba(255, 255, 255, 0.8);
+				background: rgba(255, 255, 255, 0.06);
+				padding: 7px;
+			}
+
+			.team-score-row strong {
+				color: #ffffff;
+				font-size: 0.27em;
+				line-height: 1.1;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: normal;
+			}
+
+			.team-score-row .game-button {
+				min-width: 0;
+				padding: 9px 8px;
+				width: 100%;
+				font-size: 0.28em;
+			}
+
+			@media (max-width: 900px) {
+				.home-layout {
+					grid-template-columns: 1fr;
+					height: auto;
+				}
+
+				.board-header {
+					align-items: stretch;
+					flex-direction: column;
+				}
+
+				.board-header h1 {
+					max-width: none;
+				}
+
+				.scoreboard {
+					width: 100%;
+				}
+
+				.category,
+				.points a {
+					font-size: 0.28em;
+				}
+
+				.score-controls {
+					overflow: visible;
+				}
+
+				.question-slide {
+					overflow: auto;
+				}
+
+				.question-layout {
+					grid-template-columns: 1fr;
+					overflow: visible;
+				}
+
+				.question-main {
+					overflow: visible;
+				}
+
+				.question-sidebar {
+					overflow: visible;
+				}
+
+				.team-score-row {
+					grid-template-columns: minmax(0, 1fr) 64px 64px;
+				}
+
+				.team-score-row strong {
+					grid-column: auto;
+				}
+			}
+		</style>
 	</head>
 
-	<body>
-
+	<body style="background: #191919; color: #ffffff;">
 		<div class="reveal">
+			<div class="slides" id="slides">
+				<section id="home" class="home-slide">
+					<h1>Jeopardy Games</h1>
 
-			<!-- Any section element inside of this container is displayed as a slide -->
-			<div class="slides">
-				<section>
-					<h3>JavaScript Jeopardy!</h3>
-					<table>
-						<thead>
-						<tr>
-							<th>JavaScript</th>
-							<th>More JS</th>
-							<th>Functional + Quality</th>
-							<th>Paradigms</th>
-							<th>Data Structures</th>
-						</tr>
-						</thead>
-						<tbody>
-              <tr>
-                <td><a href="#/1">$100</a></td>
-                <td><a href="#/2">$100</a></td>
-                <td><a href="#/3">$100</a></td>
-                <td><a href="#/4">$100</a></td>
-                <td><a href="#/5">$100</a></td>
-              </tr>
-							<tr>
-								<td><a href="#/1/1">$200</a></td>
-								<td><a href="#/2/1">$200</a></td>
-								<td><a href="#/3/1">$200</a></td>
-								<td><a href="#/4/1">$200</a></td>
-								<td><a href="#/5/1">$200</a></td>
-              </tr>
-              <tr>
-								<td><a href="#/1/2">$300</a></td>
-								<td><a href="#/2/2">$300</a></td>
-								<td><a href="#/3/2">$300</a></td>
-								<td><a href="#/4/2">$300</a></td>
-								<td><a href="#/5/2">$300</a></td>
-							</tr>
-							<tr>
-								<td><a href="#/1/3">$400</a></td>
-								<td><a href="#/2/3">$400</a></td>
-								<td><a href="#/3/3">$400</a></td>
-								<td><a href="#/4/3">$400</a></td>
-								<td><a href="#/5/3">$400</a></td>
-              </tr>
-              <tr>
-								<td><a href="#/1/4">$500</a></td>
-								<td><a href="#/2/4">$500</a></td>
-								<td><a href="#/3/4">$500</a></td>
-								<td><a href="#/4/4">$500</a></td>
-								<td><a href="#/5/4">$500</a></td>
-              </tr>
-						</tbody>
-					</table>
-				</section>
-				<section data-topic="JavaScript">
-					<section>
-						<p>$100</p>
-						<h2>A method used to create instances of objects; optionally allows assigning specific values to properties.</h2>
-						<p class="fragment roll-in">What is a constructor (method)?</p>
-					</section>
-					<section>
-						<p>$200</p>
-						<h2>Variables in a function that receive the value of arguments sent to the function.</h2>
-						<p class="fragment roll-in">What are parameters?</p>
-					</section>
-					<section>
-						<p>$300</p>
-						<h2>a class-free object system in which objects inherit properties directly from other objects</h2>
-						<p class="fragment roll-in">What is prototypical inheritance?</p>
-					</section>
-					<section>
-						<p>$400</p>
-						<h2>A pair of curly braces surrounding zero or more name/value pairs</h2>
-						<p class="fragment roll-in">What is an object literal?</p>
-					</section>
-					<section>
-						<p>$500</p>
-						<h2>A method that lets us construct an array of arguments to use to invoke a function. It also lets us choose the value of this. </h2>
-						<p class="fragment roll-in">What is apply? (Function.prototype.apply())?</p>
-					</section>
-				</section>
-				<section data-topic="More JavaScript">
-					<section>
-						<p>$100</p>
-						<h2>When function and variable definitions are moved to the top of the function </h2>
-						<p class="fragment roll-in">Hoisting</p>
-					</section>
-					<section>
-						<p>$200</p>
-						<h2>A word that describes the visibility and lifetimes of variables and parameters</h2>
-						<p class="fragment roll-in">What is scope?</p>
-					</section>
-					<section>
-						<p>$300</p>
-						<h2>Nested scopes may have this potential problem</h2>
-						<p class="fragment roll-in">(Unexpected) Shadowing</p>
-					</section>
-					<section>
-						<p>$400</p>
-						<h2>Scope that is defined by the definition of the variable statically in code </h2>
-						<p class="fragment roll-in">Lexical scoping </p>
-					</section>
-					<section>
-						<p>$500</p>
-						<h2>Functions that refer to independent (free) variables. In other words, the function defined in this 'remembers' the environment in which it was created. </h2>
-						<p class="fragment roll-in">What is a closure?</p>
-					</section>
-				</section>
-				<section data-topic="FunctionalQuality">
-					<section>
-						<p>$100</p>
-						<p>An error that occurs when a language’s rules are violated, such as a misspelled keyword or incorrect punctuation.</p>
-						<p class="fragment roll-in">What is a Syntax Error?</p>
-					</section>
-					<section>
-						<p>$200</p>
-						<p>A function that addition to returning a value, modifies some state or has an observable interaction with calling functions or the outside world has a … </p>
-						<p class="fragment roll-in">What is a Side Effect?</p>
-					</section>
-					<section>
-						<p>$300</p>
-						<h2>The measure of the degree to which all statements and variables in the module relate to one purpose.</h2>
-						<p class="fragment roll-in">What is cohesion?</p>
-					</section>
-					<section>
-						<p>$400</p>
-						<h2>The degree to which a module depends on other modules to do its work.</h2>
-						<p class="fragment roll-in">What is Coupling?</p>
-					</section>
-					<section>
-						<p>$500</p>
-						<h2>A word to describe the number of arguments in the function </h2>
-						<p class="fragment roll-in">What is Arity?</p>
-					</section>
-				</section>
-				<section data-topic="Paradigms">
-					<section>
-						<p>$100</p>
-						<h2>Programming with things that have data fields and methods </h2>
-						<p class="fragment roll-in">What is Object-Oriented (programming) ?</p>
-					</section>
-					<section>
-						<p>$200</p>
-						<p>Building the structure and elements of programs, treats computation as the evaluation of mathematical functions and avoids changing-state and mutable data</p>
-						<p class="fragment roll-in">What is functional (programming)?</p>
-					</section>
-					<section>
-						<p>$300</p>
-						<p>Programming focused on describing in a step-by-step way, how a program operates, (statements changing a program’s state) </p>
-						<p class="fragment roll-in">What is Imperative (or procedural programming)?</p>
-					</section>
-					<section>
-						<p>$400</p>
-						<p>Focuses on what the program should accomplish <i>without prescribing how to do it in terms of sequences of actions to be taken</i></p>
-						<p class="fragment roll-in">What is Declarative (programming) </p>
-					</section>
-					<section>
-						<p>$500</p>
-						<p>programs with ability to treat programs as their data. A program could be designed to read, generate, analyze and/or transform other programs, and even modify itself while running </p>
-						<p class="fragment roll-in">What is metaprogramming?</p>
-					</section>
-				</section>
-				<section data-topic="Data Structures">
-					<section>
-						<p>$100</p>
-						<h3>An algorithm for looking through an array that reduces the array’s searchable area by half after each comparison.</h3>
-						<p class="fragment roll-in">What is a Binary Search?</p>
-					</section>
-					<section>
-						<p>$200</p>
-						<p>A condition in a recursive module that returns a definite value; it causes the module to stop calling itself.</p>
-						<p class="fragment roll-in">What is a base case?</p>
-					</section>
-					<section>
-						<p>$300</p>
-						<h2>A Data Structure that is LIFO</h2>
-						<p class="fragment roll-in">What is a Stack?</p>
-					</section>
-					<section>
-						<p>$400</p>
-						<h2>A Data Structure that is FIFO</h2>
-						<p class="fragment roll-in">What is a Queue?</p>
-					</section>
-					<section>
-						<p>$500</p>
-						<h2>A data structure consisting of a group of nodes which together represent a sequence.</h2>
-						<p class="fragment roll-in">What is a Linked List</p>
-					</section>
+					<div class="home-layout">
+						<div class="home-panel">
+							<h2>Game filer</h2>
+							<label for="game-select">Vælg game</label>
+							<select id="game-select"></select>
+							<div class="game-list" id="game-list"></div>
+							<div class="game-meta" id="game-meta"></div>
+						</div>
+
+						<div class="home-panel">
+							<h2>Settings</h2>
+							<label for="team-count">Antal teams</label>
+							<input id="team-count" type="number" min="1" max="6" step="1" />
+
+							<div class="team-field-list" id="team-field-list"></div>
+
+							<p class="settings-note">
+								Team settings gemmes per game i denne browser.
+							</p>
+
+							<div class="home-actions">
+								<button class="game-button primary" type="button" onclick="startConfiguredGame()">
+									Start game
+								</button>
+								<button class="game-button secondary" type="button" onclick="saveSettingsAndReload('/home')">
+									Gem settings
+								</button>
+								<button class="game-button reset" type="button" onclick="resetGameSettings()">
+									Reset settings
+								</button>
+							</div>
+						</div>
+					</div>
 				</section>
 
+				<section id="board" class="board-slide">
+					<div class="board-header">
+						<h1 id="game-title">Jeopardy</h1>
+						<div class="scoreboard" id="scoreboard" aria-label="Scoreboard"></div>
+					</div>
+
+					<div class="board-wrap">
+						<div class="category-row" id="category-row"></div>
+						<div class="jeopardy-board" id="jeopardy-board"></div>
+					</div>
+
+					<div class="board-actions">
+						<div class="game-name" id="game-name"></div>
+						<div class="home-actions">
+							<button class="game-button secondary" type="button" onclick="goToHome()">
+								Settings
+							</button>
+							<button class="game-button reset" type="button" onclick="resetGame()">
+								Reset game
+							</button>
+						</div>
+					</div>
+				</section>
 			</div>
-
 		</div>
 
-		<script src="lib/js/head.min.js"></script>
-		<script src="js/reveal.min.js"></script>
+		<script src="dist/reveal.js"></script>
+		<script src="dist/plugin/notes.js"></script>
+		<script src="dist/plugin/markdown.js"></script>
+		<script src="dist/plugin/highlight.js"></script>
+		<script src="dist/plugin/math.js"></script>
+		<script src="dist/plugin/search.js"></script>
+		<script src="dist/plugin/zoom.js"></script>
 
 		<script>
+			const GAME_FILES = {
+				pokemon: "games/pokemon.js",
+				science: "games/science.js",
+			};
+			const DEFAULT_GAME_KEY = "pokemon";
+			const MIN_TEAM_COUNT = 1;
+			const MAX_TEAM_COUNT = 6;
 
-			// Full list of configuration options available here:
-			// https://github.com/hakimel/reveal.js#configuration
-			Reveal.initialize({
-				controls: true,
-				progress: true,
-				history: true,
-				center: true,
+			let gameKey = DEFAULT_GAME_KEY;
+			let gameConfig = null;
+			let categories = [];
+			let defaultTeamNames = [];
+			let teamIds = [];
+			let teams = [];
+			let scores = {};
+			let usedQuestions = [];
+			let questionAwards = {};
+			let questionIdSet = new Set();
+			let allowQuestionBoardNavigation = false;
 
-				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
-				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+			const KEY_CODE_TO_KEY = {
+				37: "ArrowLeft",
+				38: "ArrowUp",
+				39: "ArrowRight",
+				40: "ArrowDown",
+			};
 
-				// Parallax scrolling
-				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
-				// parallaxBackgroundSize: '2100px 900px',
+			function getStorageKey() {
+				return "reveal-jeopardy-game:" + (gameConfig.id || gameKey);
+			}
 
-				// Optional libraries used to extend on reveal.js
-				dependencies: [
-					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
-					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
-					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
-					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
-					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
-					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
-				]
+			function getSettingsStorageKey() {
+				return "reveal-jeopardy-settings:" + gameKey;
+			}
+
+			function getRequestedGameKey() {
+				const params = new URLSearchParams(window.location.search);
+				const requestedGame = params.get("game") || DEFAULT_GAME_KEY;
+
+				return GAME_FILES[requestedGame] ? requestedGame : DEFAULT_GAME_KEY;
+			}
+
+			function loadGameFile() {
+				gameKey = getRequestedGameKey();
+
+				return new Promise((resolve) => {
+					const script = document.createElement("script");
+
+					script.src = GAME_FILES[gameKey];
+					script.onload = resolve;
+					script.onerror = resolve;
+					document.head.appendChild(script);
+				});
+			}
+
+			function clampTeamCount(value) {
+				const parsedValue = Number(value);
+
+				if (Number.isNaN(parsedValue)) {
+					return 3;
+				}
+
+				return Math.min(MAX_TEAM_COUNT, Math.max(MIN_TEAM_COUNT, parsedValue));
+			}
+
+			function readGameSettings() {
+				try {
+					const savedSettings = localStorage.getItem(getSettingsStorageKey());
+
+					if (!savedSettings) {
+						return {};
+					}
+
+					const parsedSettings = JSON.parse(savedSettings);
+
+					return parsedSettings && typeof parsedSettings === "object"
+						? parsedSettings
+						: {};
+				} catch (error) {
+					console.warn("Could not load game settings.", error);
+					return {};
+				}
+			}
+
+			function getConfiguredTeamNames(baseTeamNames) {
+				const fallbackNames =
+					Array.isArray(baseTeamNames) && baseTeamNames.length
+						? baseTeamNames
+						: ["Team 1", "Team 2", "Team 3"];
+				const settings = readGameSettings();
+				const savedNames = Array.isArray(settings.teamNames)
+					? settings.teamNames
+					: [];
+				const teamCount = clampTeamCount(
+					settings.teamCount || savedNames.length || fallbackNames.length
+				);
+
+				return Array.from({ length: teamCount }, (_, index) => {
+					const savedName = savedNames[index];
+					const fallbackName = fallbackNames[index] || "Team " + (index + 1);
+					const name =
+						typeof savedName === "string" && savedName.trim()
+							? savedName.trim()
+							: fallbackName;
+
+					return String(name || "Team " + (index + 1));
+				});
+			}
+
+			function getTeamNamesFromForm() {
+				const teamCountInput = document.getElementById("team-count");
+				const teamCount = clampTeamCount(teamCountInput ? teamCountInput.value : 3);
+
+				return Array.from({ length: teamCount }, (_, index) => {
+					const input = document.getElementById("team-name-" + (index + 1));
+					const value = input ? input.value.trim() : "";
+
+					return value || "Team " + (index + 1);
+				});
+			}
+
+			function writeGameSettings(teamNames) {
+				try {
+					localStorage.setItem(
+						getSettingsStorageKey(),
+						JSON.stringify({
+							teamCount: teamNames.length,
+							teamNames,
+						})
+					);
+				} catch (error) {
+					console.warn("Could not save game settings.", error);
+				}
+			}
+
+			function saveSettingsAndReload(targetHash) {
+				writeGameSettings(getTeamNamesFromForm());
+				refreshGameFromSettings(targetHash || "/home");
+			}
+
+			function startConfiguredGame() {
+				saveSettingsAndReload("/board");
+			}
+
+			function resetGameSettings() {
+				try {
+					localStorage.removeItem(getSettingsStorageKey());
+				} catch (error) {
+					console.warn("Could not reset game settings.", error);
+				}
+
+				refreshGameFromSettings("/home");
+			}
+
+			function getSlideIdFromHash(targetHash) {
+				return String(targetHash || "/home").replace(/^#?\//, "") || "home";
+			}
+
+			function refreshGameFromSettings(targetHash) {
+				window.location.hash = "/" + getSlideIdFromHash(targetHash);
+				window.location.reload();
+			}
+
+			function getGameUrl(key) {
+				const url = new URL(window.location.href);
+
+				url.searchParams.set("game", key);
+				url.hash = "/home";
+
+				return url.toString();
+			}
+
+			function changeGame(key) {
+				if (!GAME_FILES[key] || key === gameKey) {
+					return;
+				}
+
+				window.location.href = getGameUrl(key);
+			}
+
+			function normalizeGameConfig(rawGame) {
+				const source = rawGame && typeof rawGame === "object" ? rawGame : {};
+				const normalizedTeams =
+					Array.isArray(source.teams) && source.teams.length
+						? source.teams
+						: ["Team 1", "Team 2", "Team 3"];
+				defaultTeamNames = normalizedTeams.map((team, index) =>
+					String(team || "Team " + (index + 1))
+				);
+				const configuredTeamNames = getConfiguredTeamNames(normalizedTeams);
+				const normalizedCategories =
+					Array.isArray(source.categories) && source.categories.length
+						? source.categories
+						: [];
+
+				return {
+					id: source.id || gameKey,
+					title: source.title || "Jeopardy",
+					teams: configuredTeamNames.map((team, index) => ({
+						id: "team" + (index + 1),
+						name: String(team || "Team " + (index + 1)),
+					})),
+					categories: normalizedCategories.map((category, categoryIndex) => ({
+						title: String(category.title || "Category " + (categoryIndex + 1)),
+						questions: normalizeQuestions(category.questions),
+					})),
+				};
+			}
+
+			function normalizeQuestions(questions) {
+				const sourceQuestions = Array.isArray(questions) ? questions : [];
+
+				return sourceQuestions.map((question, index) => {
+					const fallbackPoints = (index + 1) * 100;
+
+					return {
+						...question,
+						points: Number(question.points) || fallbackPoints,
+						question:
+							(question.question || question.html || question.markdown)
+								? question.question || ""
+								: "Question goes here.",
+						answer:
+							(question.answer || question.answerHtml || question.answerMarkdown)
+								? question.answer || ""
+								: "Answer goes here.",
+					};
+				});
+			}
+
+			function applySlideOptions(slide, question) {
+				const slideAttributes = {
+					...(question.slideAttributes || {}),
+				};
+
+				if (question.background) {
+					slideAttributes["data-background"] = question.background;
+				}
+
+				if (question.backgroundColor) {
+					slideAttributes["data-background-color"] = question.backgroundColor;
+				}
+
+				if (question.backgroundVideo) {
+					slideAttributes["data-background-video"] = question.backgroundVideo;
+				}
+
+				if (question.backgroundVideo && question.backgroundVideoLoop !== false) {
+					slideAttributes["data-background-video-loop"] = "";
+				}
+
+				if (question.backgroundVideo && question.backgroundVideoMuted !== false) {
+					slideAttributes["data-background-video-muted"] = "";
+				}
+
+				if (question.backgroundIframe) {
+					slideAttributes["data-background-iframe"] = question.backgroundIframe;
+				}
+
+				if (question.backgroundInteractive) {
+					slideAttributes["data-background-interactive"] = "";
+				}
+
+				if (question.transition) {
+					slideAttributes["data-transition"] = question.transition;
+				}
+
+				if (question.autoAnimate) {
+					slideAttributes["data-auto-animate"] = "";
+				}
+
+				Object.entries(slideAttributes).forEach(([name, value]) => {
+					slide.setAttribute(name, value === true ? "" : String(value));
+				});
+
+				if (question.className) {
+					slide.classList.add(...String(question.className).split(/\s+/));
+				}
+			}
+
+			function renderContent(container, question, kind) {
+				const isAnswer = kind === "answer";
+				const markdown = isAnswer ? question.answerMarkdown : question.markdown;
+				const html = isAnswer ? question.answerHtml : question.html;
+				const fallback = isAnswer ? question.answer : question.question;
+
+				container.innerHTML = "";
+
+				if (markdown) {
+					const markdownElement = document.createElement("div");
+					const template = document.createElement("script");
+
+					markdownElement.setAttribute("data-markdown", "");
+					markdownElement.setAttribute("data-separator", "$x");
+					template.type = "text/template";
+					template.textContent = markdown;
+					markdownElement.appendChild(template);
+					container.appendChild(markdownElement);
+					return;
+				}
+
+				if (html) {
+					container.innerHTML = html;
+					return;
+				}
+
+				container.textContent = fallback || "";
+			}
+
+			function renderHints(container, question) {
+				if (!Array.isArray(question.hints) || question.hints.length === 0) {
+					return;
+				}
+
+				const hints = document.createElement("div");
+				const hintCue = document.createElement("div");
+
+				hints.className = "question-hints";
+				hintCue.className = "hint-cue";
+				hintCue.textContent = "Højre/ned giver hints. Venstre/op går til boardet.";
+				hints.appendChild(hintCue);
+
+				question.hints.forEach((hint, index) => {
+					const hintElement = document.createElement("p");
+					const hintConfig =
+						hint && typeof hint === "object" ? hint : { text: hint };
+
+					hintElement.className = "fragment";
+					hintElement.dataset.fragmentIndex = String(index);
+
+					if (hintConfig.html) {
+						hintElement.innerHTML = hintConfig.html;
+					} else {
+						hintElement.textContent = hintConfig.text || "";
+					}
+
+					hints.appendChild(hintElement);
+				});
+
+				container.appendChild(hints);
+			}
+
+			function initializeGameData() {
+				gameConfig = normalizeGameConfig(window.JEOPARDY_GAME);
+				categories = gameConfig.categories;
+				teams = gameConfig.teams;
+				teamIds = teams.map((team) => team.id);
+				questionIdSet = new Set();
+				resetRuntimeGameState();
+
+				document.documentElement.style.setProperty(
+					"--category-count",
+					Math.max(categories.length, 1)
+				);
+				document.documentElement.style.setProperty(
+					"--question-count",
+					Math.max(getQuestionRowCount(), 1)
+				);
+				document.documentElement.style.setProperty(
+					"--team-count",
+					Math.max(teamIds.length, 1)
+				);
+			}
+
+			function getQuestionRowCount() {
+				return categories.reduce(
+					(maxCount, category) => Math.max(maxCount, category.questions.length),
+					0
+				);
+			}
+
+			function getQuestionId(categoryIndex, points) {
+				return "c" + categoryIndex + "q" + points;
+			}
+
+			function isQuestionId(questionId) {
+				return questionIdSet.has(questionId || "");
+			}
+
+			function resetRuntimeGameState() {
+				scores = {};
+				usedQuestions = [];
+				questionAwards = {};
+
+				teamIds.forEach((teamId) => {
+					scores[teamId] = 0;
+				});
+			}
+
+			function removeQuestionAward(questionId) {
+				const award = questionAwards[questionId];
+
+				if (!award || !teamIds.includes(award.team)) {
+					delete questionAwards[questionId];
+					return;
+				}
+
+				const amount = Number(award.amount);
+
+				if (!Number.isNaN(amount)) {
+					scores[award.team] = (scores[award.team] || 0) - amount;
+					updateScoreboard();
+				}
+
+				delete questionAwards[questionId];
+			}
+
+			function prepareQuestionForCorrection(questionId) {
+				if (!isQuestionId(questionId) || !usedQuestions.includes(questionId)) {
+					return;
+				}
+
+				removeQuestionAward(questionId);
+				usedQuestions = usedQuestions.filter((usedId) => usedId !== questionId);
+				setTileAvailable(questionId);
+				saveGameState();
+			}
+
+			function getTotalQuestionCount() {
+				return categories.reduce(
+					(total, category) => total + category.questions.length,
+					0
+				);
+			}
+
+			function renderTeamFields(teamNames) {
+				const teamFieldList = document.getElementById("team-field-list");
+				const teamCountInput = document.getElementById("team-count");
+
+				if (!teamFieldList || !teamCountInput) {
+					return;
+				}
+
+				const teamCount = clampTeamCount(teamCountInput.value || teamNames.length);
+
+				teamFieldList.innerHTML = "";
+
+				Array.from({ length: teamCount }, (_, index) => {
+					const wrapper = document.createElement("div");
+					const label = document.createElement("label");
+					const input = document.createElement("input");
+					const existingName = teamNames[index] || defaultTeamNames[index];
+
+					label.setAttribute("for", "team-name-" + (index + 1));
+					label.textContent = "Team " + (index + 1) + " navn";
+					input.id = "team-name-" + (index + 1);
+					input.type = "text";
+					input.value = existingName || "Team " + (index + 1);
+					input.autocomplete = "off";
+
+					wrapper.appendChild(label);
+					wrapper.appendChild(input);
+					teamFieldList.appendChild(wrapper);
+				});
+			}
+
+			function renderHome() {
+				const gameSelect = document.getElementById("game-select");
+				const gameList = document.getElementById("game-list");
+				const gameMeta = document.getElementById("game-meta");
+				const teamCountInput = document.getElementById("team-count");
+
+				if (!gameSelect || !gameList || !gameMeta || !teamCountInput) {
+					return;
+				}
+
+				gameSelect.innerHTML = "";
+				gameList.innerHTML = "";
+				gameMeta.innerHTML = "";
+
+				Object.entries(GAME_FILES).forEach(([key, path]) => {
+					const option = document.createElement("option");
+					const link = document.createElement("a");
+					const title = document.createElement("strong");
+					const file = document.createElement("span");
+
+					option.value = key;
+					option.textContent = key + " - " + path;
+					option.selected = key === gameKey;
+					gameSelect.appendChild(option);
+
+					link.className = "game-card" + (key === gameKey ? " active" : "");
+					link.href = getGameUrl(key);
+					title.textContent = key;
+					file.textContent = path;
+					link.appendChild(title);
+					link.appendChild(file);
+					gameList.appendChild(link);
+				});
+
+				gameSelect.value = gameKey;
+				gameSelect.onchange = () => changeGame(gameSelect.value);
+
+				const currentFile = document.createElement("div");
+				const categoryCount = document.createElement("div");
+				const questionCount = document.createElement("div");
+				const categoryNames = document.createElement("div");
+
+				currentFile.textContent = "Valgt fil: " + GAME_FILES[gameKey];
+				categoryCount.textContent = "Kategorier: " + categories.length;
+				questionCount.textContent = "Spørgsmål: " + getTotalQuestionCount();
+				categoryNames.textContent =
+					"Kategorier: " +
+					categories.map((category) => category.title).join(", ");
+				gameMeta.appendChild(currentFile);
+				gameMeta.appendChild(categoryCount);
+				gameMeta.appendChild(questionCount);
+				gameMeta.appendChild(categoryNames);
+
+				teamCountInput.value = teams.length || defaultTeamNames.length || 3;
+				teamCountInput.onchange = () => {
+					renderTeamFields(getTeamNamesFromForm());
+				};
+				teamCountInput.oninput = () => {
+					renderTeamFields(getTeamNamesFromForm());
+				};
+
+				renderTeamFields(teams.map((team) => team.name));
+			}
+
+			function renderGame() {
+				const title = document.getElementById("game-title");
+				const gameName = document.getElementById("game-name");
+				const scoreboard = document.getElementById("scoreboard");
+				const categoryRow = document.getElementById("category-row");
+				const board = document.getElementById("jeopardy-board");
+				const slides = document.getElementById("slides");
+
+				if (!scoreboard || !categoryRow || !board || !slides) {
+					return;
+				}
+
+				if (title) {
+					title.textContent = gameConfig.title;
+				}
+
+				if (gameName) {
+					gameName.textContent = "Game file: " + GAME_FILES[gameKey];
+				}
+
+				scoreboard.innerHTML = "";
+				categoryRow.innerHTML = "";
+				board.innerHTML = "";
+
+				slides.querySelectorAll(".question-slide").forEach((slide) => {
+					slide.remove();
+				});
+
+				teams.forEach((team) => {
+					const scoreCard = document.createElement("div");
+					const teamName = document.createElement("strong");
+					const score = document.createElement("span");
+
+					scoreCard.className = "score-card";
+					teamName.textContent = team.name;
+					score.id = "score-" + team.id;
+					score.textContent = "0";
+					scoreCard.appendChild(teamName);
+					scoreCard.appendChild(score);
+					scoreboard.appendChild(scoreCard);
+				});
+
+				categories.forEach((category) => {
+					const categoryCell = document.createElement("div");
+
+					categoryCell.className = "category";
+					categoryCell.textContent = category.title;
+					categoryRow.appendChild(categoryCell);
+				});
+
+				for (let questionIndex = 0; questionIndex < getQuestionRowCount(); questionIndex += 1) {
+					categories.forEach((category, categoryIndex) => {
+						const question = category.questions[questionIndex];
+
+						if (!question) {
+							const emptyTile = document.createElement("div");
+
+							emptyTile.className = "points used";
+							board.appendChild(emptyTile);
+							return;
+						}
+
+						const displayCategoryIndex = categoryIndex + 1;
+						const questionId = getQuestionId(displayCategoryIndex, question.points);
+						const tile = document.createElement("div");
+						const link = document.createElement("a");
+
+						questionIdSet.add(questionId);
+						tile.className = "points";
+						tile.id = "tile-" + questionId;
+						tile.dataset.category = category.title;
+						tile.dataset.points = question.points;
+						link.href = "#/" + questionId;
+						link.textContent = question.points;
+						link.setAttribute(
+							"aria-label",
+							category.title + " for " + question.points + " points"
+						);
+						link.addEventListener("click", () => {
+							prepareQuestionForCorrection(questionId);
+						});
+
+						tile.appendChild(link);
+						board.appendChild(tile);
+					});
+				}
+
+				categories.forEach((category, categoryIndex) => {
+					category.questions.forEach((question) => {
+						const displayCategoryIndex = categoryIndex + 1;
+						const questionId = getQuestionId(displayCategoryIndex, question.points);
+						const slide = document.createElement("section");
+						const heading = document.createElement("h2");
+						const questionLayout = document.createElement("div");
+						const questionMain = document.createElement("div");
+						const questionSidebar = document.createElement("div");
+						const pointBadge = document.createElement("div");
+						const questionText = document.createElement("div");
+						const answer = document.createElement("div");
+						const questionActions = document.createElement("div");
+						const showAnswerButton = document.createElement("button");
+						const scoreControls = document.createElement("div");
+
+						slide.id = questionId;
+						slide.className = "question-slide";
+						slide.dataset.points = question.points;
+						slide.dataset.category = category.title;
+						applySlideOptions(slide, question);
+						heading.textContent = category.title;
+						questionLayout.className = "question-layout";
+						questionMain.className = "question-main";
+						questionSidebar.className = "question-sidebar";
+						pointBadge.className = "question-points";
+						pointBadge.textContent = question.points;
+						questionText.className = "question-text";
+						answer.className = "answer";
+						renderContent(questionText, question, "question");
+						renderHints(questionText, question);
+						renderContent(answer, question, "answer");
+						questionActions.className = "question-actions";
+						showAnswerButton.className = "game-button primary";
+						showAnswerButton.type = "button";
+						showAnswerButton.textContent = "Show answer";
+						showAnswerButton.onclick = showAnswer;
+						scoreControls.className = "score-controls";
+						scoreControls.setAttribute("aria-label", "Score controls");
+
+						questionActions.appendChild(showAnswerButton);
+						teams.forEach((team) => {
+							const row = document.createElement("div");
+							const label = document.createElement("strong");
+							const correctButton = document.createElement("button");
+							const wrongButton = document.createElement("button");
+
+							row.className = "team-score-row";
+							label.textContent = team.name;
+							correctButton.className = "game-button correct";
+							correctButton.type = "button";
+							correctButton.textContent = "+";
+							correctButton.setAttribute(
+								"aria-label",
+								team.name + " correct, plus " + question.points
+							);
+							correctButton.onclick = () => changeScore(team.id, question.points);
+							wrongButton.className = "game-button wrong";
+							wrongButton.type = "button";
+							wrongButton.textContent = "-";
+							wrongButton.setAttribute(
+								"aria-label",
+								team.name + " wrong, minus " + question.points
+							);
+							wrongButton.onclick = () => changeScore(team.id, -question.points);
+
+							row.appendChild(label);
+							row.appendChild(correctButton);
+							row.appendChild(wrongButton);
+							scoreControls.appendChild(row);
+						});
+
+						slide.appendChild(heading);
+						questionMain.appendChild(questionText);
+						questionMain.appendChild(questionActions);
+						questionMain.appendChild(answer);
+						questionSidebar.appendChild(pointBadge);
+						questionSidebar.appendChild(scoreControls);
+						questionLayout.appendChild(questionMain);
+						questionLayout.appendChild(questionSidebar);
+						slide.appendChild(questionLayout);
+
+						if (question.notes || question.notesHtml) {
+							const notes = document.createElement("aside");
+
+							notes.className = "notes";
+							if (question.notesHtml) {
+								notes.innerHTML = question.notesHtml;
+							} else {
+								notes.textContent = question.notes;
+							}
+							slide.appendChild(notes);
+						}
+
+						slides.appendChild(slide);
+					});
+				});
+			}
+
+			function updateScoreboard() {
+				teamIds.forEach((teamId) => {
+					const scoreElement = document.getElementById("score-" + teamId);
+
+					if (scoreElement) {
+						scoreElement.textContent = scores[teamId] || 0;
+					}
+				});
+			}
+
+			function setTileAvailable(questionId) {
+				const tile = document.getElementById("tile-" + questionId);
+
+				if (!tile) {
+					return;
+				}
+
+				const link = tile.querySelector("a");
+
+				tile.classList.remove("used");
+				tile.removeAttribute("aria-disabled");
+
+				if (link) {
+					link.textContent = tile.dataset.points || "";
+					link.removeAttribute("tabindex");
+					link.setAttribute(
+						"aria-label",
+						(tile.dataset.category || "Question") +
+							" for " +
+							(tile.dataset.points || "") +
+							" points"
+					);
+				}
+			}
+
+			function setTileUsed(questionId) {
+				const tile = document.getElementById("tile-" + questionId);
+
+				if (!tile) {
+					return;
+				}
+
+				const link = tile.querySelector("a");
+
+				tile.classList.add("used");
+
+				if (link) {
+					link.textContent = "Taget";
+					link.removeAttribute("tabindex");
+					link.setAttribute("aria-label", "Taget sporgsmaal. Klik for at rette.");
+				}
+			}
+
+			function updateUsedTiles() {
+				document.querySelectorAll(".points").forEach((tile) => {
+					if (tile.id && tile.id.startsWith("tile-")) {
+						setTileAvailable(tile.id.replace("tile-", ""));
+					}
+				});
+
+				usedQuestions.forEach((questionId) => {
+					setTileUsed(questionId);
+				});
+			}
+
+			function showAnswer() {
+				const currentSlide = getCurrentQuestionSlide();
+
+				if (!currentSlide) {
+					return;
+				}
+
+				revealAnswerForQuestion(currentSlide.id);
+				broadcastGameMessage("answer-shown", {
+					questionId: currentSlide.id,
+				});
+			}
+
+			function revealAnswerForQuestion(questionId) {
+				const slide = document.getElementById(questionId);
+
+				if (!slide || !isQuestionId(questionId)) {
+					return;
+				}
+
+				const answer = slide.querySelector(".answer");
+
+				if (!answer) {
+					return;
+				}
+
+				answer.classList.add("visible");
+
+				if (
+					typeof Reveal !== "undefined" &&
+					Reveal.layout &&
+					getCurrentQuestionSlide() === slide
+				) {
+					Reveal.layout();
+				}
+			}
+
+			function clearVisibleAnswers() {
+				document.querySelectorAll(".answer.visible").forEach((answer) => {
+					answer.classList.remove("visible");
+				});
+			}
+
+			function getCurrentQuestionSlide() {
+				if (typeof Reveal !== "undefined" && Reveal.getCurrentSlide) {
+					return Reveal.getCurrentSlide();
+				}
+
+				return document.querySelector(".question-slide.present");
+			}
+
+			function isCurrentQuestionSlide() {
+				const currentSlide = getCurrentQuestionSlide();
+
+				return (
+					currentSlide &&
+					currentSlide.classList &&
+					currentSlide.classList.contains("question-slide") &&
+					isQuestionId(currentSlide.id)
+				);
+			}
+
+			function getKeyboardKey(event) {
+				return event.key || KEY_CODE_TO_KEY[event.keyCode] || "";
+			}
+
+			function stopKeyboardEvent(event) {
+				if (event.preventDefault) {
+					event.preventDefault();
+				}
+
+				if (event.stopPropagation) {
+					event.stopPropagation();
+				}
+
+				if (event.stopImmediatePropagation) {
+					event.stopImmediatePropagation();
+				}
+			}
+
+			function handleQuestionNavigationKey(event) {
+				const key = getKeyboardKey(event);
+
+				if (
+					!isCurrentQuestionSlide() ||
+					event.altKey ||
+					event.ctrlKey ||
+					event.metaKey
+				) {
+					return false;
+				}
+
+				if (
+					key !== "ArrowLeft" &&
+					key !== "ArrowRight" &&
+					key !== "ArrowUp" &&
+					key !== "ArrowDown"
+				) {
+					return false;
+				}
+
+				stopKeyboardEvent(event);
+
+				if (key === "ArrowLeft" || key === "ArrowUp") {
+					allowQuestionBoardNavigation = true;
+					goToBoard();
+					return true;
+				}
+
+				if (typeof Reveal !== "undefined" && Reveal.nextFragment) {
+					Reveal.nextFragment();
+				}
+
+				return true;
+			}
+
+			function handleQuestionArrowKeys(event) {
+				handleQuestionNavigationKey(event);
+			}
+
+			function handleRevealArrowKey(keyCode, event) {
+				if (handleQuestionNavigationKey(event || { keyCode })) {
+					return;
+				}
+
+				if (typeof Reveal === "undefined") {
+					return;
+				}
+
+				const config = Reveal.getConfig ? Reveal.getConfig() : {};
+				const skipFragments = Boolean(event && event.altKey);
+				const shiftKey = Boolean(event && event.shiftKey);
+				const overviewActive =
+					Reveal.overview && Reveal.overview.isActive
+						? Reveal.overview.isActive()
+						: false;
+				const useLinearMode =
+					config.navigationMode === "linear" ||
+					!Reveal.hasHorizontalSlides ||
+					!Reveal.hasVerticalSlides ||
+					!Reveal.hasHorizontalSlides() ||
+					!Reveal.hasVerticalSlides();
+
+				if (keyCode === 37) {
+					if (shiftKey && Reveal.slide) {
+						Reveal.slide(0);
+					} else if (!overviewActive && useLinearMode) {
+						(config.rtl ? Reveal.next : Reveal.prev)({ skipFragments });
+					} else if (Reveal.left) {
+						Reveal.left({ skipFragments });
+					}
+				} else if (keyCode === 38) {
+					if (shiftKey && Reveal.slide) {
+						Reveal.slide(undefined, 0);
+					} else if (!overviewActive && useLinearMode) {
+						Reveal.prev({ skipFragments });
+					} else if (Reveal.up) {
+						Reveal.up({ skipFragments });
+					}
+				} else if (keyCode === 39) {
+					if (shiftKey && Reveal.slide && Reveal.getHorizontalSlides) {
+						Reveal.slide(Reveal.getHorizontalSlides().length - 1);
+					} else if (!overviewActive && useLinearMode) {
+						(config.rtl ? Reveal.prev : Reveal.next)({ skipFragments });
+					} else if (Reveal.right) {
+						Reveal.right({ skipFragments });
+					}
+				} else if (keyCode === 40) {
+					if (shiftKey && Reveal.slide) {
+						Reveal.slide(undefined, Number.MAX_VALUE);
+					} else if (!overviewActive && useLinearMode) {
+						Reveal.next({ skipFragments });
+					} else if (Reveal.down) {
+						Reveal.down({ skipFragments });
+					}
+				}
+			}
+
+			function getTopLevelSlideIndex(slideId) {
+				const topLevelSlides = Array.from(
+					document.querySelectorAll(".reveal .slides > section")
+				);
+
+				return topLevelSlides.findIndex((slide) => slide.id === slideId);
+			}
+
+			function goToSlideId(slideId) {
+				const slideIndex = getTopLevelSlideIndex(slideId);
+
+				if (typeof Reveal !== "undefined" && Reveal.slide && slideIndex >= 0) {
+					Reveal.slide(slideIndex);
+					return;
+				}
+
+				window.location.hash = "/" + slideId;
+			}
+
+			function goToHome() {
+				goToSlideId("home");
+			}
+
+			function goToBoard() {
+				goToSlideId("board");
+			}
+
+			function markUsedAndGoBack(questionId) {
+				if (questionId && !usedQuestions.includes(questionId)) {
+					usedQuestions.push(questionId);
+				}
+
+				updateUsedTiles();
+				saveGameState();
+
+				if (typeof Reveal !== "undefined" && Reveal.slide) {
+					goToBoard();
+				} else {
+					window.location.hash = "/board";
+				}
+			}
+
+			function changeScore(team, amount) {
+				if (!teamIds.includes(team) || Number.isNaN(Number(amount))) {
+					return;
+				}
+
+				const currentSlide = getCurrentQuestionSlide();
+				const questionId =
+					currentSlide && currentSlide.id && isQuestionId(currentSlide.id)
+						? currentSlide.id
+						: "";
+
+				if (questionId) {
+					removeQuestionAward(questionId);
+					questionAwards[questionId] = {
+						team,
+						amount: Number(amount),
+					};
+				}
+
+				scores[team] = (scores[team] || 0) + Number(amount);
+				updateScoreboard();
+
+				if (questionId) {
+					markUsedAndGoBack(questionId);
+					return;
+				}
+
+				saveGameState();
+			}
+
+			function saveGameState() {
+				try {
+					localStorage.setItem(
+						getStorageKey(),
+						JSON.stringify({
+							scores,
+							usedQuestions,
+							questionAwards,
+						})
+					);
+					broadcastGameMessage("state-changed", {
+						storageKey: getStorageKey(),
+					});
+				} catch (error) {
+					console.warn("Could not save game state.", error);
+				}
+			}
+
+			function loadGameState() {
+				try {
+					const savedState = localStorage.getItem(getStorageKey());
+
+					if (!savedState) {
+						resetRuntimeGameState();
+						clearVisibleAnswers();
+						updateScoreboard();
+						updateUsedTiles();
+						return;
+					}
+
+					const parsedState = JSON.parse(savedState);
+
+					if (parsedState && typeof parsedState === "object") {
+						if (parsedState.scores && typeof parsedState.scores === "object") {
+							teamIds.forEach((teamId) => {
+								scores[teamId] = Number(parsedState.scores[teamId]) || 0;
+							});
+						}
+
+						if (Array.isArray(parsedState.usedQuestions)) {
+							usedQuestions = parsedState.usedQuestions.filter((questionId) =>
+								isQuestionId(questionId)
+							);
+						}
+
+						if (
+							parsedState.questionAwards &&
+							typeof parsedState.questionAwards === "object"
+						) {
+							questionAwards = {};
+
+							Object.entries(parsedState.questionAwards).forEach(
+								([questionId, award]) => {
+									if (
+										isQuestionId(questionId) &&
+										award &&
+										teamIds.includes(award.team) &&
+										!Number.isNaN(Number(award.amount))
+									) {
+										questionAwards[questionId] = {
+											team: award.team,
+											amount: Number(award.amount),
+										};
+									}
+								}
+							);
+						}
+					}
+				} catch (error) {
+					console.warn("Could not load game state.", error);
+				}
+
+				updateScoreboard();
+				updateUsedTiles();
+			}
+
+			function resetGame() {
+				if (
+					!window.confirm(
+						"Reset game? Scores and used questions will be cleared."
+					)
+				) {
+					return;
+				}
+
+				resetRuntimeGameState();
+
+				try {
+					localStorage.removeItem(getStorageKey());
+					broadcastGameMessage("state-changed", {
+						storageKey: getStorageKey(),
+					});
+				} catch (error) {
+					console.warn("Could not clear game state.", error);
+				}
+
+				updateUsedTiles();
+				clearVisibleAnswers();
+
+				updateScoreboard();
+
+				if (typeof Reveal !== "undefined" && Reveal.slide) {
+					goToBoard();
+				} else {
+					window.location.hash = "/board";
+				}
+			}
+
+			function isSameOriginGameMessage(event) {
+				return (
+					window.location.protocol === "file:" ||
+					!event.origin ||
+					event.origin === window.location.origin
+				);
+			}
+
+			function parseGameMessage(data) {
+				if (typeof data !== "string" || data.charAt(0) !== "{") {
+					return null;
+				}
+
+				try {
+					return JSON.parse(data);
+				} catch (error) {
+					return null;
+				}
+			}
+
+			function getGameMessageTargets() {
+				const targets = new Set();
+
+				if (window.parent && window.parent !== window) {
+					targets.add(window.parent);
+				}
+
+				if (window.opener) {
+					targets.add(window.opener);
+				}
+
+				if (
+					window.top &&
+					window.top !== window &&
+					window.top.opener
+				) {
+					targets.add(window.top.opener);
+				}
+
+				return targets;
+			}
+
+			function broadcastGameMessage(type, payload) {
+				const message = JSON.stringify({
+					namespace: "reveal-jeopardy",
+					type,
+					...(payload || {}),
+				});
+
+				getGameMessageTargets().forEach((target) => {
+					try {
+						target.postMessage(message, "*");
+					} catch (error) {
+						// Ignore closed or cross-origin windows.
+					}
+				});
+			}
+
+			function handleGameMessage(event) {
+				if (!isSameOriginGameMessage(event)) {
+					return;
+				}
+
+				const data = parseGameMessage(event.data);
+
+				if (!data || data.namespace !== "reveal-jeopardy") {
+					return;
+				}
+
+				if (data.type === "state-changed" && data.storageKey === getStorageKey()) {
+					loadGameState();
+				}
+
+				if (data.type === "answer-shown") {
+					revealAnswerForQuestion(data.questionId);
+				}
+			}
+
+			function handleStorageChange(event) {
+				if (event.key === getStorageKey()) {
+					loadGameState();
+				}
+			}
+
+			function initializeGameSync() {
+				window.addEventListener("message", handleGameMessage);
+				window.addEventListener("storage", handleStorageChange);
+			}
+
+			function initializeReveal() {
+				Reveal.initialize({
+					hash: true,
+					controls: false,
+					markdown: {
+						smartypants: true,
+					},
+					mathjax4: {
+						tex: {
+							inlineMath: [
+								["$", "$"],
+								["\\(", "\\)"],
+							],
+							displayMath: [
+								["$$", "$$"],
+								["\\[", "\\]"],
+							],
+						},
+					},
+					plugins: [
+						RevealMarkdown,
+						RevealHighlight,
+						RevealNotes,
+						RevealMath.MathJax4,
+						RevealSearch,
+						RevealZoom,
+					],
+				});
+
+				[37, 38, 39, 40].forEach((keyCode) => {
+					Reveal.addKeyBinding(keyCode, (event) => {
+						handleRevealArrowKey(keyCode, event);
+					});
+				});
+
+				Reveal.on("slidechanged", (event) => {
+					if (!event || !event.currentSlide) {
+						return;
+					}
+
+					const previousQuestionId = event.previousSlide ? event.previousSlide.id : "";
+					const canGoBackToBoard = allowQuestionBoardNavigation;
+
+					allowQuestionBoardNavigation = false;
+
+					if (
+						event.currentSlide.id === "board" &&
+						isQuestionId(previousQuestionId) &&
+						!canGoBackToBoard &&
+						!usedQuestions.includes(previousQuestionId) &&
+						typeof Reveal !== "undefined" &&
+						Reveal.getIndices &&
+						Reveal.slide
+					) {
+						const previousIndices = Reveal.getIndices(event.previousSlide);
+
+						if (previousIndices) {
+							Reveal.slide(previousIndices.h, previousIndices.v, previousIndices.f);
+						}
+
+						return;
+					}
+
+					const answer = event.currentSlide.querySelector(".answer.visible");
+
+					if (answer) {
+						answer.classList.remove("visible");
+					}
+				});
+
+				window.addEventListener("keydown", handleQuestionArrowKeys, true);
+			}
+
+			loadGameFile().then(() => {
+				initializeGameData();
+				renderHome();
+				renderGame();
+				loadGameState();
+				initializeGameSync();
+				initializeReveal();
 			});
-
 		</script>
-
 	</body>
 </html>
