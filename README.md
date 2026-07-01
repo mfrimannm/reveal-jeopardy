@@ -41,6 +41,18 @@ Et meget simpelt spørgsmål ser sådan ud:
 }
 ```
 
+Du kan også lave et nyt spil fra forsiden:
+
+1. Åbn `Settings`.
+2. Tryk `Question maker`.
+3. Vælg antal kategorier og rækker.
+4. Tryk `Lav board`.
+5. Klik rundt på boardet og udfyld hvert spørgsmål med spørgsmål, svar, hints og speaker notes.
+6. Tryk `Gem .js-fil`.
+7. Gem filen i `games/` og tilføj den kopierede linje til `GAME_FILES` i `index.html`.
+
+Browseren kan ikke skrive direkte til projektmappen uden en filvælger eller en lokal backend, så modulet gemmer kladden i browseren og eksporterer en færdig JavaScript-fil.
+
 ## Hvad kan det?
 
 - Jeopardy-bræt med kategorier og pointværdier.

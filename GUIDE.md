@@ -97,6 +97,30 @@ questions: [
 
 Det er bedst, at alle kategorier har samme antal spørgsmål. Hvis en kategori har færre spørgsmål end de andre, bliver der tomme felter i boardet.
 
+## Question maker
+
+Forsiden har et lille modul til at oprette en ny game-fil uden at skrive JavaScript i hånden.
+
+1. Åbn `Settings`.
+2. Tryk `Question maker`.
+3. Skriv game titel, game id og teams.
+4. Vælg antal kategorier og rækker.
+5. Tryk `Lav board`.
+6. Skriv kategorinavne direkte i toppen af boardet.
+7. Klik på en point-celle og udfyld spørgsmål, svar og eventuelle ekstra felter under `Andet`, for eksempel hints og speaker notes.
+8. Tryk `Gem kladde`, hvis du vil gemme arbejdet i browseren.
+9. Tryk `Gem .js-fil`, når spillet skal eksporteres.
+
+Hvis browseren understøtter filvælgeren, kan du vælge hvor `.js`-filen skal gemmes. Ellers bliver filen downloadet. Læg den færdige fil i `games/`.
+
+Tryk derefter `Kopier GAME_FILES-linje` og indsæt linjen i `GAME_FILES` i `index.html`, for eksempel:
+
+```js
+"mit-spil": "games/mit-spil.js",
+```
+
+Browseren må normalt ikke skrive direkte ind i projektmappen af sig selv. Derfor gemmer modulet kladden i browserens `localStorage` og eksporterer en færdig JavaScript-fil.
+
 ## Teams og settings
 
 Der er to typer settings:

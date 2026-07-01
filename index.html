@@ -87,7 +87,9 @@
 			}
 
 			.home-panel label,
-			.home-panel legend {
+			.home-panel legend,
+			.question-maker label,
+			.question-maker legend {
 				color: #dddddd;
 				display: block;
 				font-size: 0.32em;
@@ -98,7 +100,11 @@
 			}
 
 			.home-panel select,
-			.home-panel input {
+			.home-panel input,
+			.home-panel textarea,
+			.question-maker select,
+			.question-maker input,
+			.question-maker textarea {
 				border: 2px solid rgba(255, 255, 255, 0.85);
 				background: #111111;
 				box-sizing: border-box;
@@ -109,6 +115,12 @@
 				margin-bottom: 12px;
 				padding: 10px 12px;
 				width: 100%;
+			}
+
+			.home-panel textarea,
+			.question-maker textarea {
+				min-height: 72px;
+				resize: vertical;
 			}
 
 			.game-list {
@@ -176,6 +188,196 @@
 
 			.home-actions .game-button {
 				font-size: 0.31em;
+			}
+
+			.question-maker {
+				background: #191919;
+				border: 2px solid rgba(255, 255, 255, 0.78);
+				box-shadow: 0 16px 48px rgba(0, 0, 0, 0.72);
+				box-sizing: border-box;
+				color: #ffffff;
+				display: grid;
+				gap: 12px;
+				left: 50%;
+				max-height: calc(100vh - 28px);
+				overflow: auto;
+				padding: 18px;
+				position: fixed;
+				top: 14px;
+				transform: translateX(-50%);
+				width: min(1120px, calc(100vw - 28px));
+				z-index: 9999;
+			}
+
+			.question-maker[hidden] {
+				display: none;
+			}
+
+			.question-maker-header {
+				align-items: center;
+				display: flex;
+				gap: 12px;
+				justify-content: space-between;
+			}
+
+			.question-maker-header h2 {
+				color: var(--jeopardy-gold);
+				font-size: 24px;
+				line-height: 1.05;
+				margin: 0;
+				text-transform: uppercase;
+			}
+
+			.question-maker label,
+			.question-maker legend {
+				font-size: 13px;
+			}
+
+			.question-maker select,
+			.question-maker input,
+			.question-maker textarea {
+				font-size: 16px;
+			}
+
+			.question-maker .game-button {
+				font-size: 14px;
+				padding: 10px 14px;
+			}
+
+			.builder-grid {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: 10px;
+			}
+
+			.builder-setup {
+				border: 2px solid rgba(255, 255, 255, 0.62);
+				background: rgba(0, 0, 0, 0.24);
+				padding: 12px;
+			}
+
+			.builder-stage {
+				display: grid;
+				gap: 12px;
+			}
+
+			.builder-stage[hidden] {
+				display: none;
+			}
+
+			.builder-board-wrap {
+				overflow: auto;
+			}
+
+			.builder-board {
+				display: grid;
+				gap: 7px;
+				min-width: 520px;
+			}
+
+			.builder-category-title,
+			.builder-tile {
+				border: 2px solid var(--jeopardy-line);
+				box-sizing: border-box;
+				min-height: 58px;
+			}
+
+			.builder-category-title {
+				background: var(--jeopardy-blue-dark);
+				color: #ffffff;
+				font-size: 14px;
+				font-weight: 800;
+				line-height: 1.12;
+				margin: 0;
+				text-align: center;
+				text-transform: uppercase;
+			}
+
+			.builder-tile {
+				background: var(--jeopardy-blue);
+				color: var(--jeopardy-gold);
+				cursor: pointer;
+				font-size: 22px;
+				font-weight: 900;
+				line-height: 1;
+				padding: 8px;
+			}
+
+			.builder-tile:hover,
+			.builder-tile:focus,
+			.builder-tile.active {
+				background: #0a2aee;
+				transform: translateY(-1px);
+			}
+
+			.builder-tile.complete {
+				background: #164f38;
+			}
+
+			.builder-tile span {
+				color: #ffffff;
+				display: block;
+				font-size: 12px;
+				line-height: 1.15;
+				margin-top: 6px;
+			}
+
+			.builder-editor {
+				border: 2px solid rgba(255, 255, 255, 0.62);
+				background: rgba(0, 0, 0, 0.24);
+				display: grid;
+				gap: 10px;
+				padding: 12px;
+			}
+
+			.builder-editor[hidden] {
+				display: none;
+			}
+
+			.builder-editor h3 {
+				color: var(--jeopardy-gold);
+				font-size: 18px;
+				line-height: 1.1;
+				margin: 0;
+				text-transform: uppercase;
+			}
+
+			.builder-extra {
+				border: 2px solid rgba(255, 255, 255, 0.36);
+				padding: 10px;
+			}
+
+			.builder-extra summary {
+				cursor: pointer;
+				font-size: 14px;
+				font-weight: 800;
+				line-height: 1.2;
+				text-transform: uppercase;
+			}
+
+			.builder-extra-fields {
+				display: grid;
+				gap: 10px;
+				margin-top: 10px;
+			}
+
+			.builder-output {
+				font-family: Consolas, Monaco, monospace;
+				font-size: 13px;
+				min-height: 160px;
+				white-space: pre;
+			}
+
+			.builder-status {
+				color: var(--jeopardy-gold);
+				font-size: 14px;
+				line-height: 1.25;
+				min-height: 1.25em;
+			}
+
+			.builder-small-button {
+				flex: 0 0 auto;
+				padding: 8px 10px;
 			}
 
 			.board-slide {
@@ -635,6 +837,10 @@
 				.team-score-row strong {
 					grid-column: auto;
 				}
+
+				.builder-grid {
+					grid-template-columns: 1fr;
+				}
 			}
 		</style>
 	</head>
@@ -672,9 +878,127 @@
 								<button class="game-button secondary" type="button" onclick="saveSettingsAndReload('/home')">
 									Gem settings
 								</button>
+								<button class="game-button secondary" id="question-maker-toggle" type="button" onclick="toggleQuestionMaker()">
+									Question maker
+								</button>
 								<button class="game-button reset" type="button" onclick="resetGameSettings()">
 									Reset settings
 								</button>
+							</div>
+
+							<div class="question-maker" id="question-maker" hidden>
+								<div class="question-maker-header">
+									<h2>Question maker</h2>
+									<button class="game-button secondary" type="button" onclick="toggleQuestionMaker(false)">
+										Luk
+									</button>
+								</div>
+								<div class="builder-stage builder-setup" id="builder-setup">
+									<div class="builder-grid">
+										<div>
+											<label for="builder-title">Game titel</label>
+											<input id="builder-title" type="text" autocomplete="off" />
+										</div>
+										<div>
+											<label for="builder-id">Game id / filnavn</label>
+											<input id="builder-id" type="text" autocomplete="off" />
+										</div>
+										<div>
+											<label for="builder-category-count">Antal kategorier</label>
+											<input id="builder-category-count" type="number" min="1" max="10" step="1" />
+										</div>
+										<div>
+											<label for="builder-row-count">Antal rækker</label>
+											<input id="builder-row-count" type="number" min="1" max="10" step="1" />
+										</div>
+									</div>
+
+									<label for="builder-teams">Teams, en per linje</label>
+									<textarea id="builder-teams"></textarea>
+
+									<div class="home-actions">
+										<button class="game-button primary" type="button" onclick="buildQuestionMakerBoard()">
+											Lav board
+										</button>
+										<button class="game-button secondary" type="button" onclick="loadCurrentGameIntoBuilder()">
+											Hent valgt game
+										</button>
+										<button class="game-button reset" type="button" onclick="resetBuilderDraft()">
+											Reset kladde
+										</button>
+									</div>
+								</div>
+
+								<div class="builder-stage" id="builder-board-stage" hidden>
+									<div class="builder-board-wrap">
+										<div class="builder-board" id="builder-board"></div>
+									</div>
+
+									<div class="builder-editor" id="builder-editor" hidden>
+										<h3 id="builder-editor-title">Spørgsmål</h3>
+										<div class="builder-grid">
+											<div>
+												<label for="builder-question-points">Point</label>
+												<input id="builder-question-points" type="number" min="0" step="100" />
+											</div>
+											<div>
+												<label for="builder-question-type">Spørgsmålstype</label>
+												<select id="builder-question-type">
+													<option value="question">Tekst</option>
+													<option value="markdown">Markdown</option>
+													<option value="html">HTML</option>
+												</select>
+											</div>
+										</div>
+
+										<label for="builder-question-text">Spørgsmål</label>
+										<textarea id="builder-question-text"></textarea>
+
+										<div class="builder-grid">
+											<div>
+												<label for="builder-answer-type">Svartype</label>
+												<select id="builder-answer-type">
+													<option value="answer">Tekst</option>
+													<option value="answerMarkdown">Markdown</option>
+													<option value="answerHtml">HTML</option>
+												</select>
+											</div>
+										</div>
+
+										<label for="builder-answer-text">Svar</label>
+										<textarea id="builder-answer-text"></textarea>
+
+										<details class="builder-extra">
+											<summary>Andet</summary>
+											<div class="builder-extra-fields">
+												<label for="builder-hints-text">Hints, en per linje</label>
+												<textarea id="builder-hints-text"></textarea>
+
+												<label for="builder-notes-text">Speaker notes</label>
+												<textarea id="builder-notes-text"></textarea>
+											</div>
+										</details>
+									</div>
+
+									<div class="home-actions">
+										<button class="game-button secondary" type="button" onclick="editQuestionMakerSetup()">
+											Rediger setup
+										</button>
+										<button class="game-button secondary" type="button" onclick="saveBuilderDraft()">
+											Gem kladde
+										</button>
+										<button class="game-button primary" type="button" onclick="saveBuilderFile()">
+											Gem .js-fil
+										</button>
+										<button class="game-button secondary" type="button" onclick="copyBuilderRegistration()">
+											Kopier GAME_FILES-linje
+										</button>
+									</div>
+
+									<label for="builder-output">Preview af games-fil</label>
+									<textarea class="builder-output" id="builder-output" readonly></textarea>
+								</div>
+								<div class="builder-status" id="builder-status"></div>
 							</div>
 						</div>
 					</div>
@@ -718,10 +1042,12 @@
 			const GAME_FILES = {
 				pokemon: "games/pokemon.js",
 				science: "games/science.js",
+				"mit-spil": "games/mit-spil.js",
 			};
 			const DEFAULT_GAME_KEY = "pokemon";
 			const MIN_TEAM_COUNT = 1;
 			const MAX_TEAM_COUNT = 6;
+			const GAME_BUILDER_STORAGE_KEY = "reveal-jeopardy-builder-draft";
 
 			let gameKey = DEFAULT_GAME_KEY;
 			let gameConfig = null;
@@ -733,6 +1059,9 @@
 			let usedQuestions = [];
 			let questionAwards = {};
 			let questionIdSet = new Set();
+			let gameBuilderDraft = null;
+			let builderSelectedCategoryIndex = 0;
+			let builderSelectedQuestionIndex = 0;
 			let allowQuestionBoardNavigation = false;
 
 			const KEY_CODE_TO_KEY = {
@@ -867,6 +1196,930 @@
 				}
 
 				refreshGameFromSettings("/home");
+			}
+
+			function clampBuilderCount(value, fallback) {
+				const parsedValue = Number(value);
+
+				if (Number.isNaN(parsedValue)) {
+					return fallback;
+				}
+
+				return Math.min(10, Math.max(1, Math.floor(parsedValue)));
+			}
+
+			function createDefaultBuilderQuestion(points) {
+				return {
+					points,
+					questionType: "question",
+					question: "",
+					answerType: "answer",
+					answer: "",
+					hints: "",
+					notes: "",
+				};
+			}
+
+			function createDefaultBuilderCategory(index, rowCount) {
+				return {
+					title: "Kategori " + index,
+					questions: Array.from({ length: rowCount }, (_, questionIndex) =>
+						createDefaultBuilderQuestion((questionIndex + 1) * 100)
+					),
+				};
+			}
+
+			function createDefaultBuilderDraft(categoryCount, rowCount) {
+				const normalizedCategoryCount = clampBuilderCount(categoryCount, 3);
+				const normalizedRowCount = clampBuilderCount(rowCount, 5);
+
+				return {
+					title: "Mit Jeopardy Spil",
+					id: "mit-spil",
+					teams: ["Team 1", "Team 2", "Team 3"],
+					categoryCount: normalizedCategoryCount,
+					rowCount: normalizedRowCount,
+					boardCreated: false,
+					categories: Array.from(
+						{ length: normalizedCategoryCount },
+						(_, categoryIndex) =>
+							createDefaultBuilderCategory(categoryIndex + 1, normalizedRowCount)
+					),
+				};
+			}
+
+			function getBuilderTextValue(source, fields) {
+				for (const field of fields) {
+					if (typeof source[field] === "string" && source[field].trim()) {
+						return source[field].trim();
+					}
+				}
+
+				return "";
+			}
+
+			function normalizeBuilderQuestion(question, index) {
+				const source = question && typeof question === "object" ? question : {};
+				const questionType = source.markdown
+					? "markdown"
+					: source.html
+					? "html"
+					: source.questionType || "question";
+				const answerType = source.answerMarkdown
+					? "answerMarkdown"
+					: source.answerHtml
+					? "answerHtml"
+					: source.answerType || "answer";
+
+				return {
+					points: Number(source.points) || (index + 1) * 100,
+					questionType:
+						questionType === "markdown" || questionType === "html"
+							? questionType
+							: "question",
+					question: getBuilderTextValue(source, [
+						"question",
+						"markdown",
+						"html",
+					]),
+					answerType:
+						answerType === "answerMarkdown" || answerType === "answerHtml"
+							? answerType
+							: "answer",
+					answer: getBuilderTextValue(source, [
+						"answer",
+						"answerMarkdown",
+						"answerHtml",
+					]),
+					hints: Array.isArray(source.hints)
+						? source.hints
+								.map((hint) =>
+									typeof hint === "object" ? hint.text || hint.html || "" : hint
+								)
+								.join("\n")
+						: String(source.hints || ""),
+					notes: String(source.notes || source.notesHtml || ""),
+				};
+			}
+
+			function normalizeBuilderCategories(categoriesSource, categoryCount, rowCount) {
+				return Array.from({ length: categoryCount }, (_, categoryIndex) => {
+					const sourceCategory =
+						Array.isArray(categoriesSource) && categoriesSource[categoryIndex]
+							? categoriesSource[categoryIndex]
+							: {};
+					const sourceQuestions = Array.isArray(sourceCategory.questions)
+						? sourceCategory.questions
+						: [];
+
+					return {
+						title: String(
+							sourceCategory.title || "Kategori " + (categoryIndex + 1)
+						),
+						questions: Array.from({ length: rowCount }, (_, questionIndex) =>
+							normalizeBuilderQuestion(
+								sourceQuestions[questionIndex] ||
+									createDefaultBuilderQuestion((questionIndex + 1) * 100),
+								questionIndex
+							)
+						),
+					};
+				});
+			}
+
+			function normalizeBuilderDraft(draft) {
+				const source = draft && typeof draft === "object" ? draft : {};
+				const categoriesSource = Array.isArray(source.categories)
+					? source.categories
+					: [];
+				const categoryCount = clampBuilderCount(
+					source.categoryCount || categoriesSource.length,
+					3
+				);
+				const maxQuestionCount = categoriesSource.reduce(
+					(maxCount, category) =>
+						Math.max(
+							maxCount,
+							Array.isArray(category.questions) ? category.questions.length : 0
+						),
+					0
+				);
+				const rowCount = clampBuilderCount(source.rowCount || maxQuestionCount, 5);
+
+				return {
+					title: String(source.title || "Mit Jeopardy Spil"),
+					id: slugifyGameId(source.id || source.title || "mit-spil"),
+					teams:
+						Array.isArray(source.teams) && source.teams.length
+							? source.teams.map((team, index) =>
+									String(team || "Team " + (index + 1))
+							  )
+							: ["Team 1", "Team 2", "Team 3"],
+					categoryCount,
+					rowCount,
+					boardCreated: Boolean(
+						source.boardCreated ||
+							(source.boardCreated === undefined &&
+								categoriesSource.length &&
+								!source.categoryCount)
+					),
+					categories: normalizeBuilderCategories(
+						categoriesSource,
+						categoryCount,
+						rowCount
+					),
+				};
+			}
+
+			function slugifyGameId(value) {
+				const slug = String(value || "")
+					.toLowerCase()
+					.normalize("NFD")
+					.replace(/[\u0300-\u036f]/g, "")
+					.replace(/[^a-z0-9]+/g, "-")
+					.replace(/^-+|-+$/g, "");
+
+				return slug || "mit-spil";
+			}
+
+			function loadBuilderDraft() {
+				try {
+					const savedDraft = localStorage.getItem(GAME_BUILDER_STORAGE_KEY);
+
+					if (savedDraft) {
+						return normalizeBuilderDraft(JSON.parse(savedDraft));
+					}
+				} catch (error) {
+					console.warn("Could not load builder draft.", error);
+				}
+
+				return createDefaultBuilderDraft();
+			}
+
+			function persistBuilderDraft(showStatus) {
+				try {
+					localStorage.setItem(
+						GAME_BUILDER_STORAGE_KEY,
+						JSON.stringify(gameBuilderDraft)
+					);
+
+					if (showStatus) {
+						setBuilderStatus("Kladde gemt.");
+					}
+				} catch (error) {
+					console.warn("Could not save builder draft.", error);
+					setBuilderStatus("Kladde kunne ikke gemmes i browseren.");
+				}
+			}
+
+			function setBuilderStatus(message) {
+				const status = document.getElementById("builder-status");
+
+				if (status) {
+					status.textContent = message || "";
+				}
+			}
+
+			function toggleQuestionMaker(forceOpen) {
+				const maker = document.getElementById("question-maker");
+				const toggle = document.getElementById("question-maker-toggle");
+
+				if (!maker) {
+					return;
+				}
+
+				const shouldOpen =
+					typeof forceOpen === "boolean" ? forceOpen : maker.hidden;
+
+				maker.hidden = !shouldOpen;
+
+				if (toggle) {
+					toggle.setAttribute("aria-expanded", String(shouldOpen));
+				}
+
+				if (shouldOpen) {
+					maker.scrollTop = 0;
+				}
+
+				if (typeof Reveal !== "undefined" && Reveal.layout) {
+					Reveal.layout();
+				}
+			}
+
+			function initializeGameBuilder() {
+				const maker = document.getElementById("question-maker");
+				const title = document.getElementById("builder-title");
+				const id = document.getElementById("builder-id");
+				const teamsField = document.getElementById("builder-teams");
+				const toggle = document.getElementById("question-maker-toggle");
+
+				if (!maker || !title || !id || !teamsField) {
+					return;
+				}
+
+				if (maker.parentElement !== document.body) {
+					document.body.appendChild(maker);
+				}
+
+				["click", "keydown", "keyup", "keypress", "wheel", "touchmove"].forEach(
+					(eventName) => {
+						maker.addEventListener(eventName, (event) => {
+							event.stopPropagation();
+						});
+					}
+				);
+
+				gameBuilderDraft = loadBuilderDraft();
+				renderBuilderDraft();
+
+				title.oninput = handleBuilderFormInput;
+				id.oninput = handleBuilderFormInput;
+				teamsField.oninput = handleBuilderFormInput;
+				[
+					"builder-category-count",
+					"builder-row-count",
+					"builder-question-points",
+					"builder-question-type",
+					"builder-question-text",
+					"builder-answer-type",
+					"builder-answer-text",
+					"builder-hints-text",
+					"builder-notes-text",
+				].forEach((fieldId) => {
+					const field = document.getElementById(fieldId);
+
+					if (field) {
+						field.oninput = handleBuilderFormInput;
+						field.onchange = handleBuilderFormInput;
+					}
+				});
+
+				if (toggle) {
+					toggle.setAttribute("aria-controls", "question-maker");
+					toggle.setAttribute("aria-expanded", "false");
+				}
+			}
+
+			function renderBuilderDraft() {
+				const draft = normalizeBuilderDraft(gameBuilderDraft);
+				const title = document.getElementById("builder-title");
+				const id = document.getElementById("builder-id");
+				const teamsField = document.getElementById("builder-teams");
+				const categoryCount = document.getElementById("builder-category-count");
+				const rowCount = document.getElementById("builder-row-count");
+				const setupStage = document.getElementById("builder-setup");
+				const boardStage = document.getElementById("builder-board-stage");
+
+				gameBuilderDraft = draft;
+				clampBuilderSelection();
+
+				if (!title || !id || !teamsField || !categoryCount || !rowCount) {
+					return;
+				}
+
+				title.value = draft.title;
+				id.value = draft.id;
+				teamsField.value = draft.teams.join("\n");
+				categoryCount.value = draft.categoryCount;
+				rowCount.value = draft.rowCount;
+
+				if (setupStage) {
+					setupStage.hidden = draft.boardCreated;
+				}
+
+				if (boardStage) {
+					boardStage.hidden = !draft.boardCreated;
+				}
+
+				renderBuilderBoard();
+				renderSelectedBuilderQuestion();
+				updateBuilderOutput();
+			}
+
+			function clampBuilderSelection() {
+				if (!gameBuilderDraft) {
+					builderSelectedCategoryIndex = 0;
+					builderSelectedQuestionIndex = 0;
+					return;
+				}
+
+				builderSelectedCategoryIndex = Math.min(
+					Math.max(builderSelectedCategoryIndex, 0),
+					Math.max(gameBuilderDraft.categoryCount - 1, 0)
+				);
+				builderSelectedQuestionIndex = Math.min(
+					Math.max(builderSelectedQuestionIndex, 0),
+					Math.max(gameBuilderDraft.rowCount - 1, 0)
+				);
+			}
+
+			function renderBuilderBoard() {
+				const board = document.getElementById("builder-board");
+
+				if (!board || !gameBuilderDraft || !gameBuilderDraft.boardCreated) {
+					return;
+				}
+
+				board.innerHTML = "";
+				board.style.gridTemplateColumns =
+					"repeat(" + gameBuilderDraft.categoryCount + ", minmax(120px, 1fr))";
+
+				gameBuilderDraft.categories.forEach((category, categoryIndex) => {
+					const categoryInput = document.createElement("input");
+
+					categoryInput.type = "text";
+					categoryInput.className = "builder-category-title";
+					categoryInput.value = category.title;
+					categoryInput.setAttribute(
+						"aria-label",
+						"Kategori " + (categoryIndex + 1)
+					);
+					categoryInput.oninput = () => {
+						gameBuilderDraft.categories[categoryIndex].title =
+							categoryInput.value || "Kategori " + (categoryIndex + 1);
+						persistBuilderDraft(false);
+						updateBuilderOutput();
+						renderSelectedBuilderQuestionTitle();
+					};
+					board.appendChild(categoryInput);
+				});
+
+				for (
+					let questionIndex = 0;
+					questionIndex < gameBuilderDraft.rowCount;
+					questionIndex += 1
+				) {
+					gameBuilderDraft.categories.forEach((category, categoryIndex) => {
+						const question = category.questions[questionIndex];
+						const tile = document.createElement("button");
+						const title = document.createElement("span");
+						const isActive =
+							categoryIndex === builderSelectedCategoryIndex &&
+							questionIndex === builderSelectedQuestionIndex;
+
+						tile.type = "button";
+						tile.className =
+							"builder-tile" +
+							(isActive ? " active" : "") +
+							(question.question && question.answer ? " complete" : "");
+						tile.textContent = question.points;
+						title.textContent = question.question
+							? question.question.slice(0, 36)
+							: "Tomt";
+						tile.setAttribute(
+							"aria-label",
+							category.title + " for " + question.points + " point"
+						);
+						tile.onclick = () =>
+							selectBuilderQuestion(categoryIndex, questionIndex);
+						tile.appendChild(title);
+						board.appendChild(tile);
+					});
+				}
+			}
+
+			function renderSelectedBuilderQuestionTitle() {
+				const heading = document.getElementById("builder-editor-title");
+				const category =
+					gameBuilderDraft &&
+					gameBuilderDraft.categories[builderSelectedCategoryIndex];
+				const question =
+					category && category.questions[builderSelectedQuestionIndex];
+
+				if (heading && category && question) {
+					heading.textContent =
+						category.title + " - " + question.points + " point";
+				}
+			}
+
+			function renderSelectedBuilderQuestion() {
+				const editor = document.getElementById("builder-editor");
+				const category =
+					gameBuilderDraft &&
+					gameBuilderDraft.categories[builderSelectedCategoryIndex];
+				const question =
+					category && category.questions[builderSelectedQuestionIndex];
+
+				if (!editor) {
+					return;
+				}
+
+				if (!gameBuilderDraft || !gameBuilderDraft.boardCreated || !question) {
+					editor.hidden = true;
+					return;
+				}
+
+				editor.hidden = false;
+				renderSelectedBuilderQuestionTitle();
+				setBuilderFieldValue("builder-question-points", question.points);
+				setBuilderFieldValue("builder-question-type", question.questionType);
+				setBuilderFieldValue("builder-question-text", question.question);
+				setBuilderFieldValue("builder-answer-type", question.answerType);
+				setBuilderFieldValue("builder-answer-text", question.answer);
+				setBuilderFieldValue("builder-hints-text", question.hints);
+				setBuilderFieldValue("builder-notes-text", question.notes);
+			}
+
+			function setBuilderFieldValue(fieldId, value) {
+				const field = document.getElementById(fieldId);
+
+				if (field) {
+					field.value = value === undefined || value === null ? "" : value;
+				}
+			}
+
+			function buildQuestionMakerBoard() {
+				gameBuilderDraft = readBuilderDraftFromForm();
+				gameBuilderDraft.boardCreated = true;
+				gameBuilderDraft.categories = normalizeBuilderCategories(
+					gameBuilderDraft.categories,
+					gameBuilderDraft.categoryCount,
+					gameBuilderDraft.rowCount
+				);
+				builderSelectedCategoryIndex = 0;
+				builderSelectedQuestionIndex = 0;
+				persistBuilderDraft(false);
+				renderBuilderDraft();
+				setBuilderStatus("Boardet er klar. Tryk på en celle for at udfylde den.");
+				toggleQuestionMaker(true);
+			}
+
+			function editQuestionMakerSetup() {
+				gameBuilderDraft = readBuilderDraftFromForm();
+				gameBuilderDraft.boardCreated = false;
+				persistBuilderDraft(false);
+				renderBuilderDraft();
+				setBuilderStatus("Ret antal kategorier eller rækker og tryk Lav board igen.");
+				toggleQuestionMaker(true);
+			}
+
+			function selectBuilderQuestion(categoryIndex, questionIndex) {
+				saveSelectedBuilderQuestionFromForm();
+				builderSelectedCategoryIndex = categoryIndex;
+				builderSelectedQuestionIndex = questionIndex;
+				renderBuilderBoard();
+				renderSelectedBuilderQuestion();
+				setBuilderStatus("");
+			}
+
+			function saveSelectedBuilderQuestionFromForm() {
+				if (!gameBuilderDraft || !gameBuilderDraft.boardCreated) {
+					return;
+				}
+
+				const category =
+					gameBuilderDraft.categories[builderSelectedCategoryIndex];
+				const question =
+					category && category.questions[builderSelectedQuestionIndex];
+
+				if (!question) {
+					return;
+				}
+
+				question.points =
+					Number(document.getElementById("builder-question-points")?.value) ||
+					question.points;
+				question.questionType =
+					document.getElementById("builder-question-type")?.value || "question";
+				question.question =
+					document.getElementById("builder-question-text")?.value || "";
+				question.answerType =
+					document.getElementById("builder-answer-type")?.value || "answer";
+				question.answer =
+					document.getElementById("builder-answer-text")?.value || "";
+				question.hints =
+					document.getElementById("builder-hints-text")?.value || "";
+				question.notes =
+					document.getElementById("builder-notes-text")?.value || "";
+			}
+
+			function renderBuilderCategory(category, categoryIndex) {
+				const wrapper = document.createElement("div");
+				const header = document.createElement("div");
+				const label = document.createElement("label");
+				const title = document.createElement("input");
+				const removeButton = document.createElement("button");
+				const questionList = document.createElement("div");
+				const addButton = document.createElement("button");
+
+				wrapper.className = "builder-category";
+				wrapper.dataset.categoryIndex = String(categoryIndex);
+				header.className = "builder-category-header";
+				label.setAttribute("for", "builder-category-" + categoryIndex);
+				label.textContent = "Kategori " + (categoryIndex + 1);
+				title.id = "builder-category-" + categoryIndex;
+				title.type = "text";
+				title.className = "builder-category-title";
+				title.value = category.title;
+				removeButton.className = "game-button reset builder-small-button";
+				removeButton.type = "button";
+				removeButton.textContent = "Fjern";
+				removeButton.onclick = () => removeBuilderCategory(categoryIndex);
+				removeButton.disabled = gameBuilderDraft.categories.length <= 1;
+				questionList.className = "builder-question-list";
+
+				category.questions.forEach((question, questionIndex) => {
+					questionList.appendChild(
+						renderBuilderQuestion(question, categoryIndex, questionIndex)
+					);
+				});
+
+				addButton.className = "game-button secondary builder-small-button";
+				addButton.type = "button";
+				addButton.textContent = "Nyt spørgsmål";
+				addButton.onclick = () => addBuilderQuestion(categoryIndex);
+
+				header.appendChild(label);
+				header.appendChild(removeButton);
+				wrapper.appendChild(header);
+				wrapper.appendChild(title);
+				wrapper.appendChild(questionList);
+				wrapper.appendChild(addButton);
+
+				return wrapper;
+			}
+
+			function renderBuilderQuestion(question, categoryIndex, questionIndex) {
+				const wrapper = document.createElement("div");
+				const header = document.createElement("div");
+				const label = document.createElement("label");
+				const removeButton = document.createElement("button");
+				const pointsLabel = document.createElement("label");
+				const points = document.createElement("input");
+				const questionLabel = document.createElement("label");
+				const questionText = document.createElement("textarea");
+				const answerLabel = document.createElement("label");
+				const answerText = document.createElement("textarea");
+				const hintsLabel = document.createElement("label");
+				const hintsText = document.createElement("textarea");
+				const idBase =
+					"builder-c" + categoryIndex + "-q" + questionIndex;
+
+				wrapper.className = "builder-question";
+				wrapper.dataset.questionIndex = String(questionIndex);
+				header.className = "builder-question-header";
+				label.textContent = "Spørgsmål " + (questionIndex + 1);
+				removeButton.className = "game-button reset builder-small-button";
+				removeButton.type = "button";
+				removeButton.textContent = "Fjern";
+				removeButton.onclick = () =>
+					removeBuilderQuestion(categoryIndex, questionIndex);
+				removeButton.disabled =
+					gameBuilderDraft.categories[categoryIndex].questions.length <= 1;
+
+				pointsLabel.setAttribute("for", idBase + "-points");
+				pointsLabel.textContent = "Point";
+				points.id = idBase + "-points";
+				points.type = "number";
+				points.min = "0";
+				points.step = "100";
+				points.className = "builder-question-points";
+				points.value = question.points;
+
+				questionLabel.setAttribute("for", idBase + "-question");
+				questionLabel.textContent = "Spørgsmål";
+				questionText.id = idBase + "-question";
+				questionText.className = "builder-question-text";
+				questionText.value = question.question;
+
+				answerLabel.setAttribute("for", idBase + "-answer");
+				answerLabel.textContent = "Svar";
+				answerText.id = idBase + "-answer";
+				answerText.className = "builder-answer-text";
+				answerText.value = question.answer;
+
+				hintsLabel.setAttribute("for", idBase + "-hints");
+				hintsLabel.textContent = "Hints, en per linje";
+				hintsText.id = idBase + "-hints";
+				hintsText.className = "builder-hints-text";
+				hintsText.value = question.hints;
+
+				header.appendChild(label);
+				header.appendChild(removeButton);
+				wrapper.appendChild(header);
+				wrapper.appendChild(pointsLabel);
+				wrapper.appendChild(points);
+				wrapper.appendChild(questionLabel);
+				wrapper.appendChild(questionText);
+				wrapper.appendChild(answerLabel);
+				wrapper.appendChild(answerText);
+				wrapper.appendChild(hintsLabel);
+				wrapper.appendChild(hintsText);
+
+				return wrapper;
+			}
+
+			function handleBuilderFormInput() {
+				gameBuilderDraft = readBuilderDraftFromForm();
+				clampBuilderSelection();
+				persistBuilderDraft(false);
+				renderBuilderBoard();
+				renderSelectedBuilderQuestionTitle();
+				updateBuilderOutput();
+			}
+
+			function readBuilderDraftFromForm() {
+				const title = document.getElementById("builder-title");
+				const id = document.getElementById("builder-id");
+				const teamsField = document.getElementById("builder-teams");
+				const categoryCount = document.getElementById("builder-category-count");
+				const rowCount = document.getElementById("builder-row-count");
+				const teamNames = (teamsField ? teamsField.value : "")
+					.split(/\r?\n/)
+					.map((team) => team.trim())
+					.filter(Boolean);
+				const sourceDraft = gameBuilderDraft || createDefaultBuilderDraft();
+
+				saveSelectedBuilderQuestionFromForm();
+
+				return normalizeBuilderDraft({
+					title: title && title.value.trim() ? title.value.trim() : "Mit Jeopardy Spil",
+					id: id && id.value.trim() ? id.value.trim() : "mit-spil",
+					teams: teamNames.length ? teamNames : ["Team 1", "Team 2", "Team 3"],
+					categoryCount: clampBuilderCount(categoryCount ? categoryCount.value : 3, 3),
+					rowCount: clampBuilderCount(rowCount ? rowCount.value : 5, 5),
+					boardCreated: sourceDraft.boardCreated,
+					categories: sourceDraft.categories,
+				});
+			}
+
+			function addBuilderCategory() {
+				gameBuilderDraft = readBuilderDraftFromForm();
+				gameBuilderDraft.categories.push(
+					createDefaultBuilderCategory(gameBuilderDraft.categories.length + 1)
+				);
+				persistBuilderDraft(false);
+				renderBuilderDraft();
+				toggleQuestionMaker(true);
+			}
+
+			function removeBuilderCategory(categoryIndex) {
+				gameBuilderDraft = readBuilderDraftFromForm();
+
+				if (gameBuilderDraft.categories.length <= 1) {
+					return;
+				}
+
+				gameBuilderDraft.categories.splice(categoryIndex, 1);
+				persistBuilderDraft(false);
+				renderBuilderDraft();
+				toggleQuestionMaker(true);
+			}
+
+			function addBuilderQuestion(categoryIndex) {
+				gameBuilderDraft = readBuilderDraftFromForm();
+				const category = gameBuilderDraft.categories[categoryIndex];
+
+				if (!category) {
+					return;
+				}
+
+				category.questions.push(
+					createDefaultBuilderQuestion((category.questions.length + 1) * 100)
+				);
+				persistBuilderDraft(false);
+				renderBuilderDraft();
+				toggleQuestionMaker(true);
+			}
+
+			function removeBuilderQuestion(categoryIndex, questionIndex) {
+				gameBuilderDraft = readBuilderDraftFromForm();
+				const category = gameBuilderDraft.categories[categoryIndex];
+
+				if (!category || category.questions.length <= 1) {
+					return;
+				}
+
+				category.questions.splice(questionIndex, 1);
+				persistBuilderDraft(false);
+				renderBuilderDraft();
+				toggleQuestionMaker(true);
+			}
+
+			function saveBuilderDraft() {
+				gameBuilderDraft = readBuilderDraftFromForm();
+				persistBuilderDraft(true);
+				renderBuilderBoard();
+				updateBuilderOutput();
+			}
+
+			function resetBuilderDraft() {
+				if (!window.confirm("Reset question maker kladde?")) {
+					return;
+				}
+
+				gameBuilderDraft = createDefaultBuilderDraft();
+				builderSelectedCategoryIndex = 0;
+				builderSelectedQuestionIndex = 0;
+				persistBuilderDraft(false);
+				renderBuilderDraft();
+				setBuilderStatus("Kladde nulstillet.");
+				toggleQuestionMaker(true);
+			}
+
+			function getQuestionBuilderValue(question, fields) {
+				for (const field of fields) {
+					if (typeof question[field] === "string" && question[field].trim()) {
+						return question[field].trim();
+					}
+				}
+
+				return "";
+			}
+
+			function loadCurrentGameIntoBuilder() {
+				gameBuilderDraft = normalizeBuilderDraft({
+					title: gameConfig.title,
+					id: gameConfig.id,
+					teams: teams.map((team) => team.name),
+					categoryCount: categories.length,
+					rowCount: getQuestionRowCount(),
+					boardCreated: true,
+					categories: categories.map((category) => ({
+						title: category.title,
+						questions: category.questions.map((question) => ({
+							points: question.points,
+							...question,
+						})),
+					})),
+				});
+				builderSelectedCategoryIndex = 0;
+				builderSelectedQuestionIndex = 0;
+				persistBuilderDraft(false);
+				renderBuilderDraft();
+				setBuilderStatus("Valgt game er hentet ind i question maker.");
+				toggleQuestionMaker(true);
+			}
+
+			function buildGameFromBuilderDraft(draft) {
+				const normalizedDraft = normalizeBuilderDraft(draft);
+
+				return {
+					id: slugifyGameId(normalizedDraft.id || normalizedDraft.title),
+					title: normalizedDraft.title,
+					teams: normalizedDraft.teams,
+					categories: normalizedDraft.categories.map((category) => ({
+						title: category.title,
+						questions: category.questions.map((question, index) => {
+							const hints = String(question.hints || "")
+								.split(/\r?\n/)
+								.map((hint) => hint.trim())
+								.filter(Boolean);
+							const outputQuestion = {
+								points: Number(question.points) || (index + 1) * 100,
+							};
+							const questionField = question.questionType || "question";
+							const answerField = question.answerType || "answer";
+
+							outputQuestion[questionField] = question.question;
+							outputQuestion[answerField] = question.answer;
+
+							if (hints.length) {
+								outputQuestion.hints = hints;
+							}
+
+							if (question.notes) {
+								outputQuestion.notes = question.notes;
+							}
+
+							return outputQuestion;
+						}),
+					})),
+				};
+			}
+
+			function serializeBuilderGame(draft) {
+				return (
+					"window.JEOPARDY_GAME = " +
+					JSON.stringify(buildGameFromBuilderDraft(draft), null, "\t") +
+					";\n"
+				);
+			}
+
+			function getBuilderFileName() {
+				return slugifyGameId(gameBuilderDraft.id || gameBuilderDraft.title) + ".js";
+			}
+
+			function updateBuilderOutput() {
+				const output = document.getElementById("builder-output");
+
+				if (output && gameBuilderDraft) {
+					output.value = serializeBuilderGame(gameBuilderDraft);
+				}
+			}
+
+			async function saveBuilderFile() {
+				gameBuilderDraft = readBuilderDraftFromForm();
+				persistBuilderDraft(false);
+
+				const fileName = getBuilderFileName();
+				const content = serializeBuilderGame(gameBuilderDraft);
+
+				try {
+					if (window.showSaveFilePicker) {
+						const handle = await window.showSaveFilePicker({
+							suggestedName: fileName,
+							types: [
+								{
+									description: "JavaScript game file",
+									accept: {
+										"text/javascript": [".js"],
+									},
+								},
+							],
+						});
+						const writable = await handle.createWritable();
+
+						await writable.write(content);
+						await writable.close();
+					} else {
+						const blob = new Blob([content], {
+							type: "text/javascript;charset=utf-8",
+						});
+						const url = URL.createObjectURL(blob);
+						const link = document.createElement("a");
+
+						link.href = url;
+						link.download = fileName;
+						document.body.appendChild(link);
+						link.click();
+						link.remove();
+						URL.revokeObjectURL(url);
+					}
+
+					setBuilderStatus(
+						"Gemt som " +
+							fileName +
+							". Laeg filen i games/ og tilfoej den til GAME_FILES."
+					);
+				} catch (error) {
+					if (error && error.name === "AbortError") {
+						setBuilderStatus("Gem blev annulleret.");
+						return;
+					}
+
+					console.warn("Could not save game file.", error);
+					setBuilderStatus("Filen kunne ikke gemmes.");
+				}
+
+				updateBuilderOutput();
+			}
+
+			async function copyBuilderRegistration() {
+				gameBuilderDraft = readBuilderDraftFromForm();
+				persistBuilderDraft(false);
+
+				const fileName = getBuilderFileName();
+				const key = fileName.replace(/\.js$/i, "");
+				const registration = '\t"' + key + '": "games/' + fileName + '",';
+
+				try {
+					await navigator.clipboard.writeText(registration);
+					setBuilderStatus("GAME_FILES-linje kopieret: " + registration.trim());
+				} catch (error) {
+					console.warn("Could not copy game registration.", error);
+					setBuilderStatus(registration.trim());
+				}
 			}
 
 			function getSlideIdFromHash(targetHash) {
@@ -2009,6 +3262,7 @@
 			loadGameFile().then(() => {
 				initializeGameData();
 				renderHome();
+				initializeGameBuilder();
 				renderGame();
 				loadGameState();
 				initializeGameSync();
