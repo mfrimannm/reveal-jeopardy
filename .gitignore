@@ -2,6 +2,7 @@
 *.iml
 *.iws
 *.eml
+__pycache__/
 out/
 .DS_Store
 .svn
@@ -15,3 +16,5 @@ dist/reveal.es5.js
 react/dist
 react/demo/dist
 dev.html
+data/uploads/*
+!data/uploads/.gitkeep

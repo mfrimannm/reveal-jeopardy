@@ -1,15 +1,15 @@
 # Reveal Jeopardy
 
-Dette projekt er en måde at lave og afvikle Jeopardy-spil i browseren. Det bygger på reveal.js, men er sat op som et spilbræt med kategorier, spørgsmål, svar, point, hold og speaker view.
+Reveal Jeopardy er en browserbaseret Jeopardy-app bygget oven på reveal.js. Den har spilbræt, kategorier, spørgsmål, svar, point, hold, speaker view og en indbygget Question maker.
 
-Brug det til quizzer, undervisning, workshops, fredagsbar eller andre situationer, hvor et Jeopardy-format gør spørgsmålene lidt sjovere at spille igennem.
+Projektet kan nu køres som en FastAPI-app i Docker, så det kan ligge på en VPS. Spil gemmes som JSON i `data/games/`, og uploadede billeder gemmes i `data/uploads/`.
 
-## Kom i gang
+## Kom i gang lokalt
 
-Start spillet lokalt fra projektmappen:
+Kør med Docker Compose:
 
 ```sh
-python -m http.server 8000
+docker compose up --build
 ```
 
 Åbn derefter:
@@ -18,53 +18,65 @@ python -m http.server 8000
 http://localhost:8000
 ```
 
-Du kan også åbne `index.html` direkte i browseren, men Python-serveren er mere stabil til lokale billeder, lyd, video og speaker view.
+Standard admin-koden i `docker-compose.yml` er `change-me`. Skift den før appen lægges på en offentlig VPS.
+
+Du kan også køre backend direkte:
+
+```sh
+pip install -r requirements.txt
+uvicorn server:app --host 0.0.0.0 --port 8000
+```
 
 ## Sådan laver du et spil
 
-Spillene ligger i `games/` som JavaScript-filer. Hvert spil beskriver titel, hold, kategorier, spørgsmål og svar.
-
-De vigtigste filer er:
-
-- `index.html`: selve Jeopardy-appen med bræt, navigation, score og reveal.js.
-- `games/science.js`: et simpelt eksempelspil.
-- `games/pokemon.js`: et større eksempel med billeder, lyd, video, Markdown, LaTeX og speaker notes.
-- `GUIDE.md`: dansk guide til at oprette og redigere spil.
-
-Et meget simpelt spørgsmål ser sådan ud:
-
-```js
-{
-	points: 100,
-	question: "Hvad hedder Danmarks hovedstad?",
-	answer: "København.",
-}
-```
-
-Du kan også lave et nyt spil fra forsiden:
-
 1. Åbn `Settings`.
 2. Tryk `Question maker`.
-3. Vælg antal kategorier og rækker.
-4. Tryk `Lav board`.
-5. Klik rundt på boardet og udfyld hvert spørgsmål med spørgsmål, svar, hints og speaker notes.
-6. Tryk `Gem .js-fil`.
-7. Gem filen i `games/` og tilføj den kopierede linje til `GAME_FILES` i `index.html`.
+3. Log ind med admin-koden.
+4. Vælg antal kategorier og rækker.
+5. Tryk `Lav board`.
+6. Klik rundt på boardet og udfyld spørgsmål, svar, hints og speaker notes.
+7. Upload billeder direkte i spørgsmålseditoren, hvis du skal bruge lokale billeder.
+8. Tryk `Gem spil`.
 
-Browseren kan ikke skrive direkte til projektmappen uden en filvælger eller en lokal backend, så modulet gemmer kladden i browseren og eksporterer en færdig JavaScript-fil.
+Browseren gemmer stadig en lokal kladde i `localStorage`, men den færdige version gemmes på serveren i `data/games/<game-id>.json`.
+
+## Docker/VPS
+
+`docker-compose.yml` mapper `./data` til `/app/data` i containeren:
+
+```yaml
+volumes:
+  - ./data:/app/data
+```
+
+Det betyder, at spil og uploads overlever container-restart. På en VPS bør du som minimum ændre:
+
+```yaml
+environment:
+  ADMIN_PASSWORD: "en-lang-stærk-kode"
+  DATA_DIR: "/app/data"
+  MAX_UPLOAD_MB: "10"
+```
+
+Hvis du kører bag en reverse proxy, kan proxyen pege på containerens port `8000`.
+
+## Vigtige filer
+
+- `server.py`: FastAPI-backend, API, login, uploads og statisk filserver.
+- `index.html`: Jeopardy-appen, Question maker og frontend-API-kald.
+- `data/games/*.json`: spildata, som kan redigeres via interfacet.
+- `data/uploads/`: uploadede billeder.
+- `Dockerfile` og `docker-compose.yml`: container-setup.
+- `GUIDE.md`: dansk guide til spilformat og brug.
 
 ## Hvad kan det?
 
 - Jeopardy-bræt med kategorier og pointværdier.
 - Flere hold og løbende pointstyring.
 - Spørgsmål og svar som tekst, HTML eller Markdown.
-- Mulighed for hints, billeder, lyd, video, YouTube og LaTeX.
-- Speaker view med noter til værten.
-- Keyboard-navigation via reveal.js.
-
-## Mere hjælp
-
-Se [GUIDE.md](GUIDE.md) for den praktiske guide til at bygge egne Jeopardy-spil, ændre indstillinger og bruge de medfølgende eksempler.
+- Hints, billeder, lyd, video, YouTube, LaTeX og speaker notes.
+- Admin-beskyttet oprettelse/redigering af spil.
+- Admin-beskyttet billed-upload.
 
 ## Licens
 

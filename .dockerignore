@@ -1,0 +1,7 @@
+.git
+.agents
+.codex
+node_modules
+presentation
+presentation.zip
+data/uploads/*
