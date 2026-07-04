@@ -205,7 +205,7 @@
 				position: fixed;
 				top: 14px;
 				transform: translateX(-50%);
-				width: min(1120px, calc(100vw - 28px));
+				width: min(1480px, calc(100vw - 28px));
 				z-index: 9999;
 			}
 
@@ -354,6 +354,71 @@
 				line-height: 1.1;
 				margin: 0;
 				text-transform: uppercase;
+			}
+
+			.builder-editor-top {
+				align-items: end;
+				display: grid;
+				gap: 10px;
+				grid-template-columns: minmax(0, 1fr) minmax(120px, 180px);
+			}
+
+			.builder-content-grid {
+				display: grid;
+				gap: 12px;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+
+			.builder-content-panel,
+			.builder-slide-settings {
+				border: 2px solid rgba(255, 255, 255, 0.36);
+				display: grid;
+				gap: 10px;
+				padding: 10px;
+			}
+
+			.builder-content-panel textarea {
+				min-height: 210px;
+			}
+
+			.builder-helper-row {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+			}
+
+			.builder-helper-row .game-button {
+				font-size: 13px;
+				padding: 8px 10px;
+			}
+
+			.builder-slide-settings {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+			}
+
+			.builder-slide-settings h4 {
+				color: var(--jeopardy-gold);
+				font-size: 16px;
+				grid-column: 1 / -1;
+				line-height: 1.1;
+				margin: 0;
+				text-transform: uppercase;
+			}
+
+			.builder-checkbox {
+				align-items: center;
+				display: flex;
+				gap: 8px;
+				margin-top: 24px;
+			}
+
+			.builder-checkbox input {
+				margin: 0;
+				width: auto;
+			}
+
+			.builder-checkbox label {
+				margin: 0;
 			}
 
 			.builder-extra {
@@ -855,6 +920,12 @@
 				.builder-grid {
 					grid-template-columns: 1fr;
 				}
+
+				.builder-editor-top,
+				.builder-content-grid,
+				.builder-slide-settings {
+					grid-template-columns: 1fr;
+				}
 			}
 		</style>
 	</head>
@@ -965,47 +1036,113 @@
 
 									<div class="builder-editor" id="builder-editor" hidden>
 										<h3 id="builder-editor-title">Spørgsmål</h3>
-										<div class="builder-grid">
+										<div class="builder-editor-top">
 											<div>
 												<label for="builder-question-points">Point</label>
 												<input id="builder-question-points" type="number" min="0" step="100" />
 											</div>
+										</div>
+
+										<div class="builder-content-grid">
+											<div class="builder-content-panel">
+												<div>
+													<label for="builder-question-type">Spørgsmålstype</label>
+													<select id="builder-question-type">
+														<option value="question">Tekst</option>
+														<option value="markdown">Markdown</option>
+														<option value="html">HTML</option>
+													</select>
+												</div>
+
+												<label for="builder-question-text">Spørgsmål</label>
+												<div class="builder-helper-row" aria-label="Hjælp til spørgsmål">
+													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('question', 'youtube')">YouTube</button>
+													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('question', 'video')">Video</button>
+													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('question', 'audio')">Lyd</button>
+													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('question', 'image')">Billede</button>
+													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('question', 'math')">Math</button>
+												</div>
+												<textarea id="builder-question-text"></textarea>
+
+												<div class="builder-upload-row">
+													<div>
+														<label for="builder-image-upload">Upload billede til spørgsmål</label>
+														<input id="builder-image-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+													</div>
+													<button class="game-button secondary" id="builder-upload-button" type="button" onclick="uploadBuilderImage()">
+														Upload
+													</button>
+												</div>
+											</div>
+
+											<div class="builder-content-panel">
+												<div>
+													<label for="builder-answer-type">Svartype</label>
+													<select id="builder-answer-type">
+														<option value="answer">Tekst</option>
+														<option value="answerMarkdown">Markdown</option>
+														<option value="answerHtml">HTML</option>
+													</select>
+												</div>
+
+												<label for="builder-answer-text">Svar</label>
+												<div class="builder-helper-row" aria-label="Hjælp til svar">
+													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('answer', 'youtube')">YouTube</button>
+													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('answer', 'video')">Video</button>
+													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('answer', 'audio')">Lyd</button>
+													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('answer', 'image')">Billede</button>
+													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('answer', 'math')">Math</button>
+												</div>
+												<textarea id="builder-answer-text"></textarea>
+											</div>
+										</div>
+
+										<div class="builder-slide-settings">
+											<h4>Slide settings</h4>
 											<div>
-												<label for="builder-question-type">Spørgsmålstype</label>
-												<select id="builder-question-type">
-													<option value="question">Tekst</option>
-													<option value="markdown">Markdown</option>
-													<option value="html">HTML</option>
+												<label for="builder-background">Baggrundsbillede / farve</label>
+												<input id="builder-background" type="text" placeholder="/uploads/billede.webp eller #000000" />
+											</div>
+											<div>
+												<label for="builder-background-color">Baggrundsfarve</label>
+												<input id="builder-background-color" type="text" placeholder="#000000" />
+											</div>
+											<div>
+												<label for="builder-background-video">Baggrundsvideo</label>
+												<input id="builder-background-video" type="text" placeholder="examples/assets/video.mp4" />
+											</div>
+											<div>
+												<label for="builder-background-iframe">Baggrund YouTube / iframe</label>
+												<input id="builder-background-iframe" type="text" placeholder="https://www.youtube.com/watch?v=..." />
+											</div>
+											<div>
+												<label for="builder-transition">Transition</label>
+												<select id="builder-transition">
+													<option value="">Standard</option>
+													<option value="slide">Slide</option>
+													<option value="fade">Fade</option>
+													<option value="zoom">Zoom</option>
+													<option value="convex">Convex</option>
+													<option value="concave">Concave</option>
 												</select>
 											</div>
-										</div>
-
-										<label for="builder-question-text">Spørgsmål</label>
-										<textarea id="builder-question-text"></textarea>
-
-										<div class="builder-upload-row">
 											<div>
-												<label for="builder-image-upload">Upload billede</label>
-												<input id="builder-image-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+												<label for="builder-class-name">CSS class</label>
+												<input id="builder-class-name" type="text" placeholder="r-fit-text" />
 											</div>
-											<button class="game-button secondary" id="builder-upload-button" type="button" onclick="uploadBuilderImage()">
-												Upload
-											</button>
-										</div>
-
-										<div class="builder-grid">
-											<div>
-												<label for="builder-answer-type">Svartype</label>
-												<select id="builder-answer-type">
-													<option value="answer">Tekst</option>
-													<option value="answerMarkdown">Markdown</option>
-													<option value="answerHtml">HTML</option>
-												</select>
+											<div class="builder-checkbox">
+												<input id="builder-background-interactive" type="checkbox" />
+												<label for="builder-background-interactive">Interaktiv baggrund</label>
+											</div>
+											<div class="builder-checkbox">
+												<input id="builder-background-video-loop" type="checkbox" checked />
+												<label for="builder-background-video-loop">Loop baggrundsvideo</label>
+											</div>
+											<div class="builder-checkbox">
+												<input id="builder-background-video-muted" type="checkbox" checked />
+												<label for="builder-background-video-muted">Mute baggrundsvideo</label>
 											</div>
 										</div>
-
-										<label for="builder-answer-text">Svar</label>
-										<textarea id="builder-answer-text"></textarea>
 
 										<details class="builder-extra">
 											<summary>Andet</summary>
@@ -1395,6 +1532,15 @@
 					answer: "",
 					hints: "",
 					notes: "",
+					background: "",
+					backgroundColor: "",
+					backgroundVideo: "",
+					backgroundIframe: "",
+					backgroundInteractive: false,
+					backgroundVideoLoop: true,
+					backgroundVideoMuted: true,
+					transition: "",
+					className: "",
 				};
 			}
 
@@ -1477,6 +1623,15 @@
 								.join("\n")
 						: String(source.hints || ""),
 					notes: String(source.notes || source.notesHtml || ""),
+					background: String(source.background || ""),
+					backgroundColor: String(source.backgroundColor || ""),
+					backgroundVideo: String(source.backgroundVideo || ""),
+					backgroundIframe: String(source.backgroundIframe || ""),
+					backgroundInteractive: Boolean(source.backgroundInteractive),
+					backgroundVideoLoop: source.backgroundVideoLoop !== false,
+					backgroundVideoMuted: source.backgroundVideoMuted !== false,
+					transition: String(source.transition || ""),
+					className: String(source.className || ""),
 				};
 			}
 
@@ -1664,6 +1819,15 @@
 					"builder-answer-text",
 					"builder-hints-text",
 					"builder-notes-text",
+					"builder-background",
+					"builder-background-color",
+					"builder-background-video",
+					"builder-background-iframe",
+					"builder-background-interactive",
+					"builder-background-video-loop",
+					"builder-background-video-muted",
+					"builder-transition",
+					"builder-class-name",
 				].forEach((fieldId) => {
 					const field = document.getElementById(fieldId);
 
@@ -1848,6 +2012,24 @@
 				setBuilderFieldValue("builder-answer-text", question.answer);
 				setBuilderFieldValue("builder-hints-text", question.hints);
 				setBuilderFieldValue("builder-notes-text", question.notes);
+				setBuilderFieldValue("builder-background", question.background);
+				setBuilderFieldValue("builder-background-color", question.backgroundColor);
+				setBuilderFieldValue("builder-background-video", question.backgroundVideo);
+				setBuilderFieldValue("builder-background-iframe", question.backgroundIframe);
+				setBuilderFieldValue("builder-transition", question.transition);
+				setBuilderFieldValue("builder-class-name", question.className);
+				setBuilderCheckedValue(
+					"builder-background-interactive",
+					question.backgroundInteractive
+				);
+				setBuilderCheckedValue(
+					"builder-background-video-loop",
+					question.backgroundVideoLoop
+				);
+				setBuilderCheckedValue(
+					"builder-background-video-muted",
+					question.backgroundVideoMuted
+				);
 			}
 
 			function setBuilderFieldValue(fieldId, value) {
@@ -1855,6 +2037,14 @@
 
 				if (field) {
 					field.value = value === undefined || value === null ? "" : value;
+				}
+			}
+
+			function setBuilderCheckedValue(fieldId, value) {
+				const field = document.getElementById(fieldId);
+
+				if (field) {
+					field.checked = Boolean(value);
 				}
 			}
 
@@ -1921,6 +2111,29 @@
 					document.getElementById("builder-hints-text")?.value || "";
 				question.notes =
 					document.getElementById("builder-notes-text")?.value || "";
+				question.background =
+					document.getElementById("builder-background")?.value.trim() || "";
+				question.backgroundColor =
+					document.getElementById("builder-background-color")?.value.trim() || "";
+				question.backgroundVideo =
+					document.getElementById("builder-background-video")?.value.trim() || "";
+				question.backgroundIframe = createYouTubeEmbedUrl(
+					document.getElementById("builder-background-iframe")?.value.trim() ||
+						""
+				);
+				question.backgroundInteractive = Boolean(
+					document.getElementById("builder-background-interactive")?.checked
+				);
+				question.backgroundVideoLoop =
+					document.getElementById("builder-background-video-loop")?.checked !==
+					false;
+				question.backgroundVideoMuted =
+					document.getElementById("builder-background-video-muted")?.checked !==
+					false;
+				question.transition =
+					document.getElementById("builder-transition")?.value || "";
+				question.className =
+					document.getElementById("builder-class-name")?.value.trim() || "";
 			}
 
 			function renderBuilderCategory(category, categoryIndex) {
@@ -2076,7 +2289,10 @@
 			function addBuilderCategory() {
 				gameBuilderDraft = readBuilderDraftFromForm();
 				gameBuilderDraft.categories.push(
-					createDefaultBuilderCategory(gameBuilderDraft.categories.length + 1)
+					createDefaultBuilderCategory(
+						gameBuilderDraft.categories.length + 1,
+						gameBuilderDraft.rowCount
+					)
 				);
 				persistBuilderDraft(false);
 				renderBuilderDraft();
@@ -2212,6 +2428,38 @@
 								outputQuestion.notes = question.notes;
 							}
 
+							if (question.background) {
+								outputQuestion.background = question.background;
+							}
+
+							if (question.backgroundColor) {
+								outputQuestion.backgroundColor = question.backgroundColor;
+							}
+
+							if (question.backgroundVideo) {
+								outputQuestion.backgroundVideo = question.backgroundVideo;
+								outputQuestion.backgroundVideoLoop =
+									question.backgroundVideoLoop !== false;
+								outputQuestion.backgroundVideoMuted =
+									question.backgroundVideoMuted !== false;
+							}
+
+							if (question.backgroundIframe) {
+								outputQuestion.backgroundIframe = question.backgroundIframe;
+							}
+
+							if (question.backgroundInteractive) {
+								outputQuestion.backgroundInteractive = true;
+							}
+
+							if (question.transition) {
+								outputQuestion.transition = question.transition;
+							}
+
+							if (question.className) {
+								outputQuestion.className = question.className;
+							}
+
 							return outputQuestion;
 						}),
 					})),
@@ -2283,11 +2531,165 @@
 					.replace(/>/g, "&gt;");
 			}
 
+			function getBuilderContentFields(target) {
+				const isAnswer = target === "answer";
+
+				return {
+					type: document.getElementById(
+						isAnswer ? "builder-answer-type" : "builder-question-type"
+					),
+					text: document.getElementById(
+						isAnswer ? "builder-answer-text" : "builder-question-text"
+					),
+					htmlType: isAnswer ? "answerHtml" : "html",
+					markdownType: isAnswer ? "answerMarkdown" : "markdown",
+				};
+			}
+
+			function setBuilderContentType(target, type) {
+				const fields = getBuilderContentFields(target);
+
+				if (fields.type) {
+					fields.type.value = type;
+					fields.type.dispatchEvent(new Event("change", { bubbles: true }));
+				}
+			}
+
+			function getYouTubeVideoId(url) {
+				const value = String(url || "").trim();
+
+				if (!value) {
+					return "";
+				}
+
+				const shortMatch = value.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/i);
+				const embedMatch = value.match(/youtube(?:-nocookie)?\.com\/embed\/([A-Za-z0-9_-]{6,})/i);
+				const watchMatch = value.match(/[?&]v=([A-Za-z0-9_-]{6,})/i);
+
+				return (embedMatch && embedMatch[1]) || (shortMatch && shortMatch[1]) || (watchMatch && watchMatch[1]) || "";
+			}
+
+			function getYouTubeStartSeconds(url) {
+				const value = String(url || "");
+				const startMatch = value.match(/[?&]start=(\d+)/i);
+				const timeMatch = value.match(/[?&]t=(\d+)s?/i);
+
+				return (startMatch && startMatch[1]) || (timeMatch && timeMatch[1]) || "";
+			}
+
+			function createYouTubeEmbedUrl(url) {
+				const value = String(url || "").trim();
+				const videoId = getYouTubeVideoId(url);
+				const start = getYouTubeStartSeconds(url);
+
+				return videoId
+					? "https://www.youtube.com/embed/" +
+					  videoId +
+					  "?rel=0" +
+					  (start ? "&start=" + start : "")
+					: value;
+			}
+
+			function createYouTubeIframe(url) {
+				const src = createYouTubeEmbedUrl(url);
+
+				return (
+					'<iframe src="' +
+					escapeHtmlAttribute(src) +
+					'" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>'
+				);
+			}
+
 			function appendTextToField(field, text) {
 				const currentValue = field.value.trimEnd();
 
 				field.value = currentValue ? currentValue + "\n\n" + text : text;
 				field.dispatchEvent(new Event("input", { bubbles: true }));
+			}
+
+			function insertBuilderSnippet(target, snippetType) {
+				const fields = getBuilderContentFields(target);
+				let snippet = "";
+
+				if (!fields.text) {
+					return;
+				}
+
+				if (snippetType === "youtube") {
+					const url = window.prompt("YouTube-link eller embed-link");
+
+					if (!url) {
+						return;
+					}
+
+					setBuilderContentType(target, fields.htmlType);
+					snippet = createYouTubeIframe(url);
+				}
+
+				if (snippetType === "video") {
+					const src = window.prompt("Sti til lokal video", "examples/assets/video.mp4");
+
+					if (!src) {
+						return;
+					}
+
+					setBuilderContentType(target, fields.htmlType);
+					snippet =
+						'<video src="' +
+						escapeHtmlAttribute(src) +
+						'" controls data-autoplay></video>';
+				}
+
+				if (snippetType === "audio") {
+					const src = window.prompt("Sti til lydklip", "examples/assets/beeping.wav");
+
+					if (!src) {
+						return;
+					}
+
+					setBuilderContentType(target, fields.htmlType);
+					snippet =
+						'<audio src="' + escapeHtmlAttribute(src) + '" controls></audio>';
+				}
+
+				if (snippetType === "image") {
+					const src = window.prompt("Billed-URL eller lokal sti", "/uploads/billede.webp");
+
+					if (!src) {
+						return;
+					}
+
+					const alt = window.prompt("Billedtekst", "Billede") || "Billede";
+
+					if (fields.type && fields.type.value === fields.markdownType) {
+						snippet = "![" + alt.replace(/]/g, "\\]") + "](" + src + ")";
+					} else {
+						setBuilderContentType(target, fields.htmlType);
+						snippet =
+							'<img src="' +
+							escapeHtmlAttribute(src) +
+							'" alt="' +
+							escapeHtmlAttribute(alt) +
+							'">';
+					}
+				}
+
+				if (snippetType === "math") {
+					const formula = window.prompt("LaTeX formel", "\\frac{a}{b}");
+
+					if (!formula) {
+						return;
+					}
+
+					setBuilderContentType(target, fields.htmlType);
+					snippet = "<p>$$" + formula + "$$</p>";
+				}
+
+				if (snippet) {
+					appendTextToField(fields.text, snippet);
+					handleBuilderFormInput();
+					setBuilderStatus("Indholdet er indsat.");
+				}
 			}
 
 			async function uploadBuilderImage() {

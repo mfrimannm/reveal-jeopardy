@@ -12,8 +12,8 @@
 			"questions": [
 				{
 					"points": 100,
-					"html": "Han er nice\n\n<img src=\"/uploads/l0a2548-5580e812.jpg\" alt=\"L0A2548\">",
-					"answerHtml": "Hvem er Frimann"
+					"markdown": "Han er nice\n\n**Hej**\n\n<p>$$\\frac{a}{b}$$</p>\n\n<p>$$\\frac{a}{b}$$</p>\n\n<img src=\"/uploads/jn150-da5222af.jpg\" alt=\"JN150\">",
+					"answerHtml": "Hvem er Frimann\n\n<img src=\"/uploads/jn150-da5222af.jpg\" alt=\"JN150\">"
 				},
 				{
 					"points": 200,
