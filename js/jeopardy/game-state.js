@@ -1,0 +1,303 @@
+function initializeGameData() {
+	gameConfig = normalizeGameConfig(window.JEOPARDY_GAME);
+	categories = gameConfig.categories;
+	teams = gameConfig.teams;
+	teamIds = teams.map((team) => team.id);
+	questionIdSet = new Set();
+	resetRuntimeGameState();
+
+	document.documentElement.style.setProperty(
+		"--category-count",
+		Math.max(categories.length, 1)
+	);
+	document.documentElement.style.setProperty(
+		"--question-count",
+		Math.max(getQuestionRowCount(), 1)
+	);
+	document.documentElement.style.setProperty(
+		"--team-count",
+		Math.max(teamIds.length, 1)
+	);
+}
+
+function resetRuntimeGameState() {
+	scores = {};
+	usedQuestions = [];
+	questionAwards = {};
+
+	teamIds.forEach((teamId) => {
+		scores[teamId] = 0;
+	});
+}
+
+function removeQuestionAward(questionId) {
+	const award = questionAwards[questionId];
+
+	if (!award || !teamIds.includes(award.team)) {
+		delete questionAwards[questionId];
+		return;
+	}
+
+	const amount = Number(award.amount);
+
+	if (!Number.isNaN(amount)) {
+		scores[award.team] = (scores[award.team] || 0) - amount;
+		updateScoreboard();
+	}
+
+	delete questionAwards[questionId];
+}
+
+function prepareQuestionForCorrection(questionId) {
+	if (!isQuestionId(questionId) || !usedQuestions.includes(questionId)) {
+		return;
+	}
+
+	removeQuestionAward(questionId);
+	usedQuestions = usedQuestions.filter((usedId) => usedId !== questionId);
+	setTileAvailable(questionId);
+	saveGameState();
+}
+
+function markUsedAndGoBack(questionId) {
+	if (questionId && !usedQuestions.includes(questionId)) {
+		usedQuestions.push(questionId);
+	}
+
+	updateUsedTiles();
+	saveGameState();
+
+	if (typeof Reveal !== "undefined" && Reveal.slide) {
+		goToBoard();
+	} else {
+		window.location.hash = "/board";
+	}
+}
+
+function changeScore(team, amount) {
+	if (!teamIds.includes(team) || Number.isNaN(Number(amount))) {
+		return;
+	}
+
+	const currentSlide = getCurrentQuestionSlide();
+	const questionId =
+		currentSlide && currentSlide.id && isQuestionId(currentSlide.id)
+			? currentSlide.id
+			: "";
+
+	if (questionId) {
+		removeQuestionAward(questionId);
+		questionAwards[questionId] = {
+			team,
+			amount: Number(amount),
+		};
+	}
+
+	scores[team] = (scores[team] || 0) + Number(amount);
+	updateScoreboard();
+
+	if (questionId) {
+		markUsedAndGoBack(questionId);
+		return;
+	}
+
+	saveGameState();
+}
+
+function saveGameState() {
+	try {
+		localStorage.setItem(
+			getStorageKey(),
+			JSON.stringify({
+				scores,
+				usedQuestions,
+				questionAwards,
+			})
+		);
+		broadcastGameMessage("state-changed", {
+			storageKey: getStorageKey(),
+		});
+	} catch (error) {
+		console.warn("Could not save game state.", error);
+	}
+}
+
+function loadGameState() {
+	try {
+		const savedState = localStorage.getItem(getStorageKey());
+
+		if (!savedState) {
+			resetRuntimeGameState();
+			clearVisibleAnswers();
+			updateScoreboard();
+			updateUsedTiles();
+			return;
+		}
+
+		const parsedState = JSON.parse(savedState);
+
+		if (parsedState && typeof parsedState === "object") {
+			if (parsedState.scores && typeof parsedState.scores === "object") {
+				teamIds.forEach((teamId) => {
+					scores[teamId] = Number(parsedState.scores[teamId]) || 0;
+				});
+			}
+
+			if (Array.isArray(parsedState.usedQuestions)) {
+				usedQuestions = parsedState.usedQuestions.filter((questionId) =>
+					isQuestionId(questionId)
+				);
+			}
+
+			if (
+				parsedState.questionAwards &&
+				typeof parsedState.questionAwards === "object"
+			) {
+				questionAwards = {};
+
+				Object.entries(parsedState.questionAwards).forEach(
+					([questionId, award]) => {
+						if (
+							isQuestionId(questionId) &&
+							award &&
+							teamIds.includes(award.team) &&
+							!Number.isNaN(Number(award.amount))
+						) {
+							questionAwards[questionId] = {
+								team: award.team,
+								amount: Number(award.amount),
+							};
+						}
+					}
+				);
+			}
+		}
+	} catch (error) {
+		console.warn("Could not load game state.", error);
+	}
+
+	updateScoreboard();
+	updateUsedTiles();
+}
+
+function resetGame() {
+	if (
+		!window.confirm(
+			"Reset game? Scores and used questions will be cleared."
+		)
+	) {
+		return;
+	}
+
+	resetRuntimeGameState();
+
+	try {
+		localStorage.removeItem(getStorageKey());
+		broadcastGameMessage("state-changed", {
+			storageKey: getStorageKey(),
+		});
+	} catch (error) {
+		console.warn("Could not clear game state.", error);
+	}
+
+	updateUsedTiles();
+	clearVisibleAnswers();
+
+	updateScoreboard();
+
+	if (typeof Reveal !== "undefined" && Reveal.slide) {
+		goToBoard();
+	} else {
+		window.location.hash = "/board";
+	}
+}
+
+function isSameOriginGameMessage(event) {
+	return (
+		window.location.protocol === "file:" ||
+		!event.origin ||
+		event.origin === window.location.origin
+	);
+}
+
+function parseGameMessage(data) {
+	if (typeof data !== "string" || data.charAt(0) !== "{") {
+		return null;
+	}
+
+	try {
+		return JSON.parse(data);
+	} catch (error) {
+		return null;
+	}
+}
+
+function getGameMessageTargets() {
+	const targets = new Set();
+
+	if (window.parent && window.parent !== window) {
+		targets.add(window.parent);
+	}
+
+	if (window.opener) {
+		targets.add(window.opener);
+	}
+
+	if (
+		window.top &&
+		window.top !== window &&
+		window.top.opener
+	) {
+		targets.add(window.top.opener);
+	}
+
+	return targets;
+}
+
+function broadcastGameMessage(type, payload) {
+	const message = JSON.stringify({
+		namespace: "reveal-jeopardy",
+		type,
+		...(payload || {}),
+	});
+
+	getGameMessageTargets().forEach((target) => {
+		try {
+			target.postMessage(message, "*");
+		} catch (error) {
+			// Ignore closed or cross-origin windows.
+		}
+	});
+}
+
+function handleGameMessage(event) {
+	if (!isSameOriginGameMessage(event)) {
+		return;
+	}
+
+	const data = parseGameMessage(event.data);
+
+	if (!data || data.namespace !== "reveal-jeopardy") {
+		return;
+	}
+
+	if (data.type === "state-changed" && data.storageKey === getStorageKey()) {
+		loadGameState();
+	}
+
+	if (data.type === "answer-shown") {
+		revealAnswerForQuestion(data.questionId);
+	}
+}
+
+function handleStorageChange(event) {
+	if (event.key === getStorageKey()) {
+		loadGameState();
+	}
+}
+
+function initializeGameSync() {
+	window.addEventListener("message", handleGameMessage);
+	window.addEventListener("storage", handleStorageChange);
+}
+
