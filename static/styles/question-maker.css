@@ -1,0 +1,269 @@
+.question-maker {
+	background: #191919;
+	border: 2px solid rgba(255, 255, 255, 0.78);
+	box-shadow: 0 16px 48px rgba(0, 0, 0, 0.72);
+	box-sizing: border-box;
+	color: #ffffff;
+	display: grid;
+	gap: 12px;
+	left: 50%;
+	max-height: calc(100vh - 28px);
+	overflow: auto;
+	padding: 18px;
+	position: fixed;
+	top: 14px;
+	transform: translateX(-50%);
+	width: min(1480px, calc(100vw - 28px));
+	z-index: 9999;
+}
+
+.question-maker[hidden] {
+	display: none;
+}
+
+.question-maker-header {
+	align-items: center;
+	display: flex;
+	gap: 12px;
+	justify-content: space-between;
+}
+
+.question-maker-header h2 {
+	color: var(--jeopardy-gold);
+	font-size: 24px;
+	line-height: 1.05;
+	margin: 0;
+	text-transform: uppercase;
+}
+
+.question-maker label,
+.question-maker legend {
+	font-size: 13px;
+}
+
+.question-maker select,
+.question-maker input,
+.question-maker textarea {
+	font-size: 16px;
+}
+
+.question-maker .game-button {
+	font-size: 14px;
+	padding: 10px 14px;
+}
+
+.admin-panel,
+.builder-upload-row {
+	align-items: end;
+	display: grid;
+	gap: 10px;
+	grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.admin-status {
+	color: var(--jeopardy-gold);
+	font-size: 13px;
+	line-height: 1.25;
+}
+
+.builder-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.builder-setup {
+	border: 2px solid rgba(255, 255, 255, 0.62);
+	background: rgba(0, 0, 0, 0.24);
+	padding: 12px;
+}
+
+.builder-stage {
+	display: grid;
+	gap: 12px;
+}
+
+.builder-stage[hidden] {
+	display: none;
+}
+
+.builder-board-wrap {
+	overflow: auto;
+}
+
+.builder-board {
+	display: grid;
+	gap: 7px;
+	min-width: 520px;
+}
+
+.builder-category-title,
+.builder-tile {
+	border: 2px solid var(--jeopardy-line);
+	box-sizing: border-box;
+	min-height: 58px;
+}
+
+.builder-category-title {
+	background: var(--jeopardy-blue-dark);
+	color: #ffffff;
+	font-size: 14px;
+	font-weight: 800;
+	line-height: 1.12;
+	margin: 0;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+.builder-tile {
+	background: var(--jeopardy-blue);
+	color: var(--jeopardy-gold);
+	cursor: pointer;
+	font-size: 22px;
+	font-weight: 900;
+	line-height: 1;
+	padding: 8px;
+}
+
+.builder-tile:hover,
+.builder-tile:focus,
+.builder-tile.active {
+	background: #0a2aee;
+	transform: translateY(-1px);
+}
+
+.builder-tile.complete {
+	background: #164f38;
+}
+
+.builder-tile span {
+	color: #ffffff;
+	display: block;
+	font-size: 12px;
+	line-height: 1.15;
+	margin-top: 6px;
+}
+
+.builder-editor {
+	border: 2px solid rgba(255, 255, 255, 0.62);
+	background: rgba(0, 0, 0, 0.24);
+	display: grid;
+	gap: 10px;
+	padding: 12px;
+}
+
+.builder-editor[hidden] {
+	display: none;
+}
+
+.builder-editor h3 {
+	color: var(--jeopardy-gold);
+	font-size: 18px;
+	line-height: 1.1;
+	margin: 0;
+	text-transform: uppercase;
+}
+
+.builder-editor-top {
+	align-items: end;
+	display: grid;
+	gap: 10px;
+	grid-template-columns: minmax(0, 1fr) minmax(120px, 180px);
+}
+
+.builder-content-grid {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.builder-content-panel,
+.builder-slide-settings {
+	border: 2px solid rgba(255, 255, 255, 0.36);
+	display: grid;
+	gap: 10px;
+	padding: 10px;
+}
+
+.builder-content-panel textarea {
+	min-height: 210px;
+}
+
+.builder-helper-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.builder-helper-row .game-button {
+	font-size: 13px;
+	padding: 8px 10px;
+}
+
+.builder-slide-settings {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.builder-slide-settings h4 {
+	color: var(--jeopardy-gold);
+	font-size: 16px;
+	grid-column: 1 / -1;
+	line-height: 1.1;
+	margin: 0;
+	text-transform: uppercase;
+}
+
+.builder-checkbox {
+	align-items: center;
+	display: flex;
+	gap: 8px;
+	margin-top: 24px;
+}
+
+.builder-checkbox input {
+	margin: 0;
+	width: auto;
+}
+
+.builder-checkbox label {
+	margin: 0;
+}
+
+.builder-extra {
+	border: 2px solid rgba(255, 255, 255, 0.36);
+	padding: 10px;
+}
+
+.builder-extra summary {
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 800;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
+
+.builder-extra-fields {
+	display: grid;
+	gap: 10px;
+	margin-top: 10px;
+}
+
+.builder-output {
+	font-family: Consolas, Monaco, monospace;
+	font-size: 13px;
+	min-height: 160px;
+	white-space: pre;
+}
+
+.builder-status {
+	color: var(--jeopardy-gold);
+	font-size: 14px;
+	line-height: 1.25;
+	min-height: 1.25em;
+}
+
+.builder-small-button {
+	flex: 0 0 auto;
+	padding: 8px 10px;
+}
+

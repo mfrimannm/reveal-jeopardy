@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="background: #191919; color: #ffffff;">
+<html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<meta
@@ -15,10 +15,13 @@
 		<link rel="stylesheet" href="dist/theme/black.css" />
 		<link rel="stylesheet" href="dist/plugin/highlight/monokai.css" />
 
-		<link rel="stylesheet" href="css/reveal-jeopardy.css" />
+		<link rel="stylesheet" href="static/styles/app.css" />
+		<link rel="stylesheet" href="static/styles/board.css" />
+		<link rel="stylesheet" href="static/styles/question-maker.css" />
+		<link rel="stylesheet" href="static/styles/mobile.css" />
 	</head>
 
-	<body style="background: #191919; color: #ffffff;">
+	<body>
 		<div class="reveal">
 			<div class="slides" id="slides">
 				<section id="home" class="home-slide">
@@ -302,13 +305,14 @@
 		<script src="dist/plugin/search.js"></script>
 		<script src="dist/plugin/zoom.js"></script>
 
-		<script src="js/jeopardy/globals.js"></script>
-		<script src="js/jeopardy/api.js"></script>
-		<script src="js/jeopardy/game-model.js"></script>
-		<script src="js/jeopardy/media.js"></script>
-		<script src="js/jeopardy/question-maker.js"></script>
-		<script src="js/jeopardy/render.js"></script>
-		<script src="js/jeopardy/game-state.js"></script>
-		<script src="js/jeopardy/app.js"></script>
+		<script src="static/app/state.js"></script>
+		<script src="static/app/api.js"></script>
+		<script src="static/app/storage.js"></script>
+		<script src="static/app/game-model.js"></script>
+		<script src="static/app/media.js"></script>
+		<script src="static/app/question-maker.js"></script>
+		<script src="static/app/renderer.js"></script>
+		<script src="static/app/scoring.js"></script>
+		<script src="static/app/main.js"></script>
 	</body>
 </html>

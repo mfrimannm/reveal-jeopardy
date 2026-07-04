@@ -9,6 +9,8 @@ out/
 log/*.log
 tmp/**
 node_modules/
+test-results/
+playwright-report/
 .sass-cache
 presentation
 presentation.zip

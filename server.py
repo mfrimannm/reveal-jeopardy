@@ -32,6 +32,7 @@ ALLOWED_STATIC_DIRS = {
     "js",
     "lib",
     "plugin",
+    "static",
 }
 ALLOWED_UPLOAD_CONTENT_TYPES = {
     "image/gif": ".gif",

@@ -1,0 +1,212 @@
+:root {
+	--jeopardy-blue: #071fc2;
+	--jeopardy-blue-dark: #02106e;
+	--jeopardy-gold: #ffd348;
+	--jeopardy-line: #ffffff;
+	--jeopardy-red: #c92f2f;
+	--jeopardy-green: #188f54;
+	--category-count: 6;
+	--question-count: 6;
+	--team-count: 3;
+	color-scheme: dark;
+}
+
+html,
+body,
+.reveal-viewport,
+.reveal,
+.reveal .backgrounds {
+	background: #191919;
+	background-color: #191919;
+	color: #ffffff;
+}
+
+.reveal .slides section {
+	box-sizing: border-box;
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal p {
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.home-slide {
+	text-align: left;
+}
+
+.home-slide h1 {
+	color: var(--jeopardy-gold);
+	font-size: clamp(0.78em, 4vw, 1.15em);
+	line-height: 1;
+	margin: 0 0 18px;
+	text-transform: uppercase;
+}
+
+.home-layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+	gap: 18px;
+	height: calc(100% - 78px);
+	min-height: 0;
+}
+
+.home-panel {
+	border: 2px solid rgba(255, 255, 255, 0.74);
+	background: rgba(255, 255, 255, 0.06);
+	padding: 18px;
+	min-height: 0;
+	overflow: auto;
+}
+
+.home-panel h2 {
+	color: #ffffff;
+	font-size: 0.5em;
+	line-height: 1.05;
+	margin: 0 0 14px;
+}
+
+.home-panel label,
+.home-panel legend,
+.question-maker label,
+.question-maker legend {
+	color: #dddddd;
+	display: block;
+	font-size: 0.32em;
+	font-weight: 800;
+	line-height: 1.2;
+	margin-bottom: 8px;
+	text-transform: uppercase;
+}
+
+.home-panel select,
+.home-panel input,
+.home-panel textarea,
+.question-maker select,
+.question-maker input,
+.question-maker textarea {
+	border: 2px solid rgba(255, 255, 255, 0.85);
+	background: #111111;
+	box-sizing: border-box;
+	color: #ffffff;
+	font: inherit;
+	font-size: 0.34em;
+	line-height: 1.15;
+	margin-bottom: 12px;
+	padding: 10px 12px;
+	width: 100%;
+}
+
+.home-panel textarea,
+.question-maker textarea {
+	min-height: 72px;
+	resize: vertical;
+}
+
+.game-list {
+	display: grid;
+	gap: 10px;
+	margin: 14px 0;
+}
+
+.game-card {
+	border: 2px solid rgba(255, 255, 255, 0.7);
+	color: #ffffff;
+	display: block;
+	padding: 12px;
+	text-decoration: none;
+}
+
+.game-card.active {
+	border-color: var(--jeopardy-gold);
+	background: rgba(255, 211, 72, 0.12);
+}
+
+.game-card strong,
+.game-card span {
+	display: block;
+}
+
+.game-card strong {
+	color: var(--jeopardy-gold);
+	font-size: 0.36em;
+	line-height: 1.15;
+	text-transform: uppercase;
+}
+
+.game-card span,
+.game-meta,
+.settings-note {
+	color: #d8d8d8;
+	font-size: 0.28em;
+	line-height: 1.28;
+}
+
+.game-meta {
+	display: grid;
+	gap: 8px;
+	margin-top: 14px;
+}
+
+.team-field-list {
+	display: grid;
+	gap: 8px;
+	margin-bottom: 14px;
+}
+
+.team-field-list label {
+	margin-bottom: 4px;
+	text-transform: none;
+}
+
+.home-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: 12px;
+}
+
+.home-actions .game-button {
+	font-size: 0.31em;
+}
+
+.game-button {
+	border: 2px solid #ffffff;
+	background: #161616;
+	color: #ffffff;
+	padding: 10px 16px;
+	font-size: 0.35em;
+	font-weight: 800;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.game-button:hover,
+.game-button:focus {
+	background: #2a2a2a;
+}
+
+.game-button.primary {
+	background: var(--jeopardy-blue);
+	color: var(--jeopardy-gold);
+}
+
+.game-button.correct {
+	background: var(--jeopardy-green);
+}
+
+.game-button.wrong {
+	background: var(--jeopardy-red);
+}
+
+.game-button.reset {
+	background: #3a1111;
+	flex: 0 0 auto;
+	white-space: nowrap;
+}
+
+.game-button.secondary {
+	background: #222222;
+}

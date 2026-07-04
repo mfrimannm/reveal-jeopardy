@@ -1,0 +1,9 @@
+{
+	"scripts": {
+		"test:frontend": "node --test test/frontend-pure.test.js",
+		"test:ui": "TMPDIR=/tmp playwright test"
+	},
+	"devDependencies": {
+		"@playwright/test": "1.49.1"
+	}
+}

@@ -1,0 +1,63 @@
+@media (max-width: 900px) {
+	.home-layout {
+		grid-template-columns: 1fr;
+		height: auto;
+	}
+
+	.board-header {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.board-header h1 {
+		max-width: none;
+	}
+
+	.scoreboard {
+		width: 100%;
+	}
+
+	.category,
+	.points a {
+		font-size: 0.28em;
+	}
+
+	.score-controls {
+		overflow: visible;
+	}
+
+	.question-slide {
+		overflow: auto;
+	}
+
+	.question-layout {
+		grid-template-columns: 1fr;
+		overflow: visible;
+	}
+
+	.question-main {
+		overflow: visible;
+	}
+
+	.question-sidebar {
+		overflow: visible;
+	}
+
+	.team-score-row {
+		grid-template-columns: minmax(0, 1fr) 64px 64px;
+	}
+
+	.team-score-row strong {
+		grid-column: auto;
+	}
+
+	.builder-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.builder-editor-top,
+	.builder-content-grid,
+	.builder-slide-settings {
+		grid-template-columns: 1fr;
+	}
+}

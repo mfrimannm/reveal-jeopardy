@@ -27,6 +27,44 @@ pip install -r requirements.txt
 uvicorn server:app --host 0.0.0.0 --port 8000
 ```
 
+## Tests
+
+Installer backend test-afhængigheder:
+
+```sh
+python3 -m pip install -r requirements-test.txt
+```
+
+Kør backend API-tests:
+
+```sh
+python3 -m pytest tests/backend
+```
+
+Installer JavaScript test-afhængigheder:
+
+```sh
+npm install
+```
+
+Kør frontend unit tests for ren spil-logik:
+
+```sh
+npm run test:frontend
+```
+
+Installer Playwright-browseren første gang:
+
+```sh
+npx playwright install
+```
+
+Kør UI-tests. Testene starter selv FastAPI med isoleret testdata i `/tmp/reveal-jeopardy-playwright-data`:
+
+```sh
+npm run test:ui
+```
+
 ## Sådan laver du et spil
 
 1. Åbn `Settings`.
