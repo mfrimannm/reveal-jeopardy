@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Git: Push to GitHub",
+      "type": "shell",
+      "command": "git",
+      "args": ["push"],
+      "problemMatcher": []
+    },
+    {
+      "label": "GitHub: Create release",
+      "type": "shell",
+      "command": "gh",
+      "args": [
+        "release",
+        "create",
+        "${input:releaseTag}",
+        "--target",
+        "master",
+        "--generate-notes",
+        "--latest"
+      ],
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "releaseTag",
+      "type": "promptString",
+      "description": "Release tag to create, for example v1.0.0",
+      "default": "v1.0.0"
+    }
+  ]
+}
