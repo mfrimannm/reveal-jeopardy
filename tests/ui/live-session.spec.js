@@ -23,9 +23,11 @@ test("host can start live session and see mobile buzzers", async ({ browser, pag
 	await page.locator("#live-session-start").click();
 	await expect(page.locator("#live-session-id")).toHaveText(/^[A-Z2-9]{8}$/);
 	await expect(page.locator("#live-session-join-link")).toContainText("/play/");
-	await expect(page.locator("#live-session-qr svg")).toBeVisible();
+	await expect(page.locator("#live-session-qr img")).toBeVisible();
 
 	const joinUrl = await page.locator("#live-session-join-link").getAttribute("href");
+	const qrSrc = await page.locator("#live-session-qr img").getAttribute("src");
+	expect(new URL(qrSrc, "http://127.0.0.1:8010").searchParams.get("value")).toBe(joinUrl);
 	const mobileOne = await browser.newContext({
 		viewport: { width: 360, height: 740 },
 	});

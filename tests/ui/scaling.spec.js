@@ -159,10 +159,17 @@ test("h advances fragments and starts autoplay media when fragments become visib
 			)
 		)
 		.toBeGreaterThan(0);
+	const firstAudioPlayCount = await page.locator("#c1q400.present audio").first().evaluate((audio) =>
+		Number(audio.dataset.playCallCount || "0")
+	);
 
 	await page.keyboard.press("H");
 	await expect(page.locator("#c1q400.present .fragment.visible")).toHaveCount(2);
 	await expect(page.locator("#c1q400.present .fragment.visible").nth(1)).toContainText("Chu!");
+	await expect(page.locator("#c1q400.present audio").first()).toHaveAttribute(
+		"data-play-call-count",
+		String(firstAudioPlayCount)
+	);
 	await expect
 		.poll(() =>
 			page.locator("#c1q400.present audio").nth(1).evaluate((audio) =>
@@ -170,6 +177,26 @@ test("h advances fragments and starts autoplay media when fragments become visib
 			)
 		)
 		.toBeGreaterThan(0);
+	const secondAudioPlayCount = await page.locator("#c1q400.present audio").nth(1).evaluate((audio) =>
+		Number(audio.dataset.playCallCount || "0")
+	);
+
+	await page.keyboard.press("Space");
+	await expect(page.locator("#c1q400.present audio").first()).toHaveAttribute(
+		"data-play-call-count",
+		String(firstAudioPlayCount + 1)
+	);
+	await expect(page.locator("#c1q400.present audio").nth(1)).toHaveAttribute(
+		"data-play-call-count",
+		String(secondAudioPlayCount)
+	);
+	await page.locator("#c1q400.present audio").first().evaluate((audio) => {
+		audio.dispatchEvent(new Event("ended"));
+	});
+	await expect(page.locator("#c1q400.present audio").nth(1)).toHaveAttribute(
+		"data-play-call-count",
+		String(secondAudioPlayCount + 1)
+	);
 	await expect(page.locator("#c1q400.present")).toBeVisible();
 });
 

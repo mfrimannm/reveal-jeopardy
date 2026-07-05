@@ -273,20 +273,45 @@ body,
 }
 
 .live-session-qr {
-	background: #ffffff;
-	height: 128px;
-	width: 128px;
+	align-items: center;
+	background: rgba(0, 0, 0, 0.28);
+	border: 2px solid rgba(255, 211, 61, 0.72);
+	border-radius: 8px;
+	box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+	display: inline-flex;
+	height: auto;
+	justify-content: center;
+	padding: 8px;
+	width: auto;
 }
 
 .live-session-qr:empty {
 	background: transparent;
+	border: 0;
+	box-shadow: none;
 	height: 0;
+	padding: 0;
 }
 
 .live-qr-svg {
+	background: #ffffff;
+	border-radius: 4px;
 	display: block;
 	height: 128px;
 	width: 128px;
+}
+
+.live-session-list {
+	color: #dddddd;
+	font-size: 1em;
+	line-height: 1;
+}
+
+.live-session-list[data-empty="true"] {
+	color: #b9b9b9;
+	font-size: 0.22em;
+	font-style: italic;
+	font-weight: 500;
 }
 
 .live-session-panel ul,

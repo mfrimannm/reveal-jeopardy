@@ -144,6 +144,27 @@ function getAutoplayIframeSrc(iframe) {
 	}
 }
 
+function playMediaSequence(mediaElements, startIndex) {
+	const media = mediaElements[startIndex];
+
+	if (!media) {
+		return;
+	}
+
+	const playNextMedia = () => {
+		playMediaSequence(mediaElements, startIndex + 1);
+	};
+
+	if (media.ended) {
+		media.currentTime = 0;
+	}
+
+	media.addEventListener("ended", playNextMedia, { once: true });
+	media.play().catch(() => {
+		media.removeEventListener("ended", playNextMedia);
+	});
+}
+
 function startCurrentSlideMedia() {
 	const currentSlide = getCurrentSlide();
 
@@ -151,26 +172,26 @@ function startCurrentSlideMedia() {
 		return false;
 	}
 
-	let started = false;
+	const mediaElements = Array.from(currentSlide.querySelectorAll("video, audio")).filter(
+		(media) => !isInHiddenFragment(media)
+	);
+	const activeMedia = mediaElements.find((media) => !media.paused && !media.ended);
 
-	currentSlide.querySelectorAll("video, audio").forEach((media) => {
-		if (isInHiddenFragment(media)) {
-			return;
+	if (activeMedia) {
+		return true;
+	}
+
+	const unfinishedMediaIndex = mediaElements.findIndex((element) => !element.ended);
+	const startIndex = unfinishedMediaIndex >= 0 ? unfinishedMediaIndex : 0;
+
+	if (mediaElements[startIndex]) {
+		if (unfinishedMediaIndex < 0) {
+			mediaElements.forEach((media) => {
+				media.currentTime = 0;
+			});
 		}
 
-		if (!media.paused && !media.ended) {
-			return;
-		}
-
-		if (media.ended) {
-			media.currentTime = 0;
-		}
-
-		media.play().catch(() => {});
-		started = true;
-	});
-
-	if (started) {
+		playMediaSequence(mediaElements, startIndex);
 		return true;
 	}
 
@@ -196,6 +217,22 @@ function showNextHint() {
 	if (typeof Reveal !== "undefined" && Reveal.nextFragment) {
 		Reveal.nextFragment();
 	}
+}
+
+function syncFragmentMediaPlayback(event) {
+	if (typeof syncRenderedMediaPlayback !== "function") {
+		return;
+	}
+
+	const fragments = event && event.fragments ? Array.from(event.fragments) : [];
+
+	if (!fragments.length) {
+		return;
+	}
+
+	fragments.forEach((fragment) => {
+		syncRenderedMediaPlayback(fragment);
+	});
 }
 
 function handleQuestionKeyboardKey(event) {
@@ -437,17 +474,9 @@ function initializeReveal() {
 		}
 	});
 
-	Reveal.on("fragmentshown", () => {
-		if (typeof syncRenderedMediaPlayback === "function") {
-			syncRenderedMediaPlayback(document);
-		}
-	});
+	Reveal.on("fragmentshown", syncFragmentMediaPlayback);
 
-	Reveal.on("fragmenthidden", () => {
-		if (typeof syncRenderedMediaPlayback === "function") {
-			syncRenderedMediaPlayback(document);
-		}
-	});
+	Reveal.on("fragmenthidden", syncFragmentMediaPlayback);
 
 	window.addEventListener("keydown", handleGameKeyboardKey, true);
 }

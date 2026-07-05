@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import hmac
+import io
 import json
 import mimetypes
 import os
@@ -14,6 +15,8 @@ from typing import Any
 from fastapi import Cookie, FastAPI, File, Header, HTTPException, Request, Response, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+import qrcode
+import qrcode.image.svg
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -323,6 +326,36 @@ def logout(response: Response) -> dict[str, bool]:
 @app.get("/api/me")
 def me(reveal_jeopardy_admin: str | None = Cookie(default=None)) -> dict[str, bool]:
     return {"authenticated": is_valid_session(reveal_jeopardy_admin)}
+
+
+@app.get("/api/qr-code")
+def qr_code(value: str) -> Response:
+    if not value or len(value.encode("utf-8")) > 2048:
+        raise HTTPException(status_code=400, detail="Invalid QR value")
+
+    qr = qrcode.QRCode(
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        border=4,
+        box_size=8,
+    )
+    qr.add_data(value)
+    qr.make(fit=True)
+    image = qr.make_image(
+        image_factory=qrcode.image.svg.SvgPathImage,
+        attrib={
+            "class": "live-qr-svg",
+            "role": "img",
+            "aria-label": "QR kode til join-link",
+        },
+    )
+    output = io.BytesIO()
+    image.save(output)
+
+    return Response(
+        content=output.getvalue(),
+        media_type="image/svg+xml",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @app.get("/api/games")

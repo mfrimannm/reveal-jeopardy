@@ -121,6 +121,18 @@ async def test_get_game(client):
 
 
 @pytest.mark.anyio
+async def test_qr_code_endpoint_returns_svg(client):
+    response = await client.get(
+        "/api/qr-code",
+        params={"value": "https://quiz.unf.dk/play/DEBHXBUS"},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("image/svg+xml")
+    assert b"<svg" in response.content
+
+
+@pytest.mark.anyio
 async def test_favicon_does_not_404(client):
     response = await client.get("/favicon.ico")
 
