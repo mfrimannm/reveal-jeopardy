@@ -1,7 +1,7 @@
 {
 	"scripts": {
 		"test:frontend": "node --test test/frontend-pure.test.js",
-		"test:ui": "TMPDIR=/tmp playwright test"
+		"test:ui": "node node_modules/@playwright/test/cli.js test"
 	},
 	"devDependencies": {
 		"@playwright/test": "1.49.1"

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="da">
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+		/>
+		<meta name="theme-color" content="#111111" />
+		<title>Jeopardy Buzzer</title>
+		<link rel="stylesheet" href="/static/styles/mobile.css" />
+	</head>
+	<body class="mobile-play-body">
+		<main class="mobile-play-shell">
+			<header class="mobile-play-header">
+				<div class="mobile-play-label">Session</div>
+				<h1 id="mobile-session-id">-</h1>
+				<div id="mobile-session-status" class="mobile-status">Afventer host</div>
+			</header>
+
+			<section id="mobile-join-panel" class="mobile-panel">
+				<label for="mobile-player-name">Navn</label>
+				<input id="mobile-player-name" type="text" autocomplete="name" />
+
+				<label for="mobile-team-select">Team</label>
+				<select id="mobile-team-select"></select>
+
+				<button id="mobile-join-button" class="mobile-action" type="button">
+					Join
+				</button>
+			</section>
+
+			<section id="mobile-buzzer-panel" class="mobile-panel" hidden>
+				<div class="mobile-player-summary" id="mobile-player-summary"></div>
+				<button id="mobile-buzz-button" class="mobile-buzz-button" type="button">
+					BUZZ
+				</button>
+				<div class="mobile-status large" id="mobile-buzz-status">Klar</div>
+			</section>
+
+			<div id="mobile-error" class="mobile-error" hidden></div>
+		</main>
+
+		<script src="/static/app/state.js"></script>
+		<script src="/static/app/api.js"></script>
+		<script src="/static/app/live-session.js"></script>
+		<script src="/static/app/mobile-play.js"></script>
+	</body>
+</html>

@@ -245,6 +245,10 @@ function initializeReveal() {
 			return;
 		}
 
+		if (typeof syncRenderedMediaPlayback === "function") {
+			syncRenderedMediaPlayback(document);
+		}
+
 		const previousQuestionId = event.previousSlide ? event.previousSlide.id : "";
 		const canGoBackToBoard = allowQuestionBoardNavigation;
 
@@ -270,10 +274,16 @@ function initializeReveal() {
 
 		const answer = event.currentSlide.querySelector(".answer.visible");
 
-		if (answer) {
-			answer.classList.remove("visible");
-		}
-	});
+			if (answer) {
+				answer.classList.remove("visible");
+			}
+
+			if (typeof syncLiveSlideChange === "function") {
+				syncLiveSlideChange(isQuestionId(event.currentSlide.id) ? event.currentSlide.id : null);
+			} else if (typeof syncLiveCurrentQuestion === "function") {
+				syncLiveCurrentQuestion(isQuestionId(event.currentSlide.id) ? event.currentSlide.id : null);
+			}
+		});
 
 	window.addEventListener("keydown", handleQuestionArrowKeys, true);
 }
@@ -284,6 +294,7 @@ loadGameFile().then(() => {
 	initializeGameBuilder();
 	renderGame();
 	loadGameState();
+	initializeHostControls();
 	initializeGameSync();
 	initializeReveal();
 });

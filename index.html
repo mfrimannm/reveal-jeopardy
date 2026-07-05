@@ -10,6 +10,7 @@
 
 		<title>Jeopardy</title>
 
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 		<link rel="stylesheet" href="dist/reset.css" />
 		<link rel="stylesheet" href="dist/reveal.css" />
 		<link rel="stylesheet" href="dist/theme/black.css" />
@@ -47,22 +48,68 @@
 								Team settings gemmes per game i denne browser.
 							</p>
 
-							<div class="home-actions">
-								<button class="game-button primary" type="button" onclick="startConfiguredGame()">
-									Start game
-								</button>
-								<button class="game-button secondary" type="button" onclick="saveSettingsAndReload('/home')">
-									Gem settings
-								</button>
-								<button class="game-button secondary" id="question-maker-toggle" type="button" onclick="toggleQuestionMaker()">
-									Question maker
-								</button>
-								<button class="game-button reset" type="button" onclick="resetGameSettings()">
-									Reset settings
-								</button>
-							</div>
+								<div class="home-actions">
+									<button class="game-button primary" type="button" onclick="startConfiguredGame()">
+										Start game
+									</button>
+									<button class="game-button secondary" type="button" onclick="saveSettingsAndReload('/home')">
+										Gem settings
+									</button>
+									<button class="game-button secondary" id="question-maker-toggle" type="button" onclick="toggleQuestionMaker()">
+										Question maker
+									</button>
+									<button class="game-button reset" type="button" onclick="resetGameSettings()">
+										Reset settings
+									</button>
+								</div>
 
-							<div class="question-maker" id="question-maker" hidden>
+								<div class="live-session-panel" id="live-session-panel" data-testid="live-session-panel">
+									<h2>Live session</h2>
+									<div class="live-session-status" id="live-session-status">Ingen live session.</div>
+									<div class="live-session-error" id="live-session-error" hidden></div>
+									<div class="home-actions">
+										<button class="game-button primary" id="live-session-start" type="button" onclick="startLiveSession()">
+											Start live session
+										</button>
+										<button class="game-button secondary" id="live-session-reset" type="button" onclick="resetHostLiveSession()" disabled>
+											Reset session
+										</button>
+										<button class="game-button reset" id="live-session-stop" type="button" onclick="stopHostLiveSession()" disabled>
+											Stop session
+										</button>
+									</div>
+									<div class="live-session-grid">
+										<div>
+											<label>Session id</label>
+											<div class="live-session-code" id="live-session-id" data-testid="live-session-id">-</div>
+										</div>
+										<div>
+											<label>Join-link</label>
+											<a class="live-session-link" id="live-session-join-link" data-testid="live-session-join-link" href="#">-</a>
+										</div>
+									</div>
+									<div class="live-session-qr" id="live-session-qr" data-testid="live-session-qr"></div>
+									<div class="live-session-grid">
+										<div>
+											<label>Spillere</label>
+											<div id="live-session-players" data-testid="live-session-players">Ingen deltagere endnu.</div>
+										</div>
+										<div>
+											<label>Buzzers</label>
+											<div id="live-session-buzzers" data-testid="live-session-buzzers">Ingen buzzers.</div>
+										</div>
+									</div>
+									<div class="home-actions">
+										<button class="game-button secondary" id="live-session-clear-buzzers" type="button" onclick="clearHostLiveBuzzers()" disabled>
+											Ryd buzzers
+										</button>
+										<button class="game-button secondary" id="live-session-lock-buzzers" type="button" onclick="toggleHostLiveBuzzerLock()" disabled>
+											Lås buzzers
+										</button>
+									</div>
+								</div>
+
+								<div class="question-maker" id="question-maker" hidden>
 								<div class="question-maker-header">
 									<h2>Question maker</h2>
 									<button class="game-button secondary" type="button" onclick="toggleQuestionMaker(false)">
@@ -135,17 +182,13 @@
 										</div>
 
 										<div class="builder-content-grid">
-											<div class="builder-content-panel">
-												<div>
-													<label for="builder-question-type">Spørgsmålstype</label>
-													<select id="builder-question-type">
-														<option value="question">Tekst</option>
-														<option value="markdown">Markdown</option>
-														<option value="html">HTML</option>
-													</select>
+											<div class="builder-content-panel builder-live-editor" data-builder-editor="question">
+												<div class="builder-editor-row">
+													<label for="builder-question-text">Spørgsmål</label>
+													<button class="game-button secondary builder-code-toggle" id="builder-question-code-toggle" type="button" onclick="toggleBuilderCodeEditor('question')">
+														Vis kode
+													</button>
 												</div>
-
-												<label for="builder-question-text">Spørgsmål</label>
 												<div class="builder-helper-row" aria-label="Hjælp til spørgsmål">
 													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('question', 'youtube')">YouTube</button>
 													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('question', 'video')">Video</button>
@@ -153,6 +196,7 @@
 													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('question', 'image')">Billede</button>
 													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('question', 'math')">Math</button>
 												</div>
+												<div class="question-text builder-inline-preview builder-preview-content" id="builder-question-preview" tabindex="0" role="textbox" aria-label="Spørgsmål preview"></div>
 												<textarea id="builder-question-text"></textarea>
 
 												<div class="builder-upload-row">
@@ -160,23 +204,28 @@
 														<label for="builder-image-upload">Upload billede til spørgsmål</label>
 														<input id="builder-image-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
 													</div>
-													<button class="game-button secondary" id="builder-upload-button" type="button" onclick="uploadBuilderImage()">
+													<button class="game-button secondary builder-upload-button" id="builder-upload-button" type="button" onclick="uploadBuilderImage('question')">
+														Upload
+													</button>
+												</div>
+												<div class="builder-upload-row">
+													<div>
+														<label for="builder-question-video-upload">Upload video til spørgsmål</label>
+														<input id="builder-question-video-upload" type="file" accept="video/mp4,video/webm" />
+													</div>
+													<button class="game-button secondary builder-upload-button" id="builder-question-video-upload-button" type="button" onclick="uploadBuilderVideo('question')">
 														Upload
 													</button>
 												</div>
 											</div>
 
-											<div class="builder-content-panel">
-												<div>
-													<label for="builder-answer-type">Svartype</label>
-													<select id="builder-answer-type">
-														<option value="answer">Tekst</option>
-														<option value="answerMarkdown">Markdown</option>
-														<option value="answerHtml">HTML</option>
-													</select>
+											<div class="builder-content-panel builder-live-editor" data-builder-editor="answer">
+												<div class="builder-editor-row">
+													<label for="builder-answer-text">Svar</label>
+													<button class="game-button secondary builder-code-toggle" id="builder-answer-code-toggle" type="button" onclick="toggleBuilderCodeEditor('answer')">
+														Vis kode
+													</button>
 												</div>
-
-												<label for="builder-answer-text">Svar</label>
 												<div class="builder-helper-row" aria-label="Hjælp til svar">
 													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('answer', 'youtube')">YouTube</button>
 													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('answer', 'video')">Video</button>
@@ -184,8 +233,36 @@
 													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('answer', 'image')">Billede</button>
 													<button class="game-button secondary" type="button" onclick="insertBuilderSnippet('answer', 'math')">Math</button>
 												</div>
+												<div class="answer visible builder-inline-preview builder-preview-content" id="builder-answer-preview" tabindex="0" role="textbox" aria-label="Svar preview"></div>
 												<textarea id="builder-answer-text"></textarea>
+
+												<div class="builder-upload-row">
+													<div>
+														<label for="builder-answer-image-upload">Upload billede til svar</label>
+														<input id="builder-answer-image-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+													</div>
+													<button class="game-button secondary builder-upload-button" id="builder-answer-upload-button" type="button" onclick="uploadBuilderImage('answer')">
+														Upload
+													</button>
+												</div>
+												<div class="builder-upload-row">
+													<div>
+														<label for="builder-answer-video-upload">Upload video til svar</label>
+														<input id="builder-answer-video-upload" type="file" accept="video/mp4,video/webm" />
+													</div>
+													<button class="game-button secondary builder-upload-button" id="builder-answer-video-upload-button" type="button" onclick="uploadBuilderVideo('answer')">
+														Upload
+													</button>
+												</div>
 											</div>
+										</div>
+
+										<div class="builder-media-note">
+											<strong>Video-attributter</strong>
+											<span>
+												Video indsættes som kode med standardværdier. Ret efter behov i Vis kode:
+												src, start, autoplay, loop, controls og muted.
+											</span>
 										</div>
 
 										<div class="builder-slide-settings">
@@ -236,8 +313,14 @@
 										</div>
 
 										<details class="builder-extra">
-											<summary>Andet</summary>
+											<summary>Avanceret</summary>
 											<div class="builder-extra-fields">
+												<label for="builder-question-html">Spørgsmål HTML</label>
+												<textarea id="builder-question-html"></textarea>
+
+												<label for="builder-answer-html">Svar HTML</label>
+												<textarea id="builder-answer-html"></textarea>
+
 												<label for="builder-hints-text">Hints, en per linje</label>
 												<textarea id="builder-hints-text"></textarea>
 
@@ -282,17 +365,25 @@
 						<div class="jeopardy-board" id="jeopardy-board"></div>
 					</div>
 
-					<div class="board-actions">
-						<div class="game-name" id="game-name"></div>
-						<div class="home-actions">
-							<button class="game-button secondary" type="button" onclick="goToHome()">
-								Settings
-							</button>
-							<button class="game-button reset" type="button" onclick="resetGame()">
-								Reset game
-							</button>
+						<div class="board-actions">
+							<div class="game-name" id="game-name"></div>
+							<div class="live-game-panel board-live-panel">
+								<div class="live-board-status live-game-status" id="live-board-status" data-testid="live-board-status">Ingen live session</div>
+								<div class="live-game-buzzers">Ingen buzzers.</div>
+								<div class="live-game-actions">
+									<button class="game-button secondary live-clear-buzzers" type="button">Ryd buzzers</button>
+									<button class="game-button secondary live-lock-buzzers" type="button">Lås buzzers</button>
+								</div>
+							</div>
+							<div class="home-actions">
+								<button class="game-button secondary" type="button" onclick="goToHome()">
+									Settings
+								</button>
+								<button class="game-button reset" type="button" onclick="resetGame()">
+									Reset game
+								</button>
+							</div>
 						</div>
-					</div>
 				</section>
 			</div>
 		</div>
@@ -308,10 +399,14 @@
 		<script src="static/app/state.js"></script>
 		<script src="static/app/api.js"></script>
 		<script src="static/app/storage.js"></script>
-		<script src="static/app/game-model.js"></script>
 		<script src="static/app/media.js"></script>
+		<script src="static/app/content-renderer.js"></script>
+		<script src="static/app/game-model.js"></script>
 		<script src="static/app/question-maker.js"></script>
 		<script src="static/app/renderer.js"></script>
+		<script src="static/app/live-session.js"></script>
+		<script src="static/app/qr-code.js"></script>
+		<script src="static/app/host-controls.js"></script>
 		<script src="static/app/scoring.js"></script>
 		<script src="static/app/main.js"></script>
 	</body>

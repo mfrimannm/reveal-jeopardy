@@ -8,6 +8,7 @@ function loadFrontendContext() {
 	const root = path.resolve(__dirname, "..");
 	const context = {
 		console,
+		URLSearchParams,
 		localStorage: {
 			getItem() {
 				return null;
@@ -22,8 +23,9 @@ function loadFrontendContext() {
 	[
 		"static/app/state.js",
 		"static/app/storage.js",
-		"static/app/game-model.js",
 		"static/app/media.js",
+		"static/app/content-renderer.js",
+		"static/app/game-model.js",
 		"static/app/question-maker.js",
 		"static/app/scoring.js",
 	].forEach((file) => {
@@ -60,19 +62,46 @@ test("normalizes game ids, questions and game config", () => {
 	assert.equal(app.slugifyGameId("Mit Æble Spil!"), "mit-ble-spil");
 
 	const questions = app.normalizeQuestions([
-		{ points: "200", markdown: "**Q**", answerHtml: "<p>A</p>" },
+		{
+			points: "200",
+			question: { format: "rich", content: "**Q**" },
+			answer: { format: "html", content: "<p>A</p>" },
+		},
 		{},
 	]);
 	assert.deepEqual(plain(questions), [
-		{ points: 200, markdown: "**Q**", answerHtml: "<p>A</p>", question: "", answer: "" },
-		{ points: 200, question: "Question goes here.", answer: "Answer goes here." },
+		{
+			points: 200,
+			question: { format: "rich", content: "**Q**" },
+			answer: { format: "html", content: "<p>A</p>" },
+			hints: [],
+			media: null,
+		},
+		{
+			points: 200,
+			question: { format: "rich", content: "Question goes here." },
+			answer: { format: "rich", content: "Answer goes here." },
+			hints: [],
+			media: null,
+		},
 	]);
 
 	const game = app.normalizeGameConfig({
 		id: "science",
 		title: "Science",
 		teams: ["Red", "Blue"],
-		categories: [{ title: "Physics", questions: [{ points: 300, question: "Q", answer: "A" }] }],
+		categories: [
+			{
+				title: "Physics",
+				questions: [
+					{
+						points: 300,
+						question: { format: "rich", content: "Q" },
+						answer: { format: "rich", content: "A" },
+					},
+				],
+			},
+		],
 	});
 	assert.equal(game.id, "science");
 	assert.deepEqual(plain(game.teams), [
@@ -121,8 +150,8 @@ test("scores correct and wrong answers and marks questions used", () => {
 		questionAwards = {};
 		questionIdSet = new Set(["c1q100"]);
 		getCurrentQuestionSlide = () => ({ id: "c1q100" });
-		updateScoreboard = () => {};
-		updateUsedTiles = () => {};
+		updateScore = () => {};
+		updateTile = () => {};
 		goToBoard = () => { window.location.hash = "/board"; };
 
 		changeScore("team1", 100);
@@ -153,19 +182,93 @@ test("can reset a used question for correction", () => {
 		usedQuestions = ["c1q100"];
 		questionAwards = { c1q100: { team: "team1", amount: 100 } };
 		questionIdSet = new Set(["c1q100"]);
-		updateScoreboard = () => {};
-		setTileAvailable = (questionId) => { window.lastAvailableQuestionId = questionId; };
+		updateScore = () => {};
+		updateTile = (questionId) => { window.lastUpdatedQuestionId = questionId; };
 
 		prepareQuestionForCorrection("c1q100");
 
-		({ scores, usedQuestions, questionAwards, lastAvailableQuestionId: window.lastAvailableQuestionId });
+		({ scores, usedQuestions, questionAwards, lastUpdatedQuestionId: window.lastUpdatedQuestionId });
 		`
 	);
 
 	assert.deepEqual(plain(state.scores), { team1: 0 });
 	assert.deepEqual(plain(state.usedQuestions), []);
 	assert.deepEqual(plain(state.questionAwards), {});
-	assert.equal(state.lastAvailableQuestionId, "c1q100");
+	assert.equal(state.lastUpdatedQuestionId, "c1q100");
+});
+
+test("state updates target only the changed score and tile", () => {
+	const app = loadFrontendContext();
+	const state = evaluate(
+		app,
+		`
+		window = { location: { hash: "" }, parent: null, opener: null, top: null };
+		gameKey = "score-game";
+		gameConfig = { id: "score-game" };
+		teamIds = ["team1", "team2"];
+		scores = { team1: 0, team2: 0 };
+		usedQuestions = [];
+		questionAwards = {};
+		questionIdSet = new Set(["c1q100"]);
+		const scoreUpdates = [];
+		const tileUpdates = [];
+		getCurrentQuestionSlide = () => ({ id: "c1q100" });
+		updateScore = (teamId) => { scoreUpdates.push(teamId); };
+		updateTile = (questionId) => { tileUpdates.push(questionId); };
+		updateScoreboard = () => { throw new Error("full scoreboard update was not expected"); };
+		updateUsedTiles = () => { throw new Error("full board update was not expected"); };
+		goToBoard = () => { window.location.hash = "/board"; };
+
+		changeScore("team1", 100);
+
+		({ scores, usedQuestions, questionAwards, scoreUpdates, tileUpdates });
+		`
+	);
+
+	assert.deepEqual(plain(state.scores), { team1: 100, team2: 0 });
+	assert.deepEqual(plain(state.usedQuestions), ["c1q100"]);
+	assert.deepEqual(plain(state.questionAwards), {
+		c1q100: { team: "team1", amount: 100 },
+	});
+	assert.deepEqual(plain(state.scoreUpdates), ["team1"]);
+	assert.deepEqual(plain(state.tileUpdates), ["c1q100"]);
+});
+
+test("multi-score can award more than one team before returning to board", () => {
+	const app = loadFrontendContext();
+	const state = evaluate(
+		app,
+		`
+		window = { location: { hash: "" }, parent: null, opener: null, top: null };
+		gameKey = "score-game";
+		gameConfig = { id: "score-game" };
+		teamIds = ["team1", "team2"];
+		scores = { team1: 0, team2: 0 };
+		usedQuestions = [];
+		questionAwards = {};
+		questionIdSet = new Set(["c1q100"]);
+		getCurrentQuestionSlide = () => ({ id: "c1q100" });
+		updateScore = () => {};
+		updateTile = () => {};
+		goToBoard = () => { window.location.hash = "/board"; };
+
+		changeScore("team1", 100, { append: true, keepOpen: true });
+		changeScore("team2", -100, { append: true, keepOpen: true });
+		goBackWithoutScore("c1q100");
+
+		({ scores, usedQuestions, questionAwards, hash: window.location.hash });
+		`
+	);
+
+	assert.deepEqual(plain(state.scores), { team1: 100, team2: -100 });
+	assert.deepEqual(plain(state.usedQuestions), ["c1q100"]);
+	assert.deepEqual(plain(state.questionAwards), {
+		c1q100: [
+			{ team: "team1", amount: 100 },
+			{ team: "team2", amount: -100 },
+		],
+	});
+	assert.equal(state.hash, "/board");
 });
 
 test("normalizes builder drafts and serializes games", () => {
@@ -174,16 +277,16 @@ test("normalizes builder drafts and serializes games", () => {
 	const question = app.normalizeBuilderQuestion(
 		{
 			points: "500",
-			markdown: "# Question",
-			answerHtml: "<strong>Answer</strong>",
-			hints: [{ text: "Hint 1" }, "Hint 2"],
+			question: { format: "rich", content: "# Question" },
+			answer: { format: "html", content: "<strong>Answer</strong>" },
+			hints: [{ format: "rich", content: "Hint 1" }, "Hint 2"],
 			backgroundVideoMuted: false,
 		},
 		0
 	);
 
-	assert.equal(question.questionType, "markdown");
-	assert.equal(question.answerType, "answerHtml");
+	assert.deepEqual(plain(question.question), { format: "rich", content: "# Question" });
+	assert.deepEqual(plain(question.answer), { format: "html", content: "<strong>Answer</strong>" });
 	assert.equal(question.hints, "Hint 1\nHint 2");
 	assert.equal(question.backgroundVideoMuted, false);
 
@@ -196,13 +299,16 @@ test("normalizes builder drafts and serializes games", () => {
 	const game = app.buildGameFromBuilderDraft(draft);
 
 	assert.equal(game.id, "demo-game");
-	assert.equal(game.categories[0].questions[0].markdown, "# Question");
-	assert.equal(game.categories[0].questions[0].answerHtml, "<strong>Answer</strong>");
-	assert.deepEqual(plain(game.categories[0].questions[0].hints), ["Hint 1", "Hint 2"]);
+	assert.deepEqual(plain(game.categories[0].questions[0].question), { format: "rich", content: "# Question" });
+	assert.deepEqual(plain(game.categories[0].questions[0].answer), { format: "html", content: "<strong>Answer</strong>" });
+	assert.deepEqual(plain(game.categories[0].questions[0].hints), [
+		{ format: "rich", content: "Hint 1" },
+		{ format: "rich", content: "Hint 2" },
+	]);
 	assert.equal(app.serializeBuilderGame(draft), JSON.stringify(game, null, "\t") + "\n");
 });
 
-test("keeps question content fields backward compatible in builder export", () => {
+test("builder export uses rich question and answer content", () => {
 	const app = loadFrontendContext();
 	const draft = app.normalizeBuilderDraft({
 		title: "Compatibility",
@@ -215,9 +321,21 @@ test("keeps question content fields backward compatible in builder export", () =
 			{
 				title: "Formats",
 				questions: [
-					{ points: 100, question: "Plain question", answer: "Plain answer" },
-					{ points: 200, markdown: "**Markdown question**", answerMarkdown: "**Markdown answer**" },
-					{ points: 300, html: "<p>HTML question</p>", answerHtml: "<p>HTML answer</p>" },
+					{
+						points: 100,
+						question: { format: "rich", content: "Plain question" },
+						answer: { format: "rich", content: "Plain answer" },
+					},
+					{
+						points: 200,
+						question: { format: "rich", content: "**Markdown question**" },
+						answer: { format: "rich", content: "**Markdown answer**" },
+					},
+					{
+						points: 300,
+						question: { format: "html", content: "<p>HTML question</p>" },
+						answer: { format: "html", content: "<p>HTML answer</p>" },
+					},
 				],
 			},
 		],
@@ -225,12 +343,12 @@ test("keeps question content fields backward compatible in builder export", () =
 	const game = app.buildGameFromBuilderDraft(draft);
 	const questions = game.categories[0].questions;
 
-	assert.equal(questions[0].question, "Plain question");
-	assert.equal(questions[0].answer, "Plain answer");
-	assert.equal(questions[1].markdown, "**Markdown question**");
-	assert.equal(questions[1].answerMarkdown, "**Markdown answer**");
-	assert.equal(questions[2].html, "<p>HTML question</p>");
-	assert.equal(questions[2].answerHtml, "<p>HTML answer</p>");
+	assert.deepEqual(plain(questions[0].question), { format: "rich", content: "Plain question" });
+	assert.deepEqual(plain(questions[0].answer), { format: "rich", content: "Plain answer" });
+	assert.deepEqual(plain(questions[1].question), { format: "rich", content: "**Markdown question**" });
+	assert.deepEqual(plain(questions[1].answer), { format: "rich", content: "**Markdown answer**" });
+	assert.deepEqual(plain(questions[2].question), { format: "html", content: "<p>HTML question</p>" });
+	assert.deepEqual(plain(questions[2].answer), { format: "html", content: "<p>HTML answer</p>" });
 });
 
 test("creates and prepares YouTube URLs", () => {
@@ -248,6 +366,59 @@ test("creates and prepares YouTube URLs", () => {
 		app.prepareYouTubeEmbedUrl("https://www.youtube.com/embed/abcDEF12345?rel=0"),
 		"https://www.youtube.com/embed/abcDEF12345?rel=0&autoplay=1&enablejsapi=1"
 	);
+	assert.equal(
+		app.createYouTubeEmbedUrlFromMedia({
+			type: "youtube",
+			url: "https://www.youtube.com/watch?v=abcDEF12345",
+			start: 42,
+			end: 75,
+			autoplay: true,
+			loop: true,
+			controls: false,
+			muted: true,
+		}),
+		"https://www.youtube.com/embed/abcDEF12345?rel=0&start=42&end=75&autoplay=1&loop=1&playlist=abcDEF12345&controls=0&mute=1"
+	);
+	assert.deepEqual(plain(app.normalizeMedia({
+		type: "video",
+		src: "/uploads/clip.mp4",
+		start: "10",
+		autoplay: true,
+		loop: true,
+		controls: true,
+		muted: false,
+	})), {
+		type: "video",
+		src: "/uploads/clip.mp4",
+		start: 10,
+		autoplay: true,
+		loop: true,
+		controls: true,
+		muted: false,
+	});
+	assert.deepEqual(plain(app.parseRichMediaToken(
+		'::youtube url="https://www.youtube.com/watch?v=abcDEF12345" start="42" end="75" autoplay="true" loop="true" controls="false" muted="true"::'
+	)), {
+		type: "youtube",
+		url: "https://www.youtube.com/watch?v=abcDEF12345",
+		start: 42,
+		end: 75,
+		autoplay: true,
+		loop: true,
+		controls: false,
+		muted: true,
+	});
+	assert.deepEqual(plain(app.parseRichMediaToken(
+		'::video src="/uploads/clip.mp4" start="10" autoplay="false" loop="true" controls="true" muted="true"::'
+	)), {
+		type: "video",
+		src: "/uploads/clip.mp4",
+		start: 10,
+		autoplay: false,
+		loop: true,
+		controls: true,
+		muted: true,
+	});
 });
 
 test("parses game sync messages defensively", () => {

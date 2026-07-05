@@ -32,18 +32,19 @@ function normalizeQuestions(questions) {
 
 	return sourceQuestions.map((question, index) => {
 		const fallbackPoints = (index + 1) * 100;
+		const source = question && typeof question === "object" ? question : {};
 
 		return {
-			...question,
-			points: Number(question.points) || fallbackPoints,
-			question:
-				(question.question || question.html || question.markdown)
-					? question.question || ""
-					: "Question goes here.",
-			answer:
-				(question.answer || question.answerHtml || question.answerMarkdown)
-					? question.answer || ""
-					: "Answer goes here.",
+			...source,
+			points: Number(source.points) || fallbackPoints,
+			question: normalizeRichContent(
+				source.question || createRichContent("Question goes here.", "rich")
+			),
+			answer: normalizeRichContent(
+				source.answer || createRichContent("Answer goes here.", "rich")
+			),
+			hints: normalizeHints(source.hints),
+			media: normalizeMedia(source.media),
 		};
 	});
 }

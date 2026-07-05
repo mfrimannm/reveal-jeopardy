@@ -1,0 +1,13 @@
+services:
+  reveal-jeopardy:
+    image: ghcr.io/mfrimannm/reveal-jeopardy:latest
+    container_name: reveal-jeopardy
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      ADMIN_PASSWORD: "change-me"
+      DATA_DIR: "/app/data"
+      MAX_UPLOAD_MB: "10"
+    volumes:
+      - ./data:/app/data

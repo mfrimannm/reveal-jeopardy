@@ -11,6 +11,7 @@ tmp/**
 node_modules/
 test-results/
 playwright-report/
+.playwright-browsers/
 .sass-cache
 presentation
 presentation.zip

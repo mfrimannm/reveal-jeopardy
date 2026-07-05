@@ -12,18 +12,36 @@
 			"questions": [
 				{
 					"points": 100,
-					"markdown": "Han er nice\n\n**Hej**\n\n<p>$$\\frac{a}{b}$$</p>\n\n<p>$$\\frac{a}{b}$$</p>\n\n<img src=\"/uploads/jn150-da5222af.jpg\" alt=\"JN150\">",
-					"answerHtml": "Hvem er Frimann\n\n<img src=\"/uploads/jn150-da5222af.jpg\" alt=\"JN150\">"
+					"question": {
+						"format": "rich",
+						"content": "efefwef`???"
+					},
+					"answer": {
+						"format": "html",
+						"content": "Hvem er Frimann?\n\n<img src=\"/uploads/jn150-da5222af.jpg\" alt=\"JN150\">"
+					}
 				},
 				{
 					"points": 200,
-					"question": "feew",
-					"answer": "few"
+					"question": {
+						"format": "rich",
+						"content": "fewew video? = 2"
+					},
+					"answer": {
+						"format": "rich",
+						"content": "fewgrrthtrg"
+					}
 				},
 				{
 					"points": 300,
-					"question": "efweewf",
-					"answerMarkdown": "fefweewf"
+					"question": {
+						"format": "rich",
+						"content": "efweewf"
+					},
+					"answer": {
+						"format": "rich",
+						"content": "fefweewf"
+					}
 				}
 			]
 		},
@@ -32,22 +50,43 @@
 			"questions": [
 				{
 					"points": 100,
-					"question": "Question goes here.",
-					"answer": "Answer goes here.",
+					"question": {
+						"format": "rich",
+						"content": "Question goes here."
+					},
+					"answer": {
+						"format": "rich",
+						"content": "Answer goes here."
+					},
 					"hints": [
-						"grger"
+						{
+							"format": "rich",
+							"content": "grger"
+						}
 					],
 					"notes": "gregregrg"
 				},
 				{
 					"points": 200,
-					"html": "<div class=\"media-row\">\n\t<img class=\"pokemon-sprite\" src=\"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png\" alt=\"Bulbasaur\">\n\t<p>Hvilken Kanto-starter har en planteknop på ryggen?</p>\n</div>",
-					"answer": "ffewfew"
+					"question": {
+						"format": "html",
+						"content": "<div class=\"media-row\">\n\t<img class=\"pokemon-sprite\" src=\"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png\" alt=\"Bulbasaur\">\n\t<p>Hvilken Kanto-starter har en planteknop på ryggen?</p>\n</div>"
+					},
+					"answer": {
+						"format": "rich",
+						"content": "ffewfew"
+					}
 				},
 				{
 					"points": 300,
-					"question": "Question goes here.",
-					"answer": "Answer goes here."
+					"question": {
+						"format": "rich",
+						"content": "Question goes here."
+					},
+					"answer": {
+						"format": "rich",
+						"content": "Answer goes here."
+					}
 				}
 			]
 		},
@@ -56,18 +95,36 @@
 			"questions": [
 				{
 					"points": 100,
-					"question": "Question goes here.",
-					"answer": "Answer goes here."
+					"question": {
+						"format": "rich",
+						"content": "Question goes here."
+					},
+					"answer": {
+						"format": "rich",
+						"content": "Answer goes here."
+					}
 				},
 				{
 					"points": 200,
-					"html": "<iframe src=\"https://www.youtube.com/embed/bILE5BEyhdo?rel=0\" title=\"Pokemon YouTube clip as slide content\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>\n<p>YouTube ligger her som almindeligt slide-indhold, så score-knapperne stadig er nemme at ramme.</p>\n<p>Hvilket HTML-element bruges til embed'et?</p>",
-					"answer": "efewewf"
+					"question": {
+						"format": "html",
+						"content": "<iframe src=\"https://www.youtube.com/embed/bILE5BEyhdo?rel=0\" title=\"Pokemon YouTube clip as slide content\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>\n<p>YouTube ligger her som almindeligt slide-indhold, så score-knapperne stadig er nemme at ramme.</p>\n<p>Hvilket HTML-element bruges til embed'et?</p>"
+					},
+					"answer": {
+						"format": "rich",
+						"content": "efewewf"
+					}
 				},
 				{
 					"points": 300,
-					"question": "Question goes here.",
-					"answer": "Answer goes here."
+					"question": {
+						"format": "rich",
+						"content": "Question goes here."
+					},
+					"answer": {
+						"format": "rich",
+						"content": "Answer goes here."
+					}
 				}
 			]
 		}

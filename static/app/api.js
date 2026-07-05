@@ -83,8 +83,14 @@ async function loadGameFile() {
 					questions: [
 						{
 							points: 100,
-							question: "Der kunne ikke hentes et spil fra serveren.",
-							answer: "Tjek at FastAPI-serveren kører.",
+							question: {
+								format: "rich",
+								content: "Der kunne ikke hentes et spil fra serveren.",
+							},
+							answer: {
+								format: "rich",
+								content: "Tjek at FastAPI-serveren kører.",
+							},
 						},
 					],
 				},
@@ -99,12 +105,11 @@ function updateAdminControls() {
 	const loginButton = document.getElementById("admin-login-button");
 	const logoutButton = document.getElementById("admin-logout-button");
 	const saveButton = document.getElementById("builder-save-game-button");
-	const uploadButton = document.getElementById("builder-upload-button");
 
 	if (status) {
 		status.textContent = isAdmin()
-			? "Logget ind som admin. Du kan gemme spil og uploade billeder."
-			: "Log ind som admin for at gemme spil og uploade billeder.";
+			? "Logget ind som admin. Du kan gemme spil og uploade media."
+			: "Log ind som admin for at gemme spil og uploade media.";
 	}
 
 	if (password) {
@@ -124,8 +129,12 @@ function updateAdminControls() {
 		saveButton.disabled = !isAdmin();
 	}
 
-	if (uploadButton) {
+	document.querySelectorAll(".builder-upload-button").forEach((uploadButton) => {
 		uploadButton.disabled = !isAdmin();
+	});
+
+	if (typeof renderHostLiveSession === "function") {
+		renderHostLiveSession();
 	}
 }
 
@@ -159,4 +168,3 @@ async function logoutAdmin() {
 	await refreshAdminState();
 	setBuilderStatus("Logget ud.");
 }
-

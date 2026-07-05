@@ -34,6 +34,10 @@ body,
 }
 
 .home-slide {
+	max-height: 100%;
+	overflow-x: hidden !important;
+	overflow-y: auto !important;
+	padding-bottom: 24px;
 	text-align: left;
 }
 
@@ -49,8 +53,9 @@ body,
 	display: grid;
 	grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
 	gap: 18px;
-	height: calc(100% - 78px);
-	min-height: 0;
+	height: auto;
+	min-height: calc(100% - 78px);
+	align-items: start;
 }
 
 .home-panel {
@@ -58,7 +63,7 @@ body,
 	background: rgba(255, 255, 255, 0.06);
 	padding: 18px;
 	min-height: 0;
-	overflow: auto;
+	overflow: visible;
 }
 
 .home-panel h2 {
@@ -209,4 +214,120 @@ body,
 
 .game-button.secondary {
 	background: #222222;
+}
+
+.live-session-panel {
+	border-top: 2px solid rgba(255, 255, 255, 0.35);
+	display: grid;
+	gap: 12px;
+	margin-top: 18px;
+	padding-top: 16px;
+}
+
+.live-session-panel h2 {
+	margin-bottom: 0;
+}
+
+.live-session-status,
+.live-session-error,
+.live-session-link,
+.live-board-status {
+	font-size: 0.28em;
+	line-height: 1.28;
+}
+
+.live-session-panel label,
+.live-session-panel ul,
+.live-session-panel ol,
+.live-session-panel p {
+	font-size: 0.28em;
+	line-height: 1.28;
+}
+
+.live-session-error {
+	background: #3a1111;
+	border: 2px solid var(--jeopardy-red);
+	color: #ffffff;
+	font-weight: 800;
+	padding: 10px;
+}
+
+.live-session-grid {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.live-session-code {
+	color: var(--jeopardy-gold);
+	font-size: 0.62em;
+	font-weight: 900;
+	letter-spacing: 0;
+	line-height: 1;
+}
+
+.live-session-link {
+	color: #ffffff;
+	display: block;
+	overflow-wrap: anywhere;
+}
+
+.live-session-qr {
+	background: #ffffff;
+	height: 128px;
+	width: 128px;
+}
+
+.live-session-qr:empty {
+	background: transparent;
+	height: 0;
+}
+
+.live-qr-svg {
+	display: block;
+	height: 128px;
+	width: 128px;
+}
+
+.live-session-panel ul,
+.live-session-panel ol {
+	margin: 6px 0 0;
+	padding-left: 22px;
+}
+
+.live-board-status {
+	color: #dddddd;
+	font-weight: 800;
+}
+
+.live-game-panel {
+	border: 2px solid rgba(255, 255, 255, 0.58);
+	background: rgba(255, 255, 255, 0.05);
+	display: grid;
+	gap: 8px;
+	padding: 10px;
+}
+
+.live-game-status,
+.live-game-buzzers {
+	color: #dddddd;
+	font-size: 0.25em;
+	font-weight: 800;
+	line-height: 1.25;
+}
+
+.live-game-buzzers ol {
+	margin: 6px 0 0;
+	padding-left: 20px;
+}
+
+.live-game-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.live-game-actions .game-button {
+	font-size: 0.24em;
+	padding: 8px 10px;
 }

@@ -1,7 +1,13 @@
 .git
 .agents
 .codex
+.github
+.pytest_cache
+.venv
+.playwright-browsers
+__pycache__
 node_modules
+test-results
 presentation
 presentation.zip
 data/uploads/*

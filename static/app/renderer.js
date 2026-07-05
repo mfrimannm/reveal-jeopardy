@@ -50,69 +50,6 @@ function applySlideOptions(slide, question) {
 	}
 }
 
-function renderContent(container, question, kind) {
-	const isAnswer = kind === "answer";
-	const markdown = isAnswer ? question.answerMarkdown : question.markdown;
-	const html = isAnswer ? question.answerHtml : question.html;
-	const fallback = isAnswer ? question.answer : question.question;
-
-	container.innerHTML = "";
-
-	if (markdown) {
-		const markdownElement = document.createElement("div");
-		const template = document.createElement("script");
-
-		markdownElement.setAttribute("data-markdown", "");
-		markdownElement.setAttribute("data-separator", "$x");
-		template.type = "text/template";
-		template.textContent = markdown;
-		markdownElement.appendChild(template);
-		container.appendChild(markdownElement);
-		return;
-	}
-
-	if (html) {
-		container.innerHTML = html;
-		prepareYouTubeIframes(container);
-		return;
-	}
-
-	container.textContent = fallback || "";
-}
-
-function renderHints(container, question) {
-	if (!Array.isArray(question.hints) || question.hints.length === 0) {
-		return;
-	}
-
-	const hints = document.createElement("div");
-	const hintCue = document.createElement("div");
-
-	hints.className = "question-hints";
-	hintCue.className = "hint-cue";
-	hintCue.textContent = "Højre/ned giver hints. Venstre/op går til boardet.";
-	hints.appendChild(hintCue);
-
-	question.hints.forEach((hint, index) => {
-		const hintElement = document.createElement("p");
-		const hintConfig =
-			hint && typeof hint === "object" ? hint : { text: hint };
-
-		hintElement.className = "fragment";
-		hintElement.dataset.fragmentIndex = String(index);
-
-		if (hintConfig.html) {
-			hintElement.innerHTML = hintConfig.html;
-		} else {
-			hintElement.textContent = hintConfig.text || "";
-		}
-
-		hints.appendChild(hintElement);
-	});
-
-	container.appendChild(hints);
-}
-
 function renderTeamFields(teamNames) {
 	const teamFieldList = document.getElementById("team-field-list");
 	const teamCountInput = document.getElementById("team-count");
@@ -309,7 +246,11 @@ function renderGame() {
 			const answer = document.createElement("div");
 			const questionActions = document.createElement("div");
 			const showAnswerButton = document.createElement("button");
+			const backButton = document.createElement("button");
 			const scoreControls = document.createElement("div");
+			const scoreMode = document.createElement("label");
+			const scoreModeInput = document.createElement("input");
+			const livePanel = document.createElement("div");
 
 			slide.id = questionId;
 			slide.className = "question-slide";
@@ -324,26 +265,54 @@ function renderGame() {
 			pointBadge.textContent = question.points;
 			questionText.className = "question-text";
 			answer.className = "answer";
-			renderContent(questionText, question, "question");
-			renderHints(questionText, question);
-			renderContent(answer, question, "answer");
+			renderQuestionPart(questionText, question, "question");
+			renderQuestionMedia(questionText, question.media);
+			renderQuestionHints(questionText, question.hints);
+			renderQuestionPart(answer, question, "answer");
 			questionActions.className = "question-actions";
 			showAnswerButton.className = "game-button primary";
 			showAnswerButton.type = "button";
 			showAnswerButton.textContent = "Show answer";
 			showAnswerButton.onclick = showAnswer;
+			backButton.className = "game-button secondary";
+			backButton.type = "button";
+			backButton.textContent = "Til board uden point";
+			backButton.onclick = () => goBackWithoutScore(questionId);
+			scoreMode.className = "score-mode-toggle";
+			scoreModeInput.type = "checkbox";
+			scoreModeInput.id = "multi-score-" + questionId;
+			scoreMode.appendChild(scoreModeInput);
+			scoreMode.appendChild(document.createTextNode(" Flere teams"));
 			scoreControls.className = "score-controls";
 			scoreControls.setAttribute("aria-label", "Score controls");
+			livePanel.className = "live-game-panel";
+			livePanel.innerHTML =
+				'<div class="live-game-status">Ingen live session</div>' +
+				'<div class="live-game-buzzers">Ingen buzzers.</div>' +
+				'<div class="live-game-actions">' +
+				'<button class="game-button secondary live-clear-buzzers" type="button">Ryd buzzers</button>' +
+				'<button class="game-button secondary live-lock-buzzers" type="button">Lås buzzers</button>' +
+				"</div>";
 
 			questionActions.appendChild(showAnswerButton);
+			questionActions.appendChild(backButton);
+			questionActions.appendChild(scoreMode);
 			teams.forEach((team) => {
 				const row = document.createElement("div");
 				const label = document.createElement("strong");
+				const questionScore = document.createElement("span");
 				const correctButton = document.createElement("button");
 				const wrongButton = document.createElement("button");
 
 				row.className = "team-score-row";
 				label.textContent = team.name;
+				questionScore.className = "team-question-score";
+				questionScore.dataset.scoreTeamId = team.id;
+				questionScore.textContent = String(scores[team.id] || 0);
+				questionScore.setAttribute(
+					"aria-label",
+					team.name + " score " + (scores[team.id] || 0)
+				);
 				correctButton.className = "game-button correct";
 				correctButton.type = "button";
 				correctButton.textContent = "+";
@@ -351,7 +320,11 @@ function renderGame() {
 					"aria-label",
 					team.name + " correct, plus " + question.points
 				);
-				correctButton.onclick = () => changeScore(team.id, question.points);
+				correctButton.onclick = () =>
+					changeScore(team.id, question.points, {
+						append: scoreModeInput.checked,
+						keepOpen: scoreModeInput.checked,
+					});
 				wrongButton.className = "game-button wrong";
 				wrongButton.type = "button";
 				wrongButton.textContent = "-";
@@ -359,9 +332,14 @@ function renderGame() {
 					"aria-label",
 					team.name + " wrong, minus " + question.points
 				);
-				wrongButton.onclick = () => changeScore(team.id, -question.points);
+				wrongButton.onclick = () =>
+					changeScore(team.id, -question.points, {
+						append: scoreModeInput.checked,
+						keepOpen: scoreModeInput.checked,
+					});
 
 				row.appendChild(label);
+				row.appendChild(questionScore);
 				row.appendChild(correctButton);
 				row.appendChild(wrongButton);
 				scoreControls.appendChild(row);
@@ -372,6 +350,7 @@ function renderGame() {
 			questionMain.appendChild(questionActions);
 			questionMain.appendChild(answer);
 			questionSidebar.appendChild(pointBadge);
+			questionSidebar.appendChild(livePanel);
 			questionSidebar.appendChild(scoreControls);
 			questionLayout.appendChild(questionMain);
 			questionLayout.appendChild(questionSidebar);
@@ -396,11 +375,39 @@ function renderGame() {
 
 function updateScoreboard() {
 	teamIds.forEach((teamId) => {
-		const scoreElement = document.getElementById("score-" + teamId);
+		updateScore(teamId);
+	});
+}
 
-		if (scoreElement) {
-			scoreElement.textContent = scores[teamId] || 0;
-		}
+function updateScore(teamId) {
+	const scoreElement = document.getElementById("score-" + teamId);
+	const scoreValue = scores[teamId] || 0;
+
+	if (scoreElement) {
+		scoreElement.textContent = scoreValue;
+		pulseScoreElement(scoreElement);
+	}
+
+	document
+		.querySelectorAll('[data-score-team-id="' + teamId + '"]')
+		.forEach((score) => {
+			score.textContent = scoreValue;
+			score.setAttribute("aria-label", "Score " + scoreValue);
+			pulseScoreElement(score);
+		});
+}
+
+function pulseScoreElement(element) {
+	if (!element) {
+		return;
+	}
+
+	element.classList.remove("score-updated");
+	window.requestAnimationFrame(() => {
+		element.classList.add("score-updated");
+		window.setTimeout(() => {
+			element.classList.remove("score-updated");
+		}, 450);
 	});
 }
 
@@ -450,13 +457,31 @@ function setTileUsed(questionId) {
 function updateUsedTiles() {
 	document.querySelectorAll(".points").forEach((tile) => {
 		if (tile.id && tile.id.startsWith("tile-")) {
-			setTileAvailable(tile.id.replace("tile-", ""));
+			updateTile(tile.id.replace("tile-", ""));
 		}
 	});
+}
 
-	usedQuestions.forEach((questionId) => {
+function updateTile(questionId) {
+	if (usedQuestions.includes(questionId)) {
 		setTileUsed(questionId);
-	});
+		return;
+	}
+
+	setTileAvailable(questionId);
+}
+
+function updateCurrentQuestion(questionId) {
+	if (!questionId || !isQuestionId(questionId)) {
+		clearVisibleAnswers();
+		return;
+	}
+
+	const currentSlide = getCurrentQuestionSlide();
+
+	if (currentSlide && currentSlide.id !== questionId) {
+		clearVisibleAnswers();
+	}
 }
 
 function showAnswer() {
@@ -501,4 +526,3 @@ function clearVisibleAnswers() {
 		answer.classList.remove("visible");
 	});
 }
-

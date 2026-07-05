@@ -11,12 +11,11 @@ function clampBuilderCount(value, fallback) {
 function createDefaultBuilderQuestion(points) {
 	return {
 		points,
-		questionType: "question",
-		question: "",
-		answerType: "answer",
-		answer: "",
+		question: createRichContent("", "rich"),
+		answer: createRichContent("", "rich"),
 		hints: "",
 		notes: "",
+		media: null,
 		background: "",
 		backgroundColor: "",
 		backgroundVideo: "",
@@ -69,45 +68,23 @@ function getBuilderTextValue(source, fields) {
 
 function normalizeBuilderQuestion(question, index) {
 	const source = question && typeof question === "object" ? question : {};
-	const questionType = source.markdown
-		? "markdown"
-		: source.html
-		? "html"
-		: source.questionType || "question";
-	const answerType = source.answerMarkdown
-		? "answerMarkdown"
-		: source.answerHtml
-		? "answerHtml"
-		: source.answerType || "answer";
+	const questionContent = normalizeRichContent(source.question || "");
+	const answerContent = normalizeRichContent(source.answer || "");
+	const media = normalizeMedia(source.media);
 
 	return {
 		points: Number(source.points) || (index + 1) * 100,
-		questionType:
-			questionType === "markdown" || questionType === "html"
-				? questionType
-				: "question",
-		question: getBuilderTextValue(source, [
-			"question",
-			"markdown",
-			"html",
-		]),
-		answerType:
-			answerType === "answerMarkdown" || answerType === "answerHtml"
-				? answerType
-				: "answer",
-		answer: getBuilderTextValue(source, [
-			"answer",
-			"answerMarkdown",
-			"answerHtml",
-		]),
+		question: questionContent,
+		answer: answerContent,
 		hints: Array.isArray(source.hints)
 			? source.hints
 					.map((hint) =>
-						typeof hint === "object" ? hint.text || hint.html || "" : hint
+						typeof hint === "object" ? hint.content || "" : hint
 					)
 					.join("\n")
 			: String(source.hints || ""),
 		notes: String(source.notes || source.notesHtml || ""),
+		media,
 		background: String(source.background || ""),
 		backgroundColor: String(source.backgroundColor || ""),
 		backgroundVideo: String(source.backgroundVideo || ""),
@@ -298,10 +275,10 @@ function initializeGameBuilder() {
 		"builder-category-count",
 		"builder-row-count",
 		"builder-question-points",
-		"builder-question-type",
 		"builder-question-text",
-		"builder-answer-type",
+		"builder-question-html",
 		"builder-answer-text",
+		"builder-answer-html",
 		"builder-hints-text",
 		"builder-notes-text",
 		"builder-background",
@@ -335,6 +312,20 @@ function initializeGameBuilder() {
 			}
 		};
 	}
+
+	["question", "answer"].forEach((target) => {
+		const preview = document.getElementById("builder-" + target + "-preview");
+
+		if (preview) {
+			preview.onclick = () => toggleBuilderCodeEditor(target);
+			preview.onkeydown = (event) => {
+				if (event.key === "Enter" || event.key === " ") {
+					event.preventDefault();
+					toggleBuilderCodeEditor(target);
+				}
+			};
+		}
+	});
 
 	updateAdminControls();
 }
@@ -440,10 +431,10 @@ function renderBuilderBoard() {
 			tile.className =
 				"builder-tile" +
 				(isActive ? " active" : "") +
-				(question.question && question.answer ? " complete" : "");
+				(hasBuilderQuestionContent(question) && hasBuilderAnswerContent(question) ? " complete" : "");
 			tile.textContent = question.points;
-			title.textContent = question.question
-				? question.question.slice(0, 36)
+			title.textContent = getBuilderContentSummary(question.question)
+				? getBuilderContentSummary(question.question).slice(0, 36)
 				: "Tomt";
 			tile.setAttribute(
 				"aria-label",
@@ -455,6 +446,18 @@ function renderBuilderBoard() {
 			board.appendChild(tile);
 		});
 	}
+}
+
+function getBuilderContentSummary(content) {
+	return normalizeRichContent(content).content.trim();
+}
+
+function hasBuilderQuestionContent(question) {
+	return Boolean(getBuilderContentSummary(question && question.question));
+}
+
+function hasBuilderAnswerContent(question) {
+	return Boolean(getBuilderContentSummary(question && question.answer));
 }
 
 function renderSelectedBuilderQuestionTitle() {
@@ -491,10 +494,8 @@ function renderSelectedBuilderQuestion() {
 	editor.hidden = false;
 	renderSelectedBuilderQuestionTitle();
 	setBuilderFieldValue("builder-question-points", question.points);
-	setBuilderFieldValue("builder-question-type", question.questionType);
-	setBuilderFieldValue("builder-question-text", question.question);
-	setBuilderFieldValue("builder-answer-type", question.answerType);
-	setBuilderFieldValue("builder-answer-text", question.answer);
+	setBuilderContentEditorValue("question", question.question);
+	setBuilderContentEditorValue("answer", question.answer);
 	setBuilderFieldValue("builder-hints-text", question.hints);
 	setBuilderFieldValue("builder-notes-text", question.notes);
 	setBuilderFieldValue("builder-background", question.background);
@@ -515,6 +516,24 @@ function renderSelectedBuilderQuestion() {
 		"builder-background-video-muted",
 		question.backgroundVideoMuted
 	);
+	setBuilderCodeMode("question", false);
+	setBuilderCodeMode("answer", false);
+	renderBuilderPreview();
+}
+
+function setBuilderContentEditorValue(target, content) {
+	const normalized = normalizeRichContent(content);
+	const elements = getBuilderEditorElements(target);
+
+	setBuilderFieldValue("builder-" + target + "-text", normalized.content);
+	setBuilderFieldValue(
+		"builder-" + target + "-html",
+		normalized.format === "html" ? normalized.content : ""
+	);
+
+	if (elements.wrapper) {
+		elements.wrapper.dataset.contentFormat = normalized.format;
+	}
 }
 
 function setBuilderFieldValue(fieldId, value) {
@@ -584,18 +603,13 @@ function saveSelectedBuilderQuestionFromForm() {
 	question.points =
 		Number(document.getElementById("builder-question-points")?.value) ||
 		question.points;
-	question.questionType =
-		document.getElementById("builder-question-type")?.value || "question";
-	question.question =
-		document.getElementById("builder-question-text")?.value || "";
-	question.answerType =
-		document.getElementById("builder-answer-type")?.value || "answer";
-	question.answer =
-		document.getElementById("builder-answer-text")?.value || "";
+	question.question = readBuilderRichContent("question");
+	question.answer = readBuilderRichContent("answer");
 	question.hints =
 		document.getElementById("builder-hints-text")?.value || "";
 	question.notes =
 		document.getElementById("builder-notes-text")?.value || "";
+	question.media = null;
 	question.background =
 		document.getElementById("builder-background")?.value.trim() || "";
 	question.backgroundColor =
@@ -619,6 +633,20 @@ function saveSelectedBuilderQuestionFromForm() {
 		document.getElementById("builder-transition")?.value || "";
 	question.className =
 		document.getElementById("builder-class-name")?.value.trim() || "";
+}
+
+function readBuilderRichContent(target) {
+	const text = document.getElementById("builder-" + target + "-text")?.value || "";
+	const html = document.getElementById("builder-" + target + "-html")?.value || "";
+	const elements = getBuilderEditorElements(target);
+	const format =
+		(elements.wrapper && elements.wrapper.dataset.contentFormat === "html") ||
+		(!text.trim() && html.trim())
+			? "html"
+			: "rich";
+	const content = text || html;
+
+	return createRichContent(content, format);
 }
 
 function renderBuilderCategory(category, categoryIndex) {
@@ -708,13 +736,13 @@ function renderBuilderQuestion(question, categoryIndex, questionIndex) {
 	questionLabel.textContent = "Spørgsmål";
 	questionText.id = idBase + "-question";
 	questionText.className = "builder-question-text";
-	questionText.value = question.question;
+	questionText.value = getBuilderContentSummary(question.question);
 
 	answerLabel.setAttribute("for", idBase + "-answer");
 	answerLabel.textContent = "Svar";
 	answerText.id = idBase + "-answer";
 	answerText.className = "builder-answer-text";
-	answerText.value = question.answer;
+	answerText.value = getBuilderContentSummary(question.answer);
 
 	hintsLabel.setAttribute("for", idBase + "-hints");
 	hintsLabel.textContent = "Hints, en per linje";
@@ -743,7 +771,73 @@ function handleBuilderFormInput() {
 	persistBuilderDraft(false);
 	renderBuilderBoard();
 	renderSelectedBuilderQuestionTitle();
+	renderBuilderPreview();
 	updateBuilderOutput();
+}
+
+function getBuilderEditorElements(target) {
+	return {
+		wrapper: document.querySelector('[data-builder-editor="' + target + '"]'),
+		textarea: document.getElementById("builder-" + target + "-text"),
+		preview: document.getElementById("builder-" + target + "-preview"),
+		toggle: document.getElementById("builder-" + target + "-code-toggle"),
+	};
+}
+
+function setBuilderCodeMode(target, enabled) {
+	const elements = getBuilderEditorElements(target);
+	const isEnabled = Boolean(enabled);
+
+	if (!elements.wrapper || !elements.textarea || !elements.preview) {
+		return;
+	}
+
+	elements.wrapper.dataset.codeMode = isEnabled ? "true" : "false";
+	elements.textarea.hidden = !isEnabled;
+	elements.preview.hidden = isEnabled;
+
+	if (elements.toggle) {
+		elements.toggle.textContent = isEnabled ? "Vis preview" : "Vis kode";
+		elements.toggle.setAttribute("aria-pressed", String(isEnabled));
+	}
+}
+
+function toggleBuilderCodeEditor(target) {
+	const elements = getBuilderEditorElements(target);
+	const isCodeMode =
+		elements.wrapper && elements.wrapper.dataset.codeMode === "true";
+
+	setBuilderCodeMode(target, !isCodeMode);
+
+	const nextElements = getBuilderEditorElements(target);
+	const focusTarget = !isCodeMode ? nextElements.textarea : nextElements.preview;
+
+	if (focusTarget) {
+		focusTarget.focus();
+	}
+}
+
+globalThis.toggleBuilderCodeEditor = toggleBuilderCodeEditor;
+
+function renderBuilderPreview() {
+	const questionPreview = document.getElementById("builder-question-preview");
+	const answerPreview = document.getElementById("builder-answer-preview");
+	const category =
+		gameBuilderDraft &&
+		gameBuilderDraft.categories[builderSelectedCategoryIndex];
+	const question =
+		category && category.questions[builderSelectedQuestionIndex];
+
+	if (!questionPreview || !answerPreview || !question) {
+		return;
+	}
+
+	questionPreview.innerHTML = "";
+	answerPreview.innerHTML = "";
+	renderQuestionPart(questionPreview, question, "question");
+	renderQuestionMedia(questionPreview, question.media);
+	renderQuestionHints(questionPreview, question.hints);
+	renderQuestionPart(answerPreview, question, "answer");
 }
 
 function readBuilderDraftFromForm() {
@@ -898,15 +992,18 @@ function buildGameFromBuilderDraft(draft) {
 					.filter(Boolean);
 				const outputQuestion = {
 					points: Number(question.points) || (index + 1) * 100,
+					question: normalizeRichContent(question.question),
+					answer: normalizeRichContent(question.answer),
 				};
-				const questionField = question.questionType || "question";
-				const answerField = question.answerType || "answer";
-
-				outputQuestion[questionField] = question.question;
-				outputQuestion[answerField] = question.answer;
 
 				if (hints.length) {
-					outputQuestion.hints = hints;
+					outputQuestion.hints = hints.map((hint) =>
+						createRichContent(hint, "rich")
+					);
+				}
+
+				if (question.media) {
+					outputQuestion.media = normalizeMedia(question.media);
 				}
 
 				if (question.notes) {
@@ -1009,27 +1106,10 @@ async function saveBuilderFile() {
 }
 
 function getBuilderContentFields(target) {
-	const isAnswer = target === "answer";
-
 	return {
-		type: document.getElementById(
-			isAnswer ? "builder-answer-type" : "builder-question-type"
-		),
-		text: document.getElementById(
-			isAnswer ? "builder-answer-text" : "builder-question-text"
-		),
-		htmlType: isAnswer ? "answerHtml" : "html",
-		markdownType: isAnswer ? "answerMarkdown" : "markdown",
+		text: document.getElementById("builder-" + target + "-text"),
+		html: document.getElementById("builder-" + target + "-html"),
 	};
-}
-
-function setBuilderContentType(target, type) {
-	const fields = getBuilderContentFields(target);
-
-	if (fields.type) {
-		fields.type.value = type;
-		fields.type.dispatchEvent(new Event("change", { bubbles: true }));
-	}
 }
 
 function appendTextToField(field, text) {
@@ -1037,6 +1117,14 @@ function appendTextToField(field, text) {
 
 	field.value = currentValue ? currentValue + "\n\n" + text : text;
 	field.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function createBuilderMediaSnippet(type, attributes) {
+	const pairs = Object.entries(attributes)
+		.filter(([, value]) => value !== undefined && value !== null)
+		.map(([name, value]) => name + '="' + String(value).replace(/"/g, "&quot;") + '"');
+
+	return "::" + type + " " + pairs.join(" ") + "::";
 }
 
 function insertBuilderSnippet(target, snippetType) {
@@ -1054,8 +1142,15 @@ function insertBuilderSnippet(target, snippetType) {
 			return;
 		}
 
-		setBuilderContentType(target, fields.htmlType);
-		snippet = createYouTubeIframe(url);
+		snippet = createBuilderMediaSnippet("youtube", {
+			url,
+			start: 0,
+			end: "",
+			autoplay: false,
+			loop: false,
+			controls: true,
+			muted: false,
+		});
 	}
 
 	if (snippetType === "video") {
@@ -1065,11 +1160,14 @@ function insertBuilderSnippet(target, snippetType) {
 			return;
 		}
 
-		setBuilderContentType(target, fields.htmlType);
-		snippet =
-			'<video src="' +
-			escapeHtmlAttribute(src) +
-			'" controls data-autoplay></video>';
+		snippet = createBuilderMediaSnippet("video", {
+			src,
+			start: 0,
+			autoplay: false,
+			loop: false,
+			controls: true,
+			muted: false,
+		});
 	}
 
 	if (snippetType === "audio") {
@@ -1079,9 +1177,13 @@ function insertBuilderSnippet(target, snippetType) {
 			return;
 		}
 
-		setBuilderContentType(target, fields.htmlType);
-		snippet =
-			'<audio src="' + escapeHtmlAttribute(src) + '" controls></audio>';
+		snippet = createBuilderMediaSnippet("audio", {
+			src,
+			autoplay: false,
+			loop: false,
+			controls: true,
+			muted: false,
+		});
 	}
 
 	if (snippetType === "image") {
@@ -1093,17 +1195,7 @@ function insertBuilderSnippet(target, snippetType) {
 
 		const alt = window.prompt("Billedtekst", "Billede") || "Billede";
 
-		if (fields.type && fields.type.value === fields.markdownType) {
-			snippet = "![" + alt.replace(/]/g, "\\]") + "](" + src + ")";
-		} else {
-			setBuilderContentType(target, fields.htmlType);
-			snippet =
-				'<img src="' +
-				escapeHtmlAttribute(src) +
-				'" alt="' +
-				escapeHtmlAttribute(alt) +
-				'">';
-		}
+		snippet = "![" + alt.replace(/]/g, "\\]") + "](" + src + ")";
 	}
 
 	if (snippetType === "math") {
@@ -1113,28 +1205,31 @@ function insertBuilderSnippet(target, snippetType) {
 			return;
 		}
 
-		setBuilderContentType(target, fields.htmlType);
-		snippet = "<p>$$" + formula + "$$</p>";
+		snippet = "$$" + formula + "$$";
 	}
 
 	if (snippet) {
 		appendTextToField(fields.text, snippet);
 		handleBuilderFormInput();
-		setBuilderStatus("Indholdet er indsat.");
+		setBuilderStatus("Indholdet er indsat i " + (target === "answer" ? "svaret." : "spørgsmålet."));
 	}
 }
 
-async function uploadBuilderImage() {
-	const input = document.getElementById("builder-image-upload");
-	const questionType = document.getElementById("builder-question-type");
-	const questionText = document.getElementById("builder-question-text");
+async function uploadBuilderImage(target) {
+	const contentTarget = target === "answer" ? "answer" : "question";
+	const input = document.getElementById(
+		contentTarget === "answer"
+			? "builder-answer-image-upload"
+			: "builder-image-upload"
+	);
+	const contentText = document.getElementById("builder-" + contentTarget + "-text");
 
 	if (!isAdmin()) {
 		setBuilderStatus("Log ind som admin for at uploade billeder.");
 		return;
 	}
 
-	if (!input || !input.files || !input.files[0] || !questionText) {
+	if (!input || !input.files || !input.files[0] || !contentText) {
 		setBuilderStatus("Vælg et billede først.");
 		return;
 	}
@@ -1151,25 +1246,69 @@ async function uploadBuilderImage() {
 		});
 		const alt = escapeHtmlAttribute(file.name.replace(/\.[^.]+$/, ""));
 
-		if (questionType && questionType.value === "markdown") {
-			appendTextToField(questionText, "![" + alt + "](" + uploaded.url + ")");
-		} else {
-			if (questionType) {
-				questionType.value = "html";
-			}
-
-			appendTextToField(
-				questionText,
-				'<img src="' + escapeHtmlAttribute(uploaded.url) + '" alt="' + alt + '">'
-			);
-		}
+		appendTextToField(contentText, "![" + alt + "](" + uploaded.url + ")");
 
 		input.value = "";
 		handleBuilderFormInput();
-		setBuilderStatus("Billedet er uploadet og indsat i spørgsmålet.");
+		setBuilderStatus(
+			"Billedet er uploadet og indsat i " +
+				(contentTarget === "answer" ? "svaret." : "spørgsmålet.")
+		);
 	} catch (error) {
 		console.warn("Could not upload image.", error);
 		setBuilderStatus("Billedet kunne ikke uploades: " + error.message);
+	}
+}
+
+async function uploadBuilderVideo(target) {
+	const contentTarget = target === "answer" ? "answer" : "question";
+	const input = document.getElementById(
+		contentTarget === "answer"
+			? "builder-answer-video-upload"
+			: "builder-question-video-upload"
+	);
+	const contentText = document.getElementById("builder-" + contentTarget + "-text");
+
+	if (!isAdmin()) {
+		setBuilderStatus("Log ind som admin for at uploade videoer.");
+		return;
+	}
+
+	if (!input || !input.files || !input.files[0] || !contentText) {
+		setBuilderStatus("Vælg en video først.");
+		return;
+	}
+
+	const formData = new FormData();
+
+	formData.append("file", input.files[0]);
+
+	try {
+		const uploaded = await fetchJson("/api/uploads", {
+			method: "POST",
+			body: formData,
+		});
+
+		appendTextToField(
+			contentText,
+			createBuilderMediaSnippet("video", {
+				src: uploaded.url,
+				start: 0,
+				autoplay: false,
+				loop: false,
+				controls: true,
+				muted: false,
+			})
+		);
+		input.value = "";
+		handleBuilderFormInput();
+		setBuilderStatus(
+			"Videoen er uploadet og indsat i " +
+				(contentTarget === "answer" ? "svaret." : "spørgsmålet.")
+		);
+	} catch (error) {
+		console.warn("Could not upload video.", error);
+		setBuilderStatus("Videoen kunne ikke uploades: " + error.message);
 	}
 }
 
@@ -1188,4 +1327,3 @@ async function copyBuilderRegistration() {
 		setBuilderStatus(registration.trim());
 	}
 }
-
