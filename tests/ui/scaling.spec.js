@@ -30,8 +30,13 @@ async function openQuestion(page, label) {
 	await expect(page.locator(".reveal .slides > section.question-slide.present")).toBeVisible();
 }
 
+async function startGameFromHome(page) {
+	await page.getByRole("button", { name: "Start game" }).click();
+	await expect(page.locator("#board.present")).toBeVisible();
+}
+
 async function returnToBoard(page) {
-	await page.keyboard.press("ArrowLeft");
+	await page.keyboard.press("ArrowUp");
 	await expect(page.locator("#board.present")).toBeVisible();
 }
 
@@ -82,6 +87,90 @@ test("question flow can show answer and award points", async ({ page }) => {
 	await page.getByRole("button", { name: "Red correct, plus 100" }).click();
 	await expect(page.locator("#score-team1")).toHaveText("100");
 	await expect(page.locator("#board.present")).toBeVisible();
+});
+
+test("keyboard navigation is locked on board and question slides", async ({ page }) => {
+	await page.setViewportSize({ width: 1366, height: 768 });
+	await openGame(page);
+
+	for (const key of ["ArrowLeft", "ArrowRight", "ArrowDown", "Space", "H"]) {
+		await page.keyboard.press(key);
+		await expect(page.locator("#board.present")).toBeVisible();
+	}
+
+	await page.keyboard.press("ArrowUp");
+	await expect(page.locator("#home.present")).toBeVisible();
+
+	await startGameFromHome(page);
+	await openQuestion(page, "Media for 100 points");
+
+	for (const key of ["ArrowLeft", "ArrowRight", "ArrowDown"]) {
+		await page.keyboard.press(key);
+		await expect(page.locator("#c1q100.present")).toBeVisible();
+	}
+
+	await page.keyboard.press("H");
+	await expect(page.locator("#c1q100.present .question-hints .visible")).toContainText(
+		"Billedet er hintet."
+	);
+	await expect(page.locator("#c1q100.present")).toBeVisible();
+
+	await page.getByRole("button", { name: "Show answer" }).focus();
+	await page.keyboard.press("Space");
+	await expect(page.locator("#c1q100.present .answer")).not.toHaveClass(/visible/);
+	await expect(page.locator("#c1q100.present")).toBeVisible();
+
+	await page.keyboard.press("Escape");
+	await expect(page.locator("#home.present")).toBeVisible();
+
+	await startGameFromHome(page);
+	await openQuestion(page, "Media for 100 points");
+	await page.keyboard.press("ArrowUp");
+	await expect(page.locator("#board.present")).toBeVisible();
+});
+
+test("h advances fragments and starts autoplay media when fragments become visible", async ({ page }) => {
+	await page.setViewportSize({ width: 1366, height: 768 });
+	await page.addInitScript(() => {
+		HTMLMediaElement.prototype.play = function play() {
+			this.dataset.playCallCount = String(Number(this.dataset.playCallCount || "0") + 1);
+			return Promise.resolve();
+		};
+		HTMLMediaElement.prototype.pause = function pause() {};
+	});
+	await openGame(page);
+
+	await openQuestion(page, "Media for 400 points");
+	await expect(page.locator("#c1q400.present .fragment.visible")).toHaveCount(0);
+	await expect(page.locator("#c1q400.present audio").first()).toHaveAttribute("data-autoplay", "true");
+	await expect(page.locator("#c1q400.present audio").first()).not.toHaveAttribute("data-play-call-count", /./);
+
+	await page.keyboard.press("Space");
+	await expect(page.locator("#c1q400.present .fragment.visible")).toHaveCount(0);
+	await expect(page.locator("#c1q400.present audio").first()).not.toHaveAttribute("data-play-call-count", /./);
+
+	await page.keyboard.press("H");
+	await expect(page.locator("#c1q400.present .fragment.visible")).toHaveCount(1);
+	await expect(page.locator("#c1q400.present .fragment.visible").first()).toContainText("Pika!");
+	await expect
+		.poll(() =>
+			page.locator("#c1q400.present audio").first().evaluate((audio) =>
+				Number(audio.dataset.playCallCount || "0")
+			)
+		)
+		.toBeGreaterThan(0);
+
+	await page.keyboard.press("H");
+	await expect(page.locator("#c1q400.present .fragment.visible")).toHaveCount(2);
+	await expect(page.locator("#c1q400.present .fragment.visible").nth(1)).toContainText("Chu!");
+	await expect
+		.poll(() =>
+			page.locator("#c1q400.present audio").nth(1).evaluate((audio) =>
+				Number(audio.dataset.playCallCount || "0")
+			)
+		)
+		.toBeGreaterThan(0);
+	await expect(page.locator("#c1q400.present")).toBeVisible();
 });
 
 test("score update keeps board DOM in place", async ({ page }) => {

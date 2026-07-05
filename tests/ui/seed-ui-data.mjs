@@ -22,6 +22,7 @@ const categories = [
 					content: "Billede\n\n![Test image](examples/assets/image1.png)",
 				},
 				answer: { format: "rich", content: "Image answer" },
+				hints: ["Billedet er hintet."],
 			},
 			{
 				points: 200,
@@ -47,7 +48,11 @@ const categories = [
 			},
 			{
 				points: 400,
-				question: { format: "rich", content: "Media question 400" },
+				question: {
+					format: "html",
+					content:
+						'<p>Step through audio fragments:</p><div class="fragment">Pika! <audio src="examples/assets/beeping.wav" data-autoplay></audio></div><div class="fragment">Chu! <audio src="examples/assets/beeping.wav" data-autoplay></audio></div><p>Which class reveals elements step by step?</p>',
+				},
 				answer: { format: "rich", content: "Media answer 400" },
 			},
 			{

@@ -111,6 +111,35 @@ test("normalizes game ids, questions and game config", () => {
 	assert.equal(game.categories[0].questions[0].points, 300);
 });
 
+test("treats explicit empty question and answer content as a blank board tile", () => {
+	const app = loadFrontendContext();
+	const questions = app.normalizeQuestions([
+		{
+			points: 100,
+			question: { format: "rich", content: "" },
+			answer: { format: "rich", content: "" },
+		},
+		{
+			points: 200,
+			question: "",
+			answer: "",
+		},
+		{},
+	]);
+
+	assert.equal(app.isQuestionBlank(questions[0]), true);
+	assert.equal(app.isQuestionBlank(questions[1]), true);
+	assert.equal(app.isQuestionBlank(questions[2]), false);
+	assert.deepEqual(plain(questions[2].question), {
+		format: "rich",
+		content: "Question goes here.",
+	});
+	assert.deepEqual(plain(questions[2].answer), {
+		format: "rich",
+		content: "Answer goes here.",
+	});
+});
+
 test("normalizes configured team names from saved settings", () => {
 	const app = loadFrontendContext();
 	const savedSettings = JSON.stringify({
@@ -349,6 +378,66 @@ test("builder export uses rich question and answer content", () => {
 	assert.deepEqual(plain(questions[1].answer), { format: "rich", content: "**Markdown answer**" });
 	assert.deepEqual(plain(questions[2].question), { format: "html", content: "<p>HTML question</p>" });
 	assert.deepEqual(plain(questions[2].answer), { format: "html", content: "<p>HTML answer</p>" });
+});
+
+test("renders markdown images in rich and html content", () => {
+	const app = loadFrontendContext();
+
+	assert.equal(
+		app.renderRichTextToHtml("![Billede](/uploads/sk-rmbillede.png)"),
+		'<p><img src="/uploads/sk-rmbillede.png" alt="Billede"></p>'
+	);
+	assert.equal(
+		app.renderMarkdownImagesInHtml('<div>![Pikachu](https://example.test/pikachu.png)</div>'),
+		'<div><img src="https://example.test/pikachu.png" alt="Pikachu"></div>'
+	);
+});
+
+test("renders markdown tables in rich content", () => {
+	const app = loadFrontendContext();
+
+	assert.equal(
+		app.renderRichTextToHtml(
+			[
+				"| Pokemon | Type |",
+				"| --- | --- |",
+				"| Bulbasaur | Grass/Poison |",
+				"| Charmander | **Fire** |",
+				"| Squirtle | Water |",
+				"",
+				"Hvilken type har Charmander i tabellen?",
+			].join("\n")
+		),
+		"<table><thead><tr><th>Pokemon</th><th>Type</th></tr></thead><tbody>" +
+			"<tr><td>Bulbasaur</td><td>Grass/Poison</td></tr>" +
+			"<tr><td>Charmander</td><td><strong>Fire</strong></td></tr>" +
+			"<tr><td>Squirtle</td><td>Water</td></tr>" +
+			"</tbody></table><p>Hvilken type har Charmander i tabellen?</p>"
+	);
+});
+
+test("renders markdown code fences with reveal line numbers", () => {
+	const app = loadFrontendContext();
+
+	assert.equal(
+		app.renderRichTextToHtml(
+			[
+				"~~~js [1|3|5]",
+				'const team = ["Pikachu", "Eevee", "Snorlax"];',
+				'const sleepy = team.includes("Snorlax");',
+				"const mascot = team[0];",
+				"",
+				"console.log(mascot, sleepy);",
+				"~~~",
+			].join("\n")
+		),
+		'<pre><code class="language-js" data-line-numbers="1|3|5">' +
+			"const team = [&quot;Pikachu&quot;, &quot;Eevee&quot;, &quot;Snorlax&quot;];\n" +
+			"const sleepy = team.includes(&quot;Snorlax&quot;);\n" +
+			"const mascot = team[0];\n\n" +
+			"console.log(mascot, sleepy);" +
+			"</code></pre>"
+	);
 });
 
 test("creates and prepares YouTube URLs", () => {

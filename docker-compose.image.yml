@@ -1,6 +1,6 @@
 services:
   reveal-jeopardy:
-    image: ghcr.io/mfrimannm/reveal-jeopardy:latest
+    image: ghcr.io/mfrimannm/unf-quiz:latest
     container_name: reveal-jeopardy
     restart: unless-stopped
     ports:

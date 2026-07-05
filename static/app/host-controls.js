@@ -406,6 +406,25 @@ function updateLivePlayersPanel() {
 	);
 }
 
+function getLiveBuzzerTeamName(buzzer) {
+	if (buzzer.team_name) {
+		return buzzer.team_name;
+	}
+
+	const team = liveSessionState
+		? liveSessionState.teams.find((entry) => entry.id === buzzer.team_id)
+		: null;
+
+	return team ? team.name : "";
+}
+
+function getLiveBuzzerLabel(buzzer) {
+	const teamName = getLiveBuzzerTeamName(buzzer);
+	const playerLabel = buzzer.player_name + (teamName ? " (" + teamName + ")" : "");
+
+	return playerLabel + (buzzer.first ? " - først" : " - nr. " + buzzer.order);
+}
+
 function updateBuzzerPanel() {
 	const buzzersElements = [
 		document.getElementById("live-session-buzzers"),
@@ -425,9 +444,7 @@ function updateBuzzerPanel() {
 			buzzers,
 			(buzzer, index) => buzzer.player_id || buzzer.player_name || index,
 			(item, buzzer) => {
-				item.textContent =
-					buzzer.player_name +
-					(buzzer.first ? " - først" : " - nr. " + buzzer.order);
+				item.textContent = getLiveBuzzerLabel(buzzer);
 			}
 		);
 	});

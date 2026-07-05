@@ -158,6 +158,12 @@
 	opacity: 0.72;
 }
 
+.points.empty {
+	background: #111111;
+	border-color: #3d3d3d;
+	opacity: 0.42;
+}
+
 .points.used a {
 	color: #bdbdbd;
 	font-size: 0.38em;

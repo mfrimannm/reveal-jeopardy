@@ -20,7 +20,7 @@ docker compose -f docker-compose.image.yml up -d
 Image:
 
 ```text
-ghcr.io/mfrimannm/reveal-jeopardy:latest
+ghcr.io/mfrimannm/unf-quiz:latest
 ```
 
 ## VPS compose-eksempel
@@ -28,7 +28,7 @@ ghcr.io/mfrimannm/reveal-jeopardy:latest
 ```yaml
 services:
   reveal-jeopardy:
-    image: ghcr.io/mfrimannm/reveal-jeopardy:latest
+    image: ghcr.io/mfrimannm/unf-quiz:latest
     container_name: reveal-jeopardy
     restart: unless-stopped
     ports:

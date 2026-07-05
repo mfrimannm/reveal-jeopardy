@@ -405,8 +405,10 @@ async def test_buzz_order_and_buzzer_controls(client):
 
     assert first["buzzer"]["order"] == 1
     assert first["buzzer"]["first"] is True
+    assert first["buzzer"]["team_name"] == "Red"
     assert second["buzzer"]["order"] == 2
     assert second["buzzer"]["first"] is False
+    assert second["buzzer"]["team_name"] == "Blue"
 
     await client.post("/api/logout")
     unauthorized_lock = await client.post(f"/api/sessions/{session_id}/lock-buzzers")

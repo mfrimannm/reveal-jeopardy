@@ -145,6 +145,15 @@ function renderHome() {
 	renderTeamFields(teams.map((team) => team.name));
 }
 
+function createEmptyBoardTile() {
+	const emptyTile = document.createElement("div");
+
+	emptyTile.className = "points empty";
+	emptyTile.setAttribute("aria-hidden", "true");
+
+	return emptyTile;
+}
+
 function renderGame() {
 	const title = document.getElementById("game-title");
 	const gameName = document.getElementById("game-name");
@@ -199,11 +208,8 @@ function renderGame() {
 		categories.forEach((category, categoryIndex) => {
 			const question = category.questions[questionIndex];
 
-			if (!question) {
-				const emptyTile = document.createElement("div");
-
-				emptyTile.className = "points used";
-				board.appendChild(emptyTile);
+			if (!question || isQuestionBlank(question)) {
+				board.appendChild(createEmptyBoardTile());
 				return;
 			}
 
@@ -234,6 +240,10 @@ function renderGame() {
 
 	categories.forEach((category, categoryIndex) => {
 		category.questions.forEach((question) => {
+			if (isQuestionBlank(question)) {
+				return;
+			}
+
 			const displayCategoryIndex = categoryIndex + 1;
 			const questionId = getQuestionId(displayCategoryIndex, question.points);
 			const slide = document.createElement("section");

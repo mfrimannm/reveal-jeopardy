@@ -36,7 +36,7 @@
 					"points": 300,
 					"question": {
 						"format": "rich",
-						"content": "\n\t\t\t\t\t\t> \"Jeg vælger dig!\"\n\n\t\t\t\t\t\tHvilken reveal.js/markdown-form vises citatet som?\n\t\t\t\t\t\t"
+						"content": "> \"Jeg vælger dig!\"\n\nHvilken reveal.js/markdown-form vises citatet som?\n\t\t\t\t\t\t"
 					},
 					"answer": {
 						"format": "rich",
@@ -47,7 +47,7 @@
 					"points": 400,
 					"question": {
 						"format": "rich",
-						"content": "\n\t\t\t\t\t\t| Pokemon | Type |\n\t\t\t\t\t\t| --- | --- |\n\t\t\t\t\t\t| Bulbasaur | Grass/Poison |\n\t\t\t\t\t\t| Charmander | Fire |\n\t\t\t\t\t\t| Squirtle | Water |\n\n\t\t\t\t\t\tHvilken type har Charmander i tabellen?\n\t\t\t\t\t\t"
+						"content": "| Pokemon | Type |\n| --- | --- |\n| Bulbasaur | Grass/Poison |\n| Charmander | Fire |\n| Squirtle | Water |\n\nHvilken type har Charmander i tabellen?\n\t\t\t\t\t\t"
 					},
 					"answer": {
 						"format": "rich",
@@ -69,7 +69,7 @@
 					"points": 600,
 					"question": {
 						"format": "rich",
-						"content": "\n\t\t\t\t\t\t~~~js [1|3|5]\n\t\t\t\t\t\tconst team = [\"Pikachu\", \"Eevee\", \"Snorlax\"];\n\t\t\t\t\t\tconst sleepy = team.includes(\"Snorlax\");\n\t\t\t\t\t\tconst mascot = team[0];\n\n\t\t\t\t\t\tconsole.log(mascot, sleepy);\n\t\t\t\t\t\t~~~\n\n\t\t\t\t\t\tHvilken Pokemon bliver gemt i variablen `mascot`?\n\t\t\t\t\t\t"
+						"content": "\n~~~js [1|3|5]\nconst team = [\"Pikachu\", \"Eevee\", \"Snorlax\"];\nconst sleepy = team.includes(\"Snorlax\");\nconst mascot = team[0];\n\nconsole.log(mascot, sleepy);\n~~~\n\nHvilken Pokemon bliver gemt i variablen `mascot`?\n\t\t\t\t\t\t"
 					},
 					"answer": {
 						"format": "rich",
@@ -107,11 +107,11 @@
 					"points": 200,
 					"question": {
 						"format": "html",
-						"content": "\n<div class=\"media-row\">\n\t<img class=\"pokemon-sprite\" src=\"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png\" alt=\"Bulbasaur\">\n\t<p>Hvilken Kanto-starter har en planteknop på ryggen?</p>\n</div>\n"
+						"content": "\n<div class=\"media-row\">\n\t<img class=\"pokemon-sprite\" src=\"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png\" alt=\"Pikachu\">\n\t<p>Hvilken elektrisk maskot er vist på billedet 2?</p>\n</div>\n\n![Billede](https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png)\n\n![Skærmbillede 2026-06-24 031824](/uploads/sk-rmbillede-2026-06-24-031824-e1b5d20d.png)"
 					},
 					"answer": {
 						"format": "rich",
-						"content": "Bulbasaur."
+						"content": "Pikachu.\n\n![Billede](https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png)"
 					}
 				},
 				{
@@ -156,6 +156,17 @@
 					"answer": {
 						"format": "rich",
 						"content": "Snorlax."
+					}
+				},
+				{
+					"points": 700,
+					"question": {
+						"format": "rich",
+						"content": ""
+					},
+					"answer": {
+						"format": "rich",
+						"content": ""
 					}
 				}
 			]
@@ -208,7 +219,7 @@
 					}
 				},
 				{
-					"points": 600,
+					"points": 500,
 					"question": {
 						"format": "html",
 						"content": "\n<iframe src=\"https://www.youtube.com/embed/bILE5BEyhdo?rel=0&modestbranding=1\" title=\"Pokemon YouTube clip with modest branding\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>\n<p>Hvilken Pokemon-franchise-feature viser vi her: lokal video, billede eller online iframe?</p>\n"
@@ -216,6 +227,28 @@
 					"answer": {
 						"format": "rich",
 						"content": "Online iframe."
+					}
+				},
+				{
+					"points": 600,
+					"question": {
+						"format": "rich",
+						"content": ""
+					},
+					"answer": {
+						"format": "rich",
+						"content": ""
+					}
+				},
+				{
+					"points": 700,
+					"question": {
+						"format": "rich",
+						"content": ""
+					},
+					"answer": {
+						"format": "rich",
+						"content": ""
 					}
 				}
 			]
@@ -264,7 +297,7 @@
 					"points": 400,
 					"question": {
 						"format": "html",
-						"content": "\n<p>Træd gennem lydene som fragments:</p>\n<div class=\"fragment\">Pika! <audio src=\"examples/assets/beeping.wav\" data-autoplay></audio></div>\n<div class=\"fragment\">Chu! <audio src=\"examples/assets/beeping.wav\" data-autoplay></audio></div>\n<p>Hvilken klasse får elementer til at komme frem trinvis?</p>\n"
+						"content": "\n<p>Træd gennem lydene som fragments:</p>\n<div class=\"fragment\">Pika! <audio src=\"examples/assets/1.mp3\" data-autoplay></audio></div>\n<div class=\"fragment\">Chu! <audio src=\"examples/assets/2.mp3\" data-autoplay></audio></div>\n<p>Hvilken klasse får elementer til at komme frem trinvis?</p>\n"
 					},
 					"answer": {
 						"format": "rich",
@@ -291,6 +324,17 @@
 					"answer": {
 						"format": "rich",
 						"content": "poster."
+					}
+				},
+				{
+					"points": 700,
+					"question": {
+						"format": "rich",
+						"content": ""
+					},
+					"answer": {
+						"format": "rich",
+						"content": ""
 					}
 				}
 			]
@@ -364,6 +408,17 @@
 						"format": "html",
 						"content": "<p>$$D = 115$$</p>"
 					}
+				},
+				{
+					"points": 700,
+					"question": {
+						"format": "rich",
+						"content": ""
+					},
+					"answer": {
+						"format": "rich",
+						"content": ""
+					}
 				}
 			]
 		},
@@ -413,11 +468,7 @@
 						"format": "rich",
 						"content": "data-background."
 					},
-					"background": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png",
-					"slideAttributes": {
-						"data-background-size": "contain",
-						"data-background-opacity": "0.32"
-					}
+					"background": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png"
 				},
 				{
 					"points": 500,
@@ -443,6 +494,17 @@
 						"content": "aside.notes."
 					},
 					"notes": "Speaker note: Svaret er aside.notes. Denne note vises i speaker view, ikke på selve sliden."
+				},
+				{
+					"points": 700,
+					"question": {
+						"format": "rich",
+						"content": ""
+					},
+					"answer": {
+						"format": "rich",
+						"content": ""
+					}
 				}
 			]
 		}

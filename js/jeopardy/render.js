@@ -90,7 +90,7 @@ function renderHints(container, question) {
 
 	hints.className = "question-hints";
 	hintCue.className = "hint-cue";
-	hintCue.textContent = "Højre/ned giver hints. Venstre/op går til boardet.";
+	hintCue.textContent = "H giver hints. Space afspiller media. Pil op går til boardet.";
 	hints.appendChild(hintCue);
 
 	question.hints.forEach((hint, index) => {

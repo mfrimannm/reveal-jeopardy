@@ -33,20 +33,32 @@ function normalizeQuestions(questions) {
 	return sourceQuestions.map((question, index) => {
 		const fallbackPoints = (index + 1) * 100;
 		const source = question && typeof question === "object" ? question : {};
+		const hasQuestion = Object.prototype.hasOwnProperty.call(source, "question");
+		const hasAnswer = Object.prototype.hasOwnProperty.call(source, "answer");
 
 		return {
 			...source,
 			points: Number(source.points) || fallbackPoints,
 			question: normalizeRichContent(
-				source.question || createRichContent("Question goes here.", "rich")
+				hasQuestion
+					? source.question
+					: createRichContent("Question goes here.", "rich")
 			),
 			answer: normalizeRichContent(
-				source.answer || createRichContent("Answer goes here.", "rich")
+				hasAnswer ? source.answer : createRichContent("Answer goes here.", "rich")
 			),
 			hints: normalizeHints(source.hints),
 			media: normalizeMedia(source.media),
 		};
 	});
+}
+
+function isQuestionBlank(question) {
+	return (
+		Boolean(question) &&
+		isRichContentBlank(question.question) &&
+		isRichContentBlank(question.answer)
+	);
 }
 
 function getQuestionRowCount() {
@@ -66,7 +78,8 @@ function isQuestionId(questionId) {
 
 function getTotalQuestionCount() {
 	return categories.reduce(
-		(total, category) => total + category.questions.length,
+		(total, category) =>
+			total + category.questions.filter((question) => !isQuestionBlank(question)).length,
 		0
 	);
 }

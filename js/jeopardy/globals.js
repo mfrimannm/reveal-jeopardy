@@ -21,6 +21,8 @@ let builderSelectedQuestionIndex = 0;
 let allowQuestionBoardNavigation = false;
 
 const KEY_CODE_TO_KEY = {
+	27: "Escape",
+	32: " ",
 	37: "ArrowLeft",
 	38: "ArrowUp",
 	39: "ArrowRight",

@@ -27,6 +27,8 @@ let liveSessionError = "";
 let liveSessionStatus = "idle";
 
 const KEY_CODE_TO_KEY = {
+	27: "Escape",
+	32: " ",
 	37: "ArrowLeft",
 	38: "ArrowUp",
 	39: "ArrowRight",

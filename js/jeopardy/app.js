@@ -66,6 +66,35 @@ function getKeyboardKey(event) {
 	return event.key || KEY_CODE_TO_KEY[event.keyCode] || "";
 }
 
+function isSpaceKey(key) {
+	return key === " " || key === "Space" || key === "Spacebar";
+}
+
+function isHintKey(key) {
+	return String(key || "").toLowerCase() === "h";
+}
+
+function isArrowKey(key) {
+	return (
+		key === "ArrowLeft" ||
+		key === "ArrowRight" ||
+		key === "ArrowUp" ||
+		key === "ArrowDown"
+	);
+}
+
+function isKeyboardInputTarget(target) {
+	if (!target || !target.closest) {
+		return false;
+	}
+
+	return Boolean(
+		target.closest(
+			"input, textarea, select, [contenteditable=''], [contenteditable='true']"
+		)
+	);
+}
+
 function stopKeyboardEvent(event) {
 	if (event.preventDefault) {
 		event.preventDefault();
@@ -80,7 +109,96 @@ function stopKeyboardEvent(event) {
 	}
 }
 
-function handleQuestionNavigationKey(event) {
+function getCurrentSlide() {
+	if (typeof Reveal !== "undefined" && Reveal.getCurrentSlide) {
+		return Reveal.getCurrentSlide();
+	}
+
+	return document.querySelector(".reveal .slides > section.present");
+}
+
+function isInHiddenFragment(element) {
+	const fragment = element.closest ? element.closest(".fragment") : null;
+
+	return Boolean(fragment && !fragment.classList.contains("visible"));
+}
+
+function getAutoplayIframeSrc(iframe) {
+	const autoplaySrc = iframe.dataset.autoplaySrc;
+
+	if (autoplaySrc && iframe.src !== autoplaySrc) {
+		return autoplaySrc;
+	}
+
+	if (!iframe.src || !/youtube\.com\/embed\//i.test(iframe.src)) {
+		return "";
+	}
+
+	try {
+		const url = new URL(iframe.src);
+
+		url.searchParams.set("autoplay", "1");
+		return url.toString();
+	} catch (error) {
+		return iframe.src + (iframe.src.includes("?") ? "&" : "?") + "autoplay=1";
+	}
+}
+
+function startCurrentSlideMedia() {
+	const currentSlide = getCurrentSlide();
+
+	if (!currentSlide) {
+		return false;
+	}
+
+	let started = false;
+
+	currentSlide.querySelectorAll("video, audio").forEach((media) => {
+		if (isInHiddenFragment(media)) {
+			return;
+		}
+
+		if (!media.paused && !media.ended) {
+			return;
+		}
+
+		if (media.ended) {
+			media.currentTime = 0;
+		}
+
+		media.play().catch(() => {});
+		started = true;
+	});
+
+	if (started) {
+		return true;
+	}
+
+	const iframe = Array.from(currentSlide.querySelectorAll("iframe")).find(
+		(element) => !isInHiddenFragment(element) && getAutoplayIframeSrc(element)
+	);
+
+	if (!iframe) {
+		return false;
+	}
+
+	const autoplaySrc = getAutoplayIframeSrc(iframe);
+
+	if (autoplaySrc && iframe.src !== autoplaySrc) {
+		iframe.src = autoplaySrc;
+		return true;
+	}
+
+	return false;
+}
+
+function showNextHint() {
+	if (typeof Reveal !== "undefined" && Reveal.nextFragment) {
+		Reveal.nextFragment();
+	}
+}
+
+function handleQuestionKeyboardKey(event) {
 	const key = getKeyboardKey(event);
 
 	if (
@@ -92,36 +210,74 @@ function handleQuestionNavigationKey(event) {
 		return false;
 	}
 
-	if (
-		key !== "ArrowLeft" &&
-		key !== "ArrowRight" &&
-		key !== "ArrowUp" &&
-		key !== "ArrowDown"
-	) {
+	if (key !== "Escape" && !isSpaceKey(key) && !isHintKey(key) && !isArrowKey(key)) {
 		return false;
 	}
 
 	stopKeyboardEvent(event);
 
-	if (key === "ArrowLeft" || key === "ArrowUp") {
-		allowQuestionBoardNavigation = true;
-		goToBoard();
+	if (key === "Escape") {
+		goToHome();
 		return true;
 	}
 
-	if (typeof Reveal !== "undefined" && Reveal.nextFragment) {
-		Reveal.nextFragment();
+	if (isSpaceKey(key)) {
+		startCurrentSlideMedia();
+
+		return true;
+	}
+
+	if (isHintKey(key)) {
+		showNextHint();
+
+		return true;
+	}
+
+	if (key === "ArrowUp") {
+		allowQuestionBoardNavigation = true;
+		goToBoard();
 	}
 
 	return true;
 }
 
-function handleQuestionArrowKeys(event) {
-	handleQuestionNavigationKey(event);
+function handleBoardKeyboardKey(event) {
+	const currentSlide = getCurrentSlide();
+	const key = getKeyboardKey(event);
+
+	if (
+		!currentSlide ||
+		currentSlide.id !== "board" ||
+		event.altKey ||
+		event.ctrlKey ||
+		event.metaKey
+	) {
+		return false;
+	}
+
+	if (key !== "Escape" && !isSpaceKey(key) && !isHintKey(key) && !isArrowKey(key)) {
+		return false;
+	}
+
+	stopKeyboardEvent(event);
+
+	if (key === "ArrowUp" || key === "Escape") {
+		goToHome();
+	}
+
+	return true;
+}
+
+function handleGameKeyboardKey(event) {
+	if (isKeyboardInputTarget(event.target)) {
+		return false;
+	}
+
+	return handleQuestionKeyboardKey(event) || handleBoardKeyboardKey(event);
 }
 
 function handleRevealArrowKey(keyCode, event) {
-	if (handleQuestionNavigationKey(event || { keyCode })) {
+	if (handleGameKeyboardKey(event || { keyCode })) {
 		return;
 	}
 
@@ -240,6 +396,12 @@ function initializeReveal() {
 		});
 	});
 
+	[27, 32, 72].forEach((keyCode) => {
+		Reveal.addKeyBinding(keyCode, (event) => {
+			handleGameKeyboardKey(event || { keyCode });
+		});
+	});
+
 	Reveal.on("slidechanged", (event) => {
 		if (!event || !event.currentSlide) {
 			return;
@@ -275,7 +437,19 @@ function initializeReveal() {
 		}
 	});
 
-	window.addEventListener("keydown", handleQuestionArrowKeys, true);
+	Reveal.on("fragmentshown", () => {
+		if (typeof syncRenderedMediaPlayback === "function") {
+			syncRenderedMediaPlayback(document);
+		}
+	});
+
+	Reveal.on("fragmenthidden", () => {
+		if (typeof syncRenderedMediaPlayback === "function") {
+			syncRenderedMediaPlayback(document);
+		}
+	});
+
+	window.addEventListener("keydown", handleGameKeyboardKey, true);
 }
 
 loadGameFile().then(() => {

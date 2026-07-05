@@ -44,7 +44,7 @@ uvicorn server:app --host 0.0.0.0 --port 8000
 Det færdige image publiceres som:
 
 ```text
-ghcr.io/mfrimannm/reveal-jeopardy:latest
+ghcr.io/mfrimannm/unf-quiz:latest
 ```
 
 Start med den medfølgende image-compose-fil:
@@ -59,7 +59,7 @@ Et minimalt VPS-eksempel:
 ```yaml
 services:
   reveal-jeopardy:
-    image: ghcr.io/mfrimannm/reveal-jeopardy:latest
+    image: ghcr.io/mfrimannm/unf-quiz:latest
     restart: unless-stopped
     ports:
       - "8000:8000"

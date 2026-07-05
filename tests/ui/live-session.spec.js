@@ -51,8 +51,8 @@ test("host can start live session and see mobile buzzers", async ({ browser, pag
 	await playerTwo.locator("#mobile-buzz-button").click();
 	await expect(playerTwo.locator("#mobile-buzz-status")).toHaveText("Du buzzede som nr. 2");
 
-	await expect(page.locator("#live-session-buzzers")).toContainText("Alice - først");
-	await expect(page.locator("#live-session-buzzers")).toContainText("Bob - nr. 2");
+	await expect(page.locator("#live-session-buzzers")).toContainText("Alice (Red) - først");
+	await expect(page.locator("#live-session-buzzers")).toContainText("Bob (Blue) - nr. 2");
 	await expect(
 		await page.evaluate(
 			() =>
@@ -86,17 +86,17 @@ test("live session reconnects after starting the game and syncs score", async ({
 
 	await joinMobilePlayer(player, joinUrl, "Alice", "team1");
 	await player.locator("#mobile-buzz-button").click();
-	await expect(page.locator("#live-session-buzzers")).toContainText("Alice - først");
+	await expect(page.locator("#live-session-buzzers")).toContainText("Alice (Red) - først");
 
 	await page.getByRole("button", { name: "Start game" }).click();
 	await expect(page.locator("#board.present")).toBeVisible();
-	await expect(page.locator(".board-live-panel .live-game-buzzers")).toContainText("Alice - først");
+	await expect(page.locator(".board-live-panel .live-game-buzzers")).toContainText("Alice (Red) - først");
 
 	await page.locator("#jeopardy-board").getByRole("link", { name: "Media for 100 points" }).click();
 	await expect(page.locator(".question-slide.present .live-game-buzzers")).toHaveText("Ingen buzzers.");
 	await expect(player.locator("#mobile-buzz-status")).toHaveText("Klar");
 	await player.locator("#mobile-buzz-button").click();
-	await expect(page.locator(".question-slide.present .live-game-buzzers")).toContainText("Alice - først");
+	await expect(page.locator(".question-slide.present .live-game-buzzers")).toContainText("Alice (Red) - først");
 	await page.getByRole("button", { name: "Red correct, plus 100" }).click();
 	await expect(page.locator("#score-team1")).toHaveText("100");
 	await expect(page.locator("#board.present")).toBeVisible();

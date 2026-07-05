@@ -594,10 +594,15 @@ async def buzz_live_session(session_id: str, request: Request) -> dict[str, Any]
             }
 
         order = len(session["buzzers"]) + 1
+        team = next(
+            (item for item in session["teams"] if item["id"] == player.get("team_id")),
+            None,
+        )
         buzzer = {
             "player_id": player_id,
             "player_name": player["name"],
             "team_id": player.get("team_id"),
+            "team_name": team["name"] if team else None,
             "order": order,
             "first": order == 1,
             "buzzed_at": now_iso(),

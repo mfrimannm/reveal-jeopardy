@@ -13,6 +13,24 @@ function normalizeRichContent(value) {
 	return createRichContent(value || "", "rich");
 }
 
+function isRichContentBlank(value) {
+	const content = normalizeRichContent(value);
+
+	if (!content.content.trim()) {
+		return true;
+	}
+
+	if (content.format !== "html") {
+		return false;
+	}
+
+	return !content.content
+		.replace(/&nbsp;/gi, " ")
+		.replace(/<br\s*\/?>/gi, "")
+		.replace(/<\/?(p|div|span|strong|em|b|i|u|section|article|h[1-6])\b[^>]*>/gi, "")
+		.trim();
+}
+
 function escapeHtml(value) {
 	return String(value || "")
 		.replace(/&/g, "&amp;")
@@ -26,13 +44,7 @@ function renderInlineRichText(value) {
 	let html = escapeHtml(value);
 
 	html = html.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_match, alt, src) => {
-		return (
-			'<img src="' +
-			escapeHtmlAttribute(src) +
-			'" alt="' +
-			escapeHtmlAttribute(alt) +
-			'">'
-		);
+		return createMarkdownImageHtml(alt, src);
 	});
 	html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (_match, text, href) => {
 		return (
@@ -48,6 +60,155 @@ function renderInlineRichText(value) {
 	html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
 
 	return html;
+}
+
+function createMarkdownImageHtml(alt, src) {
+	return (
+		'<img src="' +
+		escapeHtmlAttribute(src) +
+		'" alt="' +
+		escapeHtmlAttribute(alt) +
+		'">'
+	);
+}
+
+function renderMarkdownImagesInHtml(value) {
+	return String(value || "").replace(
+		/!\[([^\]\n]*)\]\(([^)\s]+)\)/g,
+		(_match, alt, src) => createMarkdownImageHtml(alt, src)
+	);
+}
+
+function splitMarkdownTableRow(line) {
+	let value = String(line || "").trim();
+
+	if (!value.includes("|")) {
+		return null;
+	}
+
+	if (value.startsWith("|")) {
+		value = value.slice(1);
+	}
+
+	if (value.endsWith("|")) {
+		value = value.slice(0, -1);
+	}
+
+	const cells = [];
+	let cell = "";
+
+	for (let index = 0; index < value.length; index += 1) {
+		if (value[index] === "\\" && value[index + 1] === "|") {
+			cell += "|";
+			index += 1;
+			continue;
+		}
+
+		if (value[index] === "|") {
+			cells.push(cell.trim());
+			cell = "";
+			continue;
+		}
+
+		cell += value[index];
+	}
+
+	cells.push(cell.trim());
+
+	return cells.length > 1 ? cells : null;
+}
+
+function isMarkdownTableSeparatorRow(cells) {
+	return (
+		Array.isArray(cells) &&
+		cells.length > 1 &&
+		cells.every((cell) => /^:?-{3,}:?$/.test(String(cell || "").replace(/\s/g, "")))
+	);
+}
+
+function getMarkdownTableAlignment(cell) {
+	const value = String(cell || "").replace(/\s/g, "");
+	const left = value.startsWith(":");
+	const right = value.endsWith(":");
+
+	if (left && right) {
+		return "center";
+	}
+
+	if (right) {
+		return "right";
+	}
+
+	return left ? "left" : "";
+}
+
+function renderMarkdownTableToHtml(headerCells, separatorCells, bodyRows) {
+	const alignments = separatorCells.map(getMarkdownTableAlignment);
+	const renderCell = (tagName, cell, index) => {
+		const alignment = alignments[index];
+		const alignAttribute = alignment ? ' align="' + alignment + '"' : "";
+
+		return (
+			"<" +
+			tagName +
+			alignAttribute +
+			">" +
+			renderInlineRichText(cell) +
+			"</" +
+			tagName +
+			">"
+		);
+	};
+
+	return (
+		"<table><thead><tr>" +
+		headerCells.map((cell, index) => renderCell("th", cell, index)).join("") +
+		"</tr></thead><tbody>" +
+		bodyRows
+			.map(
+				(row) =>
+					"<tr>" +
+					headerCells.map((_cell, index) => renderCell("td", row[index] || "", index)).join("") +
+					"</tr>"
+			)
+			.join("") +
+		"</tbody></table>"
+	);
+}
+
+function parseMarkdownCodeFence(line) {
+	const match = String(line || "").match(/^\s*(`{3,}|~{3,})\s*([A-Za-z0-9_-]+)?(?:\s+(\[[0-9,\-| ]+\]))?\s*$/);
+
+	if (!match) {
+		return null;
+	}
+
+	return {
+		character: match[1][0],
+		length: match[1].length,
+		language: match[2] || "",
+		lineNumbers: match[3] ? match[3].slice(1, -1).replace(/\s/g, "") : "",
+	};
+}
+
+function isClosingMarkdownCodeFence(line, fence) {
+	const value = String(line || "").trim();
+
+	return (
+		value.length >= fence.length &&
+		value.split("").every((character) => character === fence.character)
+	);
+}
+
+function renderMarkdownCodeBlockToHtml(fence, lines) {
+	const languageClass = fence.language
+		? ' class="language-' + escapeHtmlAttribute(fence.language) + '"'
+		: "";
+	const lineNumbers = fence.lineNumbers
+		? ' data-line-numbers="' + escapeHtmlAttribute(fence.lineNumbers) + '"'
+		: "";
+
+	return "<pre><code" + languageClass + lineNumbers + ">" + escapeHtml(lines.join("\n")) + "</code></pre>";
 }
 
 function parseRichTokenAttributes(value) {
@@ -183,23 +344,66 @@ function renderRichTextToHtml(value) {
 		list = [];
 	}
 
-	lines.forEach((line) => {
+	for (let index = 0; index < lines.length; index += 1) {
+		const line = lines[index];
 		const heading = line.match(/^(#{1,3})\s+(.+)$/);
 		const bullet = line.match(/^\s*[-*]\s+(.+)$/);
 		const quote = line.match(/^\s*>\s+(.+)$/);
 		const mediaToken = parseRichMediaToken(line);
+		const tableHeader = splitMarkdownTableRow(line);
+		const tableSeparator = splitMarkdownTableRow(lines[index + 1]);
+		const codeFence = parseMarkdownCodeFence(line);
 
 		if (!line.trim()) {
 			flushParagraph();
 			flushList();
-			return;
+			continue;
+		}
+
+		if (codeFence) {
+			const codeLines = [];
+
+			flushParagraph();
+			flushList();
+			index += 1;
+
+			while (index < lines.length && !isClosingMarkdownCodeFence(lines[index], codeFence)) {
+				codeLines.push(lines[index]);
+				index += 1;
+			}
+
+			blocks.push(renderMarkdownCodeBlockToHtml(codeFence, codeLines));
+			continue;
 		}
 
 		if (mediaToken) {
 			flushParagraph();
 			flushList();
 			blocks.push(renderMediaTokenToHtml(mediaToken));
-			return;
+			continue;
+		}
+
+		if (tableHeader && isMarkdownTableSeparatorRow(tableSeparator)) {
+			const bodyRows = [];
+
+			flushParagraph();
+			flushList();
+			index += 2;
+
+			while (index < lines.length) {
+				const row = splitMarkdownTableRow(lines[index]);
+
+				if (!row || isMarkdownTableSeparatorRow(row)) {
+					index -= 1;
+					break;
+				}
+
+				bodyRows.push(row);
+				index += 1;
+			}
+
+			blocks.push(renderMarkdownTableToHtml(tableHeader, tableSeparator, bodyRows));
+			continue;
 		}
 
 		if (heading) {
@@ -214,25 +418,25 @@ function renderRichTextToHtml(value) {
 					heading[1].length +
 					">"
 			);
-			return;
+			continue;
 		}
 
 		if (bullet) {
 			flushParagraph();
 			list.push(bullet[1]);
-			return;
+			continue;
 		}
 
 		if (quote) {
 			flushParagraph();
 			flushList();
 			blocks.push("<blockquote>" + renderInlineRichText(quote[1]) + "</blockquote>");
-			return;
+			continue;
 		}
 
 		flushList();
 		paragraph.push(line);
-	});
+	}
 
 	flushParagraph();
 	flushList();
@@ -246,8 +450,9 @@ function renderRichContent(container, value) {
 	container.innerHTML = "";
 
 	if (content.format === "html") {
-		container.innerHTML = content.content;
+		container.innerHTML = renderMarkdownImagesInHtml(content.content);
 		prepareYouTubeIframes(container);
+		prepareRenderedMedia(container);
 		return;
 	}
 
@@ -256,7 +461,7 @@ function renderRichContent(container, value) {
 }
 
 function prepareRenderedMedia(container) {
-	container.querySelectorAll("video[autoplay], audio[autoplay]").forEach((media) => {
+	container.querySelectorAll("video[autoplay], audio[autoplay], video[data-autoplay], audio[data-autoplay]").forEach((media) => {
 		media.dataset.autoplay = "true";
 		media.autoplay = false;
 		media.removeAttribute("autoplay");
@@ -311,7 +516,7 @@ function renderQuestionHints(container, hintsSource) {
 
 	hintsElement.className = "question-hints";
 	hintCue.className = "hint-cue";
-	hintCue.textContent = "Højre/ned giver hints. Venstre/op går til boardet.";
+	hintCue.textContent = "H giver hints. Space afspiller media. Pil op går til boardet.";
 	hintsElement.appendChild(hintCue);
 
 	hints.forEach((hint, index) => {
@@ -517,7 +722,17 @@ function isElementInCurrentRevealSlide(element) {
 	return Reveal.getCurrentSlide() === slide;
 }
 
+function isElementInHiddenRevealFragment(element) {
+	const fragment = element.closest ? element.closest(".fragment") : null;
+
+	return Boolean(fragment && !fragment.classList.contains("visible"));
+}
+
 function isElementVisiblyOnScreen(element) {
+	if (isElementInHiddenRevealFragment(element)) {
+		return false;
+	}
+
 	const revealState = isElementInCurrentRevealSlide(element);
 
 	if (revealState !== null) {
