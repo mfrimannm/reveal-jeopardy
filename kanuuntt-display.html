@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="da">
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+		/>
+		<meta name="theme-color" content="#121212" />
+		<title>KanUUNTt Display</title>
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="/static/styles/app.css" />
+	</head>
+	<body class="kanuuntt-screen kanuuntt-display-screen">
+		<main class="kanuuntt-display">
+			<header class="kanuuntt-display-header">
+				<div>
+					<div class="kanuuntt-kicker">KanUUNTt</div>
+					<h1 id="kanuuntt-display-title">Live quiz</h1>
+				</div>
+				<div class="kanuuntt-stage-pill" id="kanuuntt-display-stage">Waiting room</div>
+			</header>
+
+			<section class="kanuuntt-waiting" id="kanuuntt-display-waiting">
+				<div>
+					<div class="kanuuntt-session-label">Join-kode</div>
+					<div class="kanuuntt-session-code" id="kanuuntt-display-session-id">-</div>
+					<a class="kanuuntt-join-link" id="kanuuntt-display-join-link" href="#">-</a>
+				</div>
+				<div class="kanuuntt-qr" id="kanuuntt-display-qr"></div>
+				<div class="kanuuntt-player-strip" id="kanuuntt-display-players">Ingen deltagere endnu.</div>
+			</section>
+
+			<section class="kanuuntt-question-view" id="kanuuntt-display-question" hidden>
+				<div class="kanuuntt-question-top">
+					<div class="kanuuntt-question-count" id="kanuuntt-display-meta">-</div>
+					<div class="kanuuntt-timer" id="kanuuntt-display-timer">Klar</div>
+					<div class="kanuuntt-answer-count" id="kanuuntt-display-answer-count">0 / 0 har svaret</div>
+				</div>
+				<h2 id="kanuuntt-display-prompt">-</h2>
+				<div class="kanuuntt-media" id="kanuuntt-display-media"></div>
+				<div class="kanuuntt-answer-grid" id="kanuuntt-display-answers"></div>
+				<div class="kanuuntt-result-details" id="kanuuntt-display-result" hidden></div>
+				<div class="kanuuntt-scoreboard" id="kanuuntt-display-scoreboard" hidden></div>
+			</section>
+
+			<div class="kanuuntt-error" id="kanuuntt-display-error" hidden></div>
+		</main>
+
+		<script src="/static/app/api.js"></script>
+		<script src="/static/app/live-session.js"></script>
+		<script src="/static/app/qr-code.js"></script>
+		<script src="/static/app/kanuuntt-common.js"></script>
+		<script src="/static/app/kanuuntt-display.js"></script>
+	</body>
+</html>

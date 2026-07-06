@@ -26,15 +26,48 @@
 		<div class="reveal">
 			<div class="slides" id="slides">
 				<section id="home" class="home-slide">
-					<h1>Jeopardy Games</h1>
+					<h1>UNF Quiz</h1>
 
 					<div class="home-layout">
 						<div class="home-panel">
-							<h2>Game filer</h2>
+							<h2>Jeopardy</h2>
 							<label for="game-select">Vælg game</label>
 							<select id="game-select"></select>
 							<div class="game-list" id="game-list"></div>
 							<div class="game-meta" id="game-meta"></div>
+							<div class="home-actions">
+								<button class="game-button primary" type="button" onclick="startConfiguredGame()">
+									Start spil
+								</button>
+								<button class="game-button secondary" type="button" onclick="toggleQuestionMaker(true)">
+									Byg Jeopardy
+								</button>
+								<button class="game-button secondary" type="button" onclick="startLiveSession()">
+									Live buzzer
+								</button>
+							</div>
+
+							<div class="mode-divider"></div>
+							<h2>KanUUNTt</h2>
+							<p class="settings-note">Live quiz med display, backend og mobil-svar.</p>
+							<label for="kanuuntt-game-select">Vaelg KanUUNTt-spil</label>
+							<select id="kanuuntt-game-select"></select>
+							<div class="game-list" id="kanuuntt-game-list"></div>
+							<div class="game-meta" id="kanuuntt-game-meta"></div>
+							<div class="home-actions">
+								<button class="game-button primary" id="kanuuntt-session-start" type="button" onclick="startSelectedQuizLiveSession()">
+									Start live quiz
+								</button>
+								<button class="game-button secondary" id="kanuuntt-open-display-button" type="button" onclick="openKanuunttDisplay()" disabled>
+									Åben display
+								</button>
+								<button class="game-button secondary" id="kanuuntt-open-backend-button" type="button" onclick="openKanuunttBackend()" disabled>
+									Åben backend
+								</button>
+								<button class="game-button secondary" type="button" onclick="toggleKanuunttMaker(true)">
+									KanUUNTt maker
+								</button>
+							</div>
 						</div>
 
 						<div class="home-panel">
@@ -55,9 +88,6 @@
 									<button class="game-button secondary" type="button" onclick="saveSettingsAndReload('/home')">
 										Gem settings
 									</button>
-									<button class="game-button secondary" id="question-maker-toggle" type="button" onclick="toggleQuestionMaker()">
-										Question maker
-									</button>
 									<button class="game-button reset" type="button" onclick="resetGameSettings()">
 										Reset settings
 									</button>
@@ -70,6 +100,9 @@
 									<div class="home-actions">
 										<button class="game-button primary" id="live-session-start" type="button" onclick="startLiveSession()">
 											Start live session
+										</button>
+										<button class="game-button primary" id="quiz-session-start" type="button" onclick="startQuizLiveSession()">
+											Start KanUUNTt
 										</button>
 										<button class="game-button secondary" id="live-session-reset" type="button" onclick="resetHostLiveSession()" disabled>
 											Reset session
@@ -108,6 +141,34 @@
 										</button>
 									</div>
 								</div>
+
+									<div class="quiz-session-panel" id="quiz-session-panel" hidden data-testid="quiz-session-panel">
+										<div class="quiz-session-topline">
+											<h3>KanUUNTt</h3>
+											<div class="quiz-session-stage" id="quiz-session-stage" data-testid="quiz-session-stage">Waiting room</div>
+										</div>
+										<div class="quiz-session-meta" id="quiz-session-meta">Ingen quiz session.</div>
+										<div class="quiz-session-live-row">
+											<div class="quiz-session-timer" id="quiz-session-timer" data-testid="quiz-session-timer">Klar</div>
+											<div class="quiz-live-answer-count" id="quiz-live-answer-count" data-testid="quiz-live-answer-count">0 / 0 har svaret</div>
+										</div>
+										<div class="quiz-session-question" id="quiz-session-question" data-testid="quiz-session-question">-</div>
+										<div class="quiz-session-media" id="quiz-session-media" data-testid="quiz-session-media"></div>
+										<div class="quiz-session-answers" id="quiz-session-answers" data-testid="quiz-session-answers"></div>
+										<div class="quiz-result-details" id="quiz-result-details" data-testid="quiz-result-details" hidden></div>
+										<div class="quiz-scoreboard" id="quiz-scoreboard" data-testid="quiz-scoreboard" hidden></div>
+										<div class="home-actions">
+											<button class="game-button primary" id="quiz-start-question" type="button" onclick="startHostQuizQuestion()" disabled>
+												Start quiz
+											</button>
+											<button class="game-button secondary" id="quiz-close-question" type="button" onclick="closeHostQuizQuestion()" disabled>
+												Luk spørgsmål
+											</button>
+											<button class="game-button secondary" id="quiz-next-question" type="button" onclick="nextHostQuizQuestion()" disabled>
+												Næste spørgsmål
+											</button>
+										</div>
+									</div>
 
 								<div class="question-maker" id="question-maker" hidden>
 								<div class="question-maker-header">
@@ -354,6 +415,63 @@
 					</div>
 				</section>
 
+				<section class="kanuuntt-maker" id="kanuuntt-maker" hidden>
+					<div class="question-maker-header">
+						<h2>KanUUNTt maker</h2>
+						<button class="game-button secondary" type="button" onclick="toggleKanuunttMaker(false)">
+							Luk
+						</button>
+					</div>
+					<div class="builder-stage builder-setup">
+						<div class="admin-panel">
+							<div>
+								<label for="kanuuntt-admin-password">Admin kode</label>
+								<input id="kanuuntt-admin-password" type="password" autocomplete="current-password" />
+							</div>
+							<button class="game-button secondary" type="button" onclick="loginKanuunttAdmin()">
+								Log ind
+							</button>
+						</div>
+						<div class="admin-status" id="kanuuntt-admin-status"></div>
+					</div>
+					<div class="builder-stage builder-setup">
+						<div class="builder-grid">
+							<div>
+								<label for="kanuuntt-maker-title">Quiz titel</label>
+								<input id="kanuuntt-maker-title" type="text" autocomplete="off" />
+							</div>
+							<div>
+								<label for="kanuuntt-maker-id">Quiz id / filnavn</label>
+								<input id="kanuuntt-maker-id" type="text" autocomplete="off" />
+							</div>
+							<div>
+								<label for="kanuuntt-maker-teams">Teams, en per linje</label>
+								<textarea id="kanuuntt-maker-teams"></textarea>
+							</div>
+						</div>
+					</div>
+					<div class="builder-stage">
+						<div class="kanuuntt-maker-list" id="kanuuntt-maker-questions"></div>
+						<div class="home-actions">
+							<button class="game-button secondary" type="button" onclick="addKanuunttQuestion()">
+								Nyt spørgsmål
+							</button>
+							<button class="game-button secondary" type="button" onclick="loadCurrentKanuunttGameIntoMaker()">
+								Hent valgt KanUUNTt
+							</button>
+							<button class="game-button reset" type="button" onclick="resetKanuunttMakerDraft()">
+								Reset kladde
+							</button>
+							<button class="game-button primary" id="kanuuntt-maker-save" type="button" onclick="saveKanuunttMakerFile()">
+								Gem KanUUNTt
+							</button>
+						</div>
+						<label for="kanuuntt-maker-output">Preview af quiz JSON</label>
+						<textarea class="builder-output" id="kanuuntt-maker-output" readonly></textarea>
+						<div class="builder-status" id="kanuuntt-maker-status"></div>
+					</div>
+				</section>
+
 				<section id="board" class="board-slide">
 					<div class="board-header">
 						<h1 id="game-title">Jeopardy</h1>
@@ -403,6 +521,7 @@
 		<script src="static/app/content-renderer.js"></script>
 		<script src="static/app/game-model.js"></script>
 		<script src="static/app/question-maker.js"></script>
+		<script src="static/app/kanuuntt-maker.js"></script>
 		<script src="static/app/renderer.js"></script>
 		<script src="static/app/live-session.js"></script>
 		<script src="static/app/qr-code.js"></script>

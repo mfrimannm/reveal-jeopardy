@@ -7,6 +7,13 @@ async function openHost(page) {
 	await expect(page.locator("#game-title")).toHaveText("UI Scaling Test");
 }
 
+async function openQuizHost(page) {
+	await page.goto("/");
+	await page.evaluate(() => localStorage.clear());
+	await page.goto("/?game=ui-quiz#/home");
+	await expect(page.locator("#game-title")).toHaveText("UI Quiz Test");
+}
+
 async function joinMobilePlayer(page, joinUrl, name, teamId) {
 	await page.goto(joinUrl);
 	await expect(page.locator("#mobile-session-id")).toHaveText(/^[A-Z2-9]{8}$/);
@@ -14,6 +21,15 @@ async function joinMobilePlayer(page, joinUrl, name, teamId) {
 	await page.locator("#mobile-team-select").selectOption(teamId);
 	await page.locator("#mobile-join-button").click();
 	await expect(page.locator("#mobile-buzz-status")).toHaveText("Klar");
+}
+
+async function joinMobileQuizPlayer(page, joinUrl, name, teamId) {
+	await page.goto(joinUrl);
+	await expect(page.locator("#mobile-session-id")).toHaveText(/^[A-Z2-9]{8}$/);
+	await page.locator("#mobile-player-name").fill(name);
+	await page.locator("#mobile-team-select").selectOption(teamId);
+	await page.locator("#mobile-join-button").click();
+	await expect(page.locator("#mobile-quiz-panel")).toBeVisible();
 }
 
 test("host can start live session and see mobile buzzers", async ({ browser, page }) => {
@@ -73,6 +89,75 @@ test("host can start live session and see mobile buzzers", async ({ browser, pag
 	await mobileOne.close();
 	await mobileTwo.close();
 	await page.close();
+});
+
+test("host can run a quiz question with mobile answers and scoreboard", async ({ browser, page }) => {
+	test.setTimeout(45_000);
+	await openQuizHost(page);
+
+	await expect(page.locator("#quiz-session-start")).toBeEnabled();
+	await page.locator("#quiz-session-start").click();
+	await expect(page.locator("#live-session-id")).toHaveText(/^[A-Z2-9]{8}$/);
+	await expect(page.locator("#live-session-join-link")).toContainText("/play/");
+	await expect(page.locator("#live-session-qr img")).toBeVisible();
+	await expect(page.locator("#quiz-session-panel")).toBeVisible();
+	await expect(page.locator("#quiz-session-stage")).toHaveText("Waiting room");
+
+	const joinUrl = await page.locator("#live-session-join-link").getAttribute("href");
+	const sessionId = await page.locator("#live-session-id").textContent();
+	const displayPage = await page.context().newPage();
+	const backendPage = await page.context().newPage();
+
+	await displayPage.goto("/kanuuntt/display/" + sessionId);
+	await backendPage.goto("/kanuuntt/backend/" + sessionId);
+	await expect(displayPage.locator("#kanuuntt-display-stage")).toHaveText("Waiting room");
+	await expect(displayPage.locator("#kanuuntt-display-session-id")).toHaveText(sessionId);
+	await expect(displayPage.locator("#kanuuntt-display-qr img")).toBeVisible();
+	await expect(backendPage.locator("#kanuuntt-backend-stage")).toHaveText("Waiting room");
+	await expect(backendPage.locator("#kanuuntt-open-display")).toHaveAttribute("href", /\/kanuuntt\/display\//);
+	const mobileContext = await browser.newContext({
+		viewport: { width: 360, height: 740 },
+	});
+	const player = await mobileContext.newPage();
+
+	await joinMobileQuizPlayer(player, joinUrl, "Alice", "team1");
+	await expect(page.locator("#live-session-players")).toContainText("Alice");
+	await expect(displayPage.locator("#kanuuntt-display-players")).toContainText("Alice");
+	await expect(backendPage.locator("#kanuuntt-backend-player-count")).toHaveText("1");
+
+	await backendPage.locator("#kanuuntt-start-question").click();
+	await expect(page.locator("#quiz-session-stage")).toHaveText("Spørgsmålet er åbent");
+	await expect(page.locator("#quiz-session-question")).toHaveText("What does the image show?");
+	await expect(displayPage.locator("#kanuuntt-display-stage")).toHaveText("Spørgsmålet er aabent");
+	await expect(displayPage.locator("#kanuuntt-display-prompt")).toHaveText("What does the image show?");
+	await expect(page.locator("#quiz-session-media img")).toBeVisible();
+	await expect(player.locator("#mobile-quiz-prompt")).toHaveText("What does the image show?");
+	await expect(player.locator(".mobile-answer-button")).toHaveCount(4);
+	await expect(player.locator("#mobile-quiz-status")).toHaveText("Vælg et svar");
+
+	await player.getByRole("button", { name: /A local image/ }).click();
+	await expect(player.locator("#mobile-quiz-status")).toHaveText("Svar modtaget. Venter på de andre.");
+	await expect(page.locator("#quiz-live-answer-count")).toHaveText("1 / 1 har svaret");
+	await expect(backendPage.locator("#kanuuntt-backend-answer-count")).toHaveText("1 / 1");
+
+	await backendPage.locator("#kanuuntt-close-question").click();
+	await expect(page.locator("#quiz-session-stage")).toHaveText("Resultatfordeling");
+	await expect(page.locator("#quiz-session-answers")).toContainText("1 svar / 100%");
+	await expect(displayPage.locator("#kanuuntt-display-stage")).toHaveText("Resultat");
+	await expect(displayPage.locator("#kanuuntt-display-answers")).toContainText("1 svar / 100%");
+	await expect(page.locator("#quiz-result-details")).toContainText("Alice +1000 point");
+
+	await expect(page.locator("#quiz-session-stage")).toHaveText("Scoreboard", { timeout: 12_000 });
+	await expect(displayPage.locator("#kanuuntt-display-stage")).toHaveText("Scoreboard", { timeout: 12_000 });
+	await expect(page.locator("#quiz-scoreboard")).toContainText("Alice");
+	await expect(page.locator("#quiz-scoreboard")).toContainText("1000 point");
+
+	await expect(page.locator("#quiz-session-question")).toHaveText("Which rule counts in this quiz?", { timeout: 12_000 });
+	await expect(player.locator("#mobile-quiz-prompt")).toHaveText("Which rule counts in this quiz?");
+
+	await displayPage.close();
+	await backendPage.close();
+	await mobileContext.close();
 });
 
 test("live session reconnects after starting the game and syncs score", async ({ browser, page }) => {

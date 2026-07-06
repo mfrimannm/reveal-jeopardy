@@ -32,12 +32,12 @@ function getLiveHostHeaders(hostToken) {
 		: {};
 }
 
-function createLiveSession(gameId) {
+function createLiveSession(gameId, mode) {
 	return liveSessionRequest("", {
 		method: "POST",
 		body: JSON.stringify({
 			game_id: gameId,
-			mode: "jeopardy",
+			mode: mode || "jeopardy",
 		}),
 	});
 }
@@ -130,6 +130,62 @@ function unlockLiveBuzzers(sessionId, hostToken) {
 		{
 			method: "POST",
 			headers: getLiveHostHeaders(hostToken),
+		}
+	);
+}
+
+function startQuizQuestion(sessionId, hostToken) {
+	return liveSessionRequest(
+		"/" + encodeURIComponent(sessionId) + "/quiz/start-question",
+		{
+			method: "POST",
+			headers: getLiveHostHeaders(hostToken),
+		}
+	);
+}
+
+function submitQuizAnswer(sessionId, playerId, answerId) {
+	return liveSessionRequest(
+		"/" + encodeURIComponent(sessionId) + "/quiz/submit-answer",
+		{
+			method: "POST",
+			body: JSON.stringify({
+				player_id: playerId,
+				answer_id: answerId,
+			}),
+		}
+	);
+}
+
+function closeQuizQuestion(sessionId, hostToken) {
+	return liveSessionRequest(
+		"/" + encodeURIComponent(sessionId) + "/quiz/close-question",
+		{
+			method: "POST",
+			headers: getLiveHostHeaders(hostToken),
+		}
+	);
+}
+
+function nextQuizQuestion(sessionId, hostToken) {
+	return liveSessionRequest(
+		"/" + encodeURIComponent(sessionId) + "/quiz/next-question",
+		{
+			method: "POST",
+			headers: getLiveHostHeaders(hostToken),
+		}
+	);
+}
+
+function setQuizPhase(sessionId, hostToken, quizPhase) {
+	return liveSessionRequest(
+		"/" + encodeURIComponent(sessionId) + "/quiz/phase",
+		{
+			method: "POST",
+			headers: getLiveHostHeaders(hostToken),
+			body: JSON.stringify({
+				quiz_phase: quizPhase,
+			}),
 		}
 	);
 }

@@ -81,6 +81,66 @@ function renderTeamFields(teamNames) {
 	});
 }
 
+function renderKanuunttGamePicker() {
+	const gameSelect = document.getElementById("kanuuntt-game-select");
+	const gameList = document.getElementById("kanuuntt-game-list");
+	const gameMeta = document.getElementById("kanuuntt-game-meta");
+	const quizGames = availableGames.filter((game) => game.mode === "quiz");
+	const selectedGame =
+		quizGames.find((game) => game.id === gameKey) ||
+		quizGames[0] ||
+		null;
+
+	if (!gameSelect || !gameList || !gameMeta) {
+		return;
+	}
+
+	gameSelect.innerHTML = "";
+	gameList.innerHTML = "";
+	gameMeta.innerHTML = "";
+
+	if (!selectedGame) {
+		gameSelect.disabled = true;
+		gameList.textContent = "Ingen KanUUNTt-spil fundet.";
+		return;
+	}
+
+	gameSelect.disabled = false;
+	quizGames.forEach((game) => {
+		const option = document.createElement("option");
+		const link = document.createElement("a");
+		const title = document.createElement("strong");
+		const meta = document.createElement("span");
+
+		option.value = game.id;
+		option.textContent = game.title + " - " + game.id;
+		option.selected = game.id === selectedGame.id;
+		gameSelect.appendChild(option);
+
+		link.className = "game-card" + (game.id === gameKey ? " active" : "");
+		link.href = getGameUrl(game.id);
+		title.textContent = game.title;
+		meta.textContent = game.id;
+		link.appendChild(title);
+		link.appendChild(meta);
+		gameList.appendChild(link);
+	});
+
+	gameSelect.value = selectedGame.id;
+	gameSelect.onchange = () => changeGame(gameSelect.value);
+
+	const currentFile = document.createElement("div");
+	const questionCount = document.createElement("div");
+
+	currentFile.textContent = "Valgt KanUUNTt: " + selectedGame.id;
+	questionCount.textContent =
+		selectedGame.id === gameKey && Array.isArray(window.JEOPARDY_GAME.quiz_questions)
+			? "Quiz-Spørgsmål: " + window.JEOPARDY_GAME.quiz_questions.length
+			: "Åben spillet for detaljer.";
+	gameMeta.appendChild(currentFile);
+	gameMeta.appendChild(questionCount);
+}
+
 function renderHome() {
 	const gameSelect = document.getElementById("game-select");
 	const gameList = document.getElementById("game-list");
@@ -95,7 +155,7 @@ function renderHome() {
 	gameList.innerHTML = "";
 	gameMeta.innerHTML = "";
 
-	availableGames.forEach((game) => {
+	availableGames.filter((game) => game.mode !== "quiz").forEach((game) => {
 		const option = document.createElement("option");
 		const link = document.createElement("a");
 		const title = document.createElement("strong");
@@ -143,6 +203,7 @@ function renderHome() {
 	};
 
 	renderTeamFields(teams.map((team) => team.name));
+	renderKanuunttGamePicker();
 }
 
 function createEmptyBoardTile() {

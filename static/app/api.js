@@ -136,6 +136,10 @@ function updateAdminControls() {
 	if (typeof renderHostLiveSession === "function") {
 		renderHostLiveSession();
 	}
+
+	if (typeof updateKanuunttAdminStatus === "function") {
+		updateKanuunttAdminStatus();
+	}
 }
 
 async function loginAdmin() {

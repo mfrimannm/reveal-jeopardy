@@ -2,6 +2,27 @@ function getLiveHostSessionId() {
 	return liveSessionState && liveSessionState.session_id;
 }
 
+function isQuizLiveSession() {
+	return Boolean(liveSessionState && liveSessionState.mode === "quiz");
+}
+
+const quizFlowConfig = {
+	questionIntroSeconds: 3,
+	resultSeconds: 6,
+	scoreboardSeconds: 6,
+	autoAdvance: true,
+};
+const quizAnswerStyles = [
+	{ symbol: "▲", className: "quiz-answer-a" },
+	{ symbol: "◆", className: "quiz-answer-b" },
+	{ symbol: "●", className: "quiz-answer-c" },
+	{ symbol: "■", className: "quiz-answer-d" },
+];
+let quizCountdownTimer = null;
+let quizAutomationTimer = null;
+let quizAutomationKey = "";
+let quizAutoCloseKey = "";
+
 function getStoredLiveSessionKey() {
 	return LIVE_SESSION_STORAGE_KEY + gameKey;
 }
@@ -32,6 +53,12 @@ function rememberLiveSession(sessionId, hostToken) {
 					host_token: hostToken || "",
 				})
 			);
+			if (hostToken) {
+				localStorage.setItem(
+					"reveal-jeopardy-live-host-token:" + sessionId,
+					hostToken
+				);
+			}
 		}
 	} catch (error) {
 		console.warn("Could not remember live session.", error);
@@ -103,7 +130,6 @@ function handleLiveSessionMessage(message) {
 
 	if (message.type === "session_state") {
 		setHostLiveSession(message.session);
-		liveSessionError = "";
 		liveSessionStatus = "connected";
 		renderHostLiveSession();
 		return;
@@ -139,7 +165,7 @@ function connectHostLiveSession(sessionId) {
 async function startLiveSession() {
 	try {
 		setLiveSessionStatus("starting");
-		const session = await createLiveSession(gameKey);
+		const session = await createLiveSession(gameKey, "jeopardy");
 		setHostLiveSession(session);
 		liveSessionError = "";
 		rememberLiveSession(session.session_id, liveSessionHostToken);
@@ -148,6 +174,64 @@ async function startLiveSession() {
 	} catch (error) {
 		console.warn("Could not start live session.", error);
 		setLiveSessionError(error.message || "Kunne ikke starte live session.");
+	}
+}
+
+async function startQuizLiveSession() {
+	try {
+		setLiveSessionStatus("starting");
+		const session = await createLiveSession(gameKey, "quiz");
+		setHostLiveSession(session);
+		liveSessionError = "";
+		rememberLiveSession(session.session_id, liveSessionHostToken);
+		connectHostLiveSession(session.session_id);
+		renderHostLiveSession();
+	} catch (error) {
+		console.warn("Could not start KanUUNTt session.", error);
+		setLiveSessionError(
+			error.message ||
+				"Kunne ikke starte KanUUNTt. Vaelg et game med quiz_questions."
+		);
+	}
+}
+
+function getSelectedKanuunttGameKey() {
+	const select = document.getElementById("kanuuntt-game-select");
+
+	return (select && select.value) || gameKey;
+}
+
+async function startSelectedQuizLiveSession() {
+	try {
+		setLiveSessionStatus("starting");
+		const session = await createLiveSession(getSelectedKanuunttGameKey(), "quiz");
+		setHostLiveSession(session);
+		liveSessionError = "";
+		rememberLiveSession(session.session_id, liveSessionHostToken);
+		connectHostLiveSession(session.session_id);
+		renderHostLiveSession();
+	} catch (error) {
+		console.warn("Could not start selected KanUUNTt session.", error);
+		setLiveSessionError(
+			error.message ||
+				"Kunne ikke starte KanUUNTt. Vaelg et game med quiz_questions."
+		);
+	}
+}
+
+function openKanuunttDisplay() {
+	const sessionId = getLiveHostSessionId();
+
+	if (sessionId) {
+		window.open("/kanuuntt/display/" + encodeURIComponent(sessionId), "_blank", "noreferrer");
+	}
+}
+
+function openKanuunttBackend() {
+	const sessionId = getLiveHostSessionId();
+
+	if (sessionId) {
+		window.open("/kanuuntt/backend/" + encodeURIComponent(sessionId), "_blank", "noreferrer");
 	}
 }
 
@@ -201,6 +285,22 @@ async function clearHostLiveBuzzers() {
 	} catch (error) {
 		console.warn("Could not clear buzzers.", error);
 		setLiveSessionError(error.message || "Kunne ikke rydde buzzers.");
+	}
+}
+
+async function setHostQuizPhase(quizPhase) {
+	const sessionId = getLiveHostSessionId();
+
+	if (!sessionId) {
+		return;
+	}
+
+	try {
+		setHostLiveSession(await setQuizPhase(sessionId, liveSessionHostToken, quizPhase));
+		renderHostLiveSession();
+	} catch (error) {
+		console.warn("Could not update quiz phase.", error);
+		setLiveSessionError(error.message || "Kunne ikke opdatere quizfase.");
 	}
 }
 
@@ -266,14 +366,39 @@ function syncTextList(container, tagName, emptyText, items, getKey, updateItem) 
 
 function updateLiveSessionButtons() {
 	const startButton = document.getElementById("live-session-start");
+	const quizStartButton = document.getElementById("quiz-session-start");
+	const selectedQuizStartButton = document.getElementById("kanuuntt-session-start");
+	const displayButton = document.getElementById("kanuuntt-open-display-button");
+	const backendButton = document.getElementById("kanuuntt-open-backend-button");
 	const stopButton = document.getElementById("live-session-stop");
 	const resetButton = document.getElementById("live-session-reset");
 	const clearButton = document.getElementById("live-session-clear-buzzers");
 	const lockButton = document.getElementById("live-session-lock-buzzers");
+	const quizStartQuestionButton = document.getElementById("quiz-start-question");
+	const quizCloseQuestionButton = document.getElementById("quiz-close-question");
+	const quizNextQuestionButton = document.getElementById("quiz-next-question");
 	const active = Boolean(liveSessionState);
+	const quizActive = isQuizLiveSession();
+	const questionOpen = quizActive && liveSessionState.question_open;
 
 	if (startButton) {
 		startButton.disabled = active;
+	}
+
+	if (quizStartButton) {
+		quizStartButton.disabled = active;
+	}
+
+	if (selectedQuizStartButton) {
+		selectedQuizStartButton.disabled = active;
+	}
+
+	if (displayButton) {
+		displayButton.disabled = !quizActive;
+	}
+
+	if (backendButton) {
+		backendButton.disabled = !quizActive;
 	}
 
 	if (stopButton) {
@@ -292,6 +417,38 @@ function updateLiveSessionButtons() {
 		lockButton.disabled = !active;
 		lockButton.textContent =
 			active && liveSessionState.buzzer_locked ? "Åbn buzzers" : "Lås buzzers";
+	}
+}
+
+function updateQuizSessionButtons() {
+	const quizStartQuestionButton = document.getElementById("quiz-start-question");
+	const quizCloseQuestionButton = document.getElementById("quiz-close-question");
+	const quizNextQuestionButton = document.getElementById("quiz-next-question");
+	const quizActive = isQuizLiveSession();
+	const questionOpen = quizActive && liveSessionState.question_open;
+	const phase = getQuizPhase();
+
+	if (quizStartQuestionButton) {
+		quizStartQuestionButton.disabled =
+			!quizActive ||
+			questionOpen ||
+			["result_distribution", "answer_reveal", "scoreboard", "final_scoreboard"].includes(phase);
+		quizStartQuestionButton.textContent =
+			phase === "waiting" ? "Start quiz" : "Start spørgsmål";
+	}
+
+	if (quizCloseQuestionButton) {
+		quizCloseQuestionButton.disabled = !quizActive || !questionOpen;
+	}
+
+	if (quizNextQuestionButton) {
+		quizNextQuestionButton.disabled = !quizActive || phase === "final_scoreboard";
+		quizNextQuestionButton.textContent =
+			quizActive &&
+			Number(liveSessionState.current_question_index || 0) >=
+				(liveSessionState.quiz_questions || []).length - 1
+				? "Vis finale"
+				: "Næste spørgsmål";
 	}
 }
 
@@ -450,6 +607,439 @@ function updateBuzzerPanel() {
 	});
 }
 
+function getCurrentQuizQuestion() {
+	if (!isQuizLiveSession() || !Array.isArray(liveSessionState.quiz_questions)) {
+		return null;
+	}
+
+	return (
+		liveSessionState.quiz_questions[
+			Number(liveSessionState.current_question_index || 0)
+		] || null
+	);
+}
+
+function getCurrentQuizQuestionIndex() {
+	return Number(liveSessionState && liveSessionState.current_question_index || 0);
+}
+
+function getQuizPhase() {
+	if (!isQuizLiveSession()) {
+		return "waiting";
+	}
+
+	if (liveSessionState.quiz_phase) {
+		return liveSessionState.quiz_phase;
+	}
+
+	return liveSessionState.question_open ? "question_open" : "waiting";
+}
+
+function getQuizQuestionRemainingSeconds(question) {
+	if (!question || !liveSessionState || !liveSessionState.question_started_at) {
+		return null;
+	}
+
+	const startedAt = Date.parse(liveSessionState.question_started_at);
+
+	if (!Number.isFinite(startedAt)) {
+		return null;
+	}
+
+	const elapsedSeconds = (Date.now() - startedAt) / 1000;
+	const remaining = Number(question.timeLimitSeconds || 0) - elapsedSeconds;
+
+	return Math.max(0, Math.ceil(remaining));
+}
+
+function clearQuizCountdownTimer() {
+	if (quizCountdownTimer) {
+		clearInterval(quizCountdownTimer);
+		quizCountdownTimer = null;
+	}
+}
+
+function clearQuizAutomationTimer() {
+	if (quizAutomationTimer) {
+		clearTimeout(quizAutomationTimer);
+		quizAutomationTimer = null;
+	}
+}
+
+function renderQuizMedia(container, media) {
+	container.replaceChildren();
+
+	if (!media || !media.type || !media.src) {
+		const empty = document.createElement("div");
+		empty.className = "quiz-media-empty";
+		empty.textContent = "Tekstspørgsmål";
+		container.appendChild(empty);
+		return;
+	}
+
+	const wrapper = document.createElement("div");
+	wrapper.className = "quiz-media-frame";
+
+	if (media.type === "image") {
+		const image = document.createElement("img");
+		image.src = media.src;
+		image.alt = media.alt || "";
+		image.loading = "eager";
+		wrapper.appendChild(image);
+	} else if (media.type === "video") {
+		const video = document.createElement("video");
+		video.src = media.src;
+		video.controls = true;
+		video.autoplay = Boolean(media.autoplay);
+		video.loop = Boolean(media.loop);
+		video.muted = Boolean(media.muted || media.autoplay);
+		video.playsInline = true;
+		if (media.poster) {
+			video.poster = media.poster;
+		}
+		wrapper.appendChild(video);
+	} else if (media.type === "audio") {
+		const audio = document.createElement("audio");
+		audio.src = media.src;
+		audio.controls = true;
+		audio.autoplay = Boolean(media.autoplay);
+		audio.loop = Boolean(media.loop);
+		wrapper.appendChild(audio);
+	} else if (media.type === "embed") {
+		const iframe = document.createElement("iframe");
+		iframe.src = media.src;
+		iframe.title = media.title || "Quiz embed";
+		iframe.allowFullscreen = true;
+		iframe.referrerPolicy = "strict-origin-when-cross-origin";
+		wrapper.appendChild(iframe);
+	} else {
+		const unsupported = document.createElement("div");
+		unsupported.className = "quiz-media-empty";
+		unsupported.textContent = "Media kunne ikke vises";
+		wrapper.appendChild(unsupported);
+	}
+
+	container.appendChild(wrapper);
+}
+
+function getCurrentQuizAnswers() {
+	if (!liveSessionState || !Array.isArray(liveSessionState.answers)) {
+		return [];
+	}
+
+	const questionIndex = getCurrentQuizQuestionIndex();
+
+	return liveSessionState.answers.filter(
+		(answer) => Number(answer.question_index) === questionIndex
+	);
+}
+
+function getQuizScoreRows() {
+	if (!liveSessionState) {
+		return [];
+	}
+
+	const scores = liveSessionState.scores || {};
+
+	return [...(liveSessionState.players || [])]
+		.map((player) => ({
+			player,
+			score: Number(scores[player.id] || 0),
+		}))
+		.sort((left, right) => right.score - left.score || left.player.name.localeCompare(right.player.name));
+}
+
+function renderQuizAnswerGrid(container, question, options) {
+	container.replaceChildren();
+
+	if (!question || !Array.isArray(question.answers)) {
+		return;
+	}
+
+	const settings = options || {};
+	const currentAnswers = getCurrentQuizAnswers();
+	const answerCounts = new Map();
+
+	currentAnswers.forEach((answer) => {
+		answerCounts.set(answer.answer_id, Number(answerCounts.get(answer.answer_id) || 0) + 1);
+	});
+
+	question.answers.forEach((answer, index) => {
+		const style = quizAnswerStyles[index % quizAnswerStyles.length];
+		const card = document.createElement("div");
+		const count = Number(answerCounts.get(answer.id) || 0);
+		const percent = currentAnswers.length
+			? Math.round((count / currentAnswers.length) * 100)
+			: 0;
+
+		card.className = "quiz-answer-card " + style.className;
+		if (settings.showCorrect && answer.correct) {
+			card.classList.add("correct");
+		}
+		if (settings.showCorrect && !answer.correct) {
+			card.classList.add("dimmed");
+		}
+
+		const symbol = document.createElement("span");
+		symbol.className = "quiz-answer-symbol";
+		symbol.textContent = style.symbol;
+
+		const text = document.createElement("span");
+		text.className = "quiz-answer-text";
+		text.textContent = answer.text;
+
+		card.appendChild(symbol);
+		card.appendChild(text);
+
+		if (settings.showDistribution) {
+			const result = document.createElement("span");
+			result.className = "quiz-answer-result";
+			result.textContent = count + " svar" + (currentAnswers.length ? " / " + percent + "%" : "");
+			card.appendChild(result);
+		}
+
+		container.appendChild(card);
+	});
+}
+
+function renderQuizResultDetails(container, question) {
+	container.replaceChildren();
+
+	if (!question) {
+		return;
+	}
+
+	const correctAnswers = new Set(
+		(question.answers || [])
+			.filter((answer) => answer.correct)
+			.map((answer) => answer.id)
+	);
+	const correctRows = getCurrentQuizAnswers().filter((answer) =>
+		correctAnswers.has(answer.answer_id)
+	);
+
+	if (!correctRows.length) {
+		const empty = document.createElement("div");
+		empty.className = "quiz-result-empty";
+		empty.textContent = "Ingen korrekte svar endnu.";
+		container.appendChild(empty);
+		return;
+	}
+
+	const title = document.createElement("div");
+	title.className = "quiz-result-title";
+	title.textContent = "Korrekte svar";
+	container.appendChild(title);
+
+	correctRows.forEach((answer) => {
+		const row = document.createElement("div");
+		row.className = "quiz-result-row";
+		row.textContent =
+			answer.player_name + " +" + Number(answer.earned_points || 0) + " point";
+		container.appendChild(row);
+	});
+}
+
+function renderQuizScoreboard(container, finalMode) {
+	container.replaceChildren();
+
+	const title = document.createElement("div");
+	title.className = "quiz-scoreboard-title";
+	title.textContent = finalMode ? "Final scoreboard" : "Scoreboard";
+	container.appendChild(title);
+
+	const rows = getQuizScoreRows();
+
+	if (!rows.length) {
+		const empty = document.createElement("div");
+		empty.className = "quiz-result-empty";
+		empty.textContent = "Ingen deltagere endnu.";
+		container.appendChild(empty);
+		return;
+	}
+
+	rows.forEach((entry, index) => {
+		const row = document.createElement("div");
+		row.className = "quiz-scoreboard-row";
+
+		const rank = document.createElement("span");
+		rank.className = "quiz-scoreboard-rank";
+		rank.textContent = String(index + 1);
+
+		const name = document.createElement("span");
+		name.className = "quiz-scoreboard-name";
+		name.textContent = entry.player.name;
+
+		const points = document.createElement("span");
+		points.className = "quiz-scoreboard-points";
+		points.textContent = entry.score + " point";
+
+		row.appendChild(rank);
+		row.appendChild(name);
+		row.appendChild(points);
+		container.appendChild(row);
+	});
+}
+
+function scheduleQuizAutomation(phase, question, remainingSeconds) {
+	if (!quizFlowConfig.autoAdvance || !isQuizLiveSession()) {
+		clearQuizAutomationTimer();
+		return;
+	}
+
+	const questionIndex = getCurrentQuizQuestionIndex();
+	const key =
+		getLiveHostSessionId() +
+		":" +
+		phase +
+		":" +
+		questionIndex +
+		":" +
+		(liveSessionState.phase_started_at || liveSessionState.question_started_at || "");
+
+	if (quizAutomationKey === key && quizAutomationTimer) {
+		return;
+	}
+
+	clearQuizAutomationTimer();
+	quizAutomationKey = key;
+
+	if (phase === "question_intro") {
+		quizAutomationTimer = setTimeout(startHostQuizQuestion, quizFlowConfig.questionIntroSeconds * 1000);
+	} else if (phase === "result_distribution") {
+		quizAutomationTimer = setTimeout(() => setHostQuizPhase("answer_reveal"), quizFlowConfig.resultSeconds * 1000);
+	} else if (phase === "answer_reveal") {
+		quizAutomationTimer = setTimeout(() => setHostQuizPhase("scoreboard"), 1600);
+	} else if (phase === "scoreboard") {
+		quizAutomationTimer = setTimeout(nextHostQuizQuestion, quizFlowConfig.scoreboardSeconds * 1000);
+	} else if (phase === "question_open" && remainingSeconds !== null) {
+		const closeKey = key + ":close";
+		if (quizAutoCloseKey !== closeKey) {
+			quizAutoCloseKey = closeKey;
+			quizAutomationTimer = setTimeout(closeHostQuizQuestion, Math.max(remainingSeconds, 1) * 1000);
+		}
+	}
+}
+
+function updateQuizPanel() {
+	const panel = document.getElementById("quiz-session-panel");
+	const questionElement = document.getElementById("quiz-session-question");
+	const metaElement = document.getElementById("quiz-session-meta");
+	const answersElement = document.getElementById("quiz-session-answers");
+	const mediaElement = document.getElementById("quiz-session-media");
+	const timerElement = document.getElementById("quiz-session-timer");
+	const liveCountElement = document.getElementById("quiz-live-answer-count");
+	const resultElement = document.getElementById("quiz-result-details");
+	const scoreboardElement = document.getElementById("quiz-scoreboard");
+	const stageElement = document.getElementById("quiz-session-stage");
+	const quizActive = isQuizLiveSession();
+	const question = getCurrentQuizQuestion();
+	const phase = getQuizPhase();
+	const remainingSeconds = getQuizQuestionRemainingSeconds(question);
+
+	if (!panel) {
+		return;
+	}
+
+	panel.hidden = !quizActive;
+
+	if (!quizActive) {
+		clearQuizCountdownTimer();
+		clearQuizAutomationTimer();
+		return;
+	}
+
+	panel.dataset.quizPhase = phase;
+
+	if (stageElement) {
+		stageElement.textContent =
+			phase === "waiting"
+				? "Waiting room"
+				: phase === "question_intro"
+					? "Næste spørgsmål"
+					: phase === "question_open"
+						? "Spørgsmålet er åbent"
+						: phase === "result_distribution"
+							? "Resultatfordeling"
+							: phase === "answer_reveal"
+								? "Korrekt svar og point"
+								: phase === "final_scoreboard"
+									? "Final scoreboard"
+									: "Scoreboard";
+	}
+
+	if (questionElement) {
+		questionElement.textContent = question ? question.prompt : "Venter på quizspørgsmål.";
+	}
+
+	if (metaElement) {
+		const questionIndex = Number(liveSessionState.current_question_index || 0) + 1;
+		const questionTotal = (liveSessionState.quiz_questions || []).length;
+		metaElement.textContent =
+			"Spørgsmål " +
+			questionIndex +
+			" / " +
+			questionTotal +
+			" - " +
+			(liveSessionState.players || []).length +
+			" deltagere";
+	}
+
+	if (mediaElement) {
+		renderQuizMedia(mediaElement, question && question.media);
+	}
+
+	if (timerElement) {
+		if (phase === "question_open" && remainingSeconds !== null) {
+			timerElement.textContent = remainingSeconds + "s";
+			timerElement.style.setProperty(
+				"--quiz-progress",
+				question && question.timeLimitSeconds
+					? String(Math.max(0, Math.min(1, remainingSeconds / Number(question.timeLimitSeconds))))
+					: "0"
+			);
+		} else {
+			timerElement.textContent = phase === "waiting" ? "Klar" : "Pause";
+			timerElement.style.setProperty("--quiz-progress", "0");
+		}
+	}
+
+	if (liveCountElement) {
+		liveCountElement.textContent =
+			Number(liveSessionState.answer_count || 0) +
+			" / " +
+			(liveSessionState.players || []).length +
+			" har svaret";
+	}
+
+	if (answersElement) {
+		renderQuizAnswerGrid(answersElement, question, {
+			showCorrect: ["result_distribution", "answer_reveal", "scoreboard", "final_scoreboard"].includes(phase),
+			showDistribution: ["result_distribution", "answer_reveal", "scoreboard", "final_scoreboard"].includes(phase),
+		});
+	}
+
+	if (resultElement) {
+		resultElement.hidden = !["result_distribution", "answer_reveal", "scoreboard", "final_scoreboard"].includes(phase);
+		renderQuizResultDetails(resultElement, question);
+	}
+
+	if (scoreboardElement) {
+		scoreboardElement.hidden = !["scoreboard", "final_scoreboard"].includes(phase);
+		renderQuizScoreboard(scoreboardElement, phase === "final_scoreboard");
+	}
+
+	if (phase === "question_open") {
+		if (!quizCountdownTimer) {
+			quizCountdownTimer = setInterval(renderHostLiveSession, 500);
+		}
+	} else {
+		clearQuizCountdownTimer();
+	}
+
+	scheduleQuizAutomation(phase, question, remainingSeconds);
+}
+
 function renderHostLiveSession() {
 	const panel = document.getElementById("live-session-panel");
 
@@ -461,8 +1051,58 @@ function renderHostLiveSession() {
 	updateLiveSessionIdentity();
 	updateLivePlayersPanel();
 	updateBuzzerPanel();
+	updateQuizPanel();
+	updateQuizSessionButtons();
 	updateSessionStatus();
 	updateLiveGameControls();
+}
+
+async function startHostQuizQuestion() {
+	const sessionId = getLiveHostSessionId();
+
+	if (!sessionId) {
+		return;
+	}
+
+	try {
+		setHostLiveSession(await startQuizQuestion(sessionId, liveSessionHostToken));
+		renderHostLiveSession();
+	} catch (error) {
+		console.warn("Could not start quiz question.", error);
+		setLiveSessionError(error.message || "Kunne ikke starte sporgsmal.");
+	}
+}
+
+async function closeHostQuizQuestion() {
+	const sessionId = getLiveHostSessionId();
+
+	if (!sessionId) {
+		return;
+	}
+
+	try {
+		setHostLiveSession(await closeQuizQuestion(sessionId, liveSessionHostToken));
+		renderHostLiveSession();
+	} catch (error) {
+		console.warn("Could not close quiz question.", error);
+		setLiveSessionError(error.message || "Kunne ikke lukke sporgsmal.");
+	}
+}
+
+async function nextHostQuizQuestion() {
+	const sessionId = getLiveHostSessionId();
+
+	if (!sessionId) {
+		return;
+	}
+
+	try {
+		setHostLiveSession(await nextQuizQuestion(sessionId, liveSessionHostToken));
+		renderHostLiveSession();
+	} catch (error) {
+		console.warn("Could not advance quiz question.", error);
+		setLiveSessionError(error.message || "Kunne ikke ga til næste sporgsmal.");
+	}
 }
 
 function syncScoresFromLiveSession() {

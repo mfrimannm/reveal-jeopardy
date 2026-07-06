@@ -22,6 +22,8 @@ import qrcode.image.svg
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("DATA_DIR", BASE_DIR / "data")).resolve()
 GAMES_DIR = DATA_DIR / "games"
+JEOPARDY_GAMES_DIR = GAMES_DIR / "jeopardy"
+KANUUNTT_GAMES_DIR = GAMES_DIR / "kanuuntt"
 UPLOADS_DIR = DATA_DIR / "uploads"
 SEED_GAMES_DIR = BASE_DIR / "seed-data" / "games"
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "change-me")
@@ -62,11 +64,16 @@ session_websockets: dict[str, list[WebSocket]] = {}
 
 def ensure_data_dirs() -> None:
     GAMES_DIR.mkdir(parents=True, exist_ok=True)
+    JEOPARDY_GAMES_DIR.mkdir(parents=True, exist_ok=True)
+    KANUUNTT_GAMES_DIR.mkdir(parents=True, exist_ok=True)
     UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
-    if not any(GAMES_DIR.glob("*.json")) and SEED_GAMES_DIR.exists():
-        for seed_file in SEED_GAMES_DIR.glob("*.json"):
-            shutil.copy2(seed_file, GAMES_DIR / seed_file.name)
+    if not any(GAMES_DIR.rglob("*.json")) and SEED_GAMES_DIR.exists():
+        for seed_file in SEED_GAMES_DIR.rglob("*.json"):
+            relative_path = seed_file.relative_to(SEED_GAMES_DIR)
+            destination = GAMES_DIR / relative_path
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(seed_file, destination)
 
 
 def sign_session(value: str) -> str:
@@ -102,7 +109,60 @@ def validate_game_id(game_id: str) -> str:
 
 
 def game_path(game_id: str) -> Path:
-    return GAMES_DIR / f"{validate_game_id(game_id)}.json"
+    return JEOPARDY_GAMES_DIR / f"{validate_game_id(game_id)}.json"
+
+
+def game_write_path(game_id: str, payload: dict[str, Any]) -> Path:
+    filename = f"{validate_game_id(game_id)}.json"
+
+    if isinstance(payload.get("quiz_questions"), list):
+        return KANUUNTT_GAMES_DIR / filename
+
+    return JEOPARDY_GAMES_DIR / filename
+
+
+def game_search_paths(game_id: str, mode: str | None = None) -> list[Path]:
+    filename = f"{validate_game_id(game_id)}.json"
+
+    if mode == "quiz":
+        return [
+            KANUUNTT_GAMES_DIR / filename,
+            GAMES_DIR / filename,
+            JEOPARDY_GAMES_DIR / filename,
+        ]
+
+    if mode == "jeopardy":
+        return [
+            JEOPARDY_GAMES_DIR / filename,
+            GAMES_DIR / filename,
+            KANUUNTT_GAMES_DIR / filename,
+        ]
+
+    return [
+        JEOPARDY_GAMES_DIR / filename,
+        KANUUNTT_GAMES_DIR / filename,
+        GAMES_DIR / filename,
+    ]
+
+
+def find_game_path(game_id: str, mode: str | None = None) -> Path:
+    for path in game_search_paths(game_id, mode):
+        if path.exists():
+            return path
+
+    raise HTTPException(status_code=404, detail="Game not found")
+
+
+def game_mode_from_path(path: Path) -> str:
+    try:
+        relative_path = path.relative_to(GAMES_DIR)
+    except ValueError:
+        return "jeopardy"
+
+    if relative_path.parts and relative_path.parts[0] == "kanuuntt":
+        return "quiz"
+
+    return "jeopardy"
 
 
 def read_game(path: Path) -> dict[str, Any]:
@@ -169,6 +229,32 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def parse_iso_datetime(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+
+    return parsed.astimezone(timezone.utc)
+
+
+def is_quiz_question_expired(session: dict[str, Any], question: dict[str, Any]) -> bool:
+    started_at = parse_iso_datetime(session.get("question_started_at"))
+
+    if not started_at:
+        return False
+
+    elapsed_seconds = (datetime.now(timezone.utc) - started_at).total_seconds()
+
+    return elapsed_seconds >= int(question.get("timeLimitSeconds") or 0)
+
+
 def copy_session(session: dict[str, Any]) -> dict[str, Any]:
 	return json.loads(json.dumps(session))
 
@@ -176,7 +262,29 @@ def copy_session(session: dict[str, Any]) -> dict[str, Any]:
 def copy_public_session(session: dict[str, Any]) -> dict[str, Any]:
     session_snapshot = copy_session(session)
     session_snapshot.pop("host_token", None)
+    sanitize_public_quiz_session(session_snapshot)
     return session_snapshot
+
+
+def sanitize_public_quiz_session(session: dict[str, Any]) -> None:
+    quiz_questions = session.get("quiz_questions")
+    reveal_correct_answers = session.get("quiz_phase") in {
+        "result_distribution",
+        "answer_reveal",
+        "scoreboard",
+        "final_scoreboard",
+    }
+
+    if not isinstance(quiz_questions, list):
+        return
+
+    for question in quiz_questions:
+        if not isinstance(question, dict) or not isinstance(question.get("answers"), list):
+            continue
+
+        for answer in question["answers"]:
+            if isinstance(answer, dict) and not reveal_correct_answers:
+                answer.pop("correct", None)
 
 
 def generate_session_id() -> str:
@@ -230,13 +338,11 @@ def require_live_host(
     raise HTTPException(status_code=401, detail="Live host authorization required")
 
 
-def get_game_teams(game_id: str) -> list[dict[str, str]]:
-    path = game_path(game_id)
+def get_game_data(game_id: str, mode: str | None = None) -> dict[str, Any]:
+    return read_game(find_game_path(game_id, mode))
 
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Game not found")
 
-    game = read_game(path)
+def get_game_teams_from_data(game: dict[str, Any]) -> list[dict[str, str]]:
     source_teams = game.get("teams") if isinstance(game.get("teams"), list) else []
 
     if not source_teams:
@@ -249,6 +355,191 @@ def get_game_teams(game_id: str) -> list[dict[str, str]]:
         }
         for index, team_name in enumerate(source_teams)
     ]
+
+
+def get_game_teams(game_id: str) -> list[dict[str, str]]:
+    return get_game_teams_from_data(get_game_data(game_id))
+
+
+def normalize_session_mode(mode: str) -> str:
+    normalized = mode.strip().lower() or "jeopardy"
+
+    if normalized in {"quiz", "kanuuntt"}:
+        return "quiz"
+
+    return normalized
+
+
+def normalize_quiz_media(raw_media: Any) -> dict[str, Any] | None:
+    if raw_media is None:
+        return None
+
+    if not isinstance(raw_media, dict):
+        raise HTTPException(status_code=400, detail="Quiz question media must be an object")
+
+    media_type = str(raw_media.get("type") or "").strip().lower()
+    src = str(raw_media.get("src") or "").strip()
+
+    if media_type not in {"image", "video", "audio", "embed"}:
+        raise HTTPException(status_code=400, detail="Unsupported quiz question media type")
+    if not src:
+        raise HTTPException(status_code=400, detail="Quiz question media src is required")
+
+    media: dict[str, Any] = {
+        "type": media_type,
+        "src": src,
+    }
+
+    if media_type == "image":
+        alt = str(raw_media.get("alt") or "").strip()
+        if alt:
+            media["alt"] = alt
+    elif media_type == "video":
+        poster = str(raw_media.get("poster") or "").strip()
+        if poster:
+            media["poster"] = poster
+        media["autoplay"] = bool(raw_media.get("autoplay"))
+        media["loop"] = bool(raw_media.get("loop"))
+        media["muted"] = bool(raw_media.get("muted"))
+    elif media_type == "audio":
+        media["autoplay"] = bool(raw_media.get("autoplay"))
+        media["loop"] = bool(raw_media.get("loop"))
+    elif media_type == "embed":
+        title = str(raw_media.get("title") or "").strip()
+        media["title"] = title or "Embedded quiz media"
+
+    return media
+
+
+def validate_quiz_questions(game: dict[str, Any]) -> list[dict[str, Any]]:
+    raw_questions = game.get("quiz_questions")
+
+    if not isinstance(raw_questions, list) or not raw_questions:
+        raise HTTPException(status_code=400, detail="Quiz questions are required")
+
+    questions: list[dict[str, Any]] = []
+
+    for question_index, raw_question in enumerate(raw_questions):
+        if not isinstance(raw_question, dict):
+            raise HTTPException(status_code=400, detail=f"Quiz question {question_index + 1} must be an object")
+
+        question_type = str(raw_question.get("type") or "").strip()
+        if question_type != "multiple-choice":
+            raise HTTPException(status_code=400, detail="Only multiple-choice quiz questions are supported")
+
+        prompt = str(raw_question.get("prompt") or "").strip()
+        if not prompt:
+            raise HTTPException(status_code=400, detail=f"Quiz question {question_index + 1} prompt is required")
+
+        try:
+            time_limit_seconds = int(raw_question.get("timeLimitSeconds"))
+        except (TypeError, ValueError) as error:
+            raise HTTPException(status_code=400, detail="Quiz question timeLimitSeconds is required") from error
+
+        if time_limit_seconds <= 0:
+            raise HTTPException(status_code=400, detail="Quiz question timeLimitSeconds must be positive")
+
+        try:
+            points = int(raw_question.get("points"))
+        except (TypeError, ValueError) as error:
+            raise HTTPException(status_code=400, detail="Quiz question points are required") from error
+
+        if points < 0:
+            raise HTTPException(status_code=400, detail="Quiz question points cannot be negative")
+
+        raw_answers = raw_question.get("answers")
+        if not isinstance(raw_answers, list) or len(raw_answers) < 2:
+            raise HTTPException(status_code=400, detail="Quiz questions need at least two answers")
+
+        answers: list[dict[str, Any]] = []
+        answer_ids: set[str] = set()
+        correct_answers = 0
+
+        for answer_index, raw_answer in enumerate(raw_answers):
+            if not isinstance(raw_answer, dict):
+                raise HTTPException(status_code=400, detail="Quiz answers must be objects")
+
+            answer_id = str(raw_answer.get("id") or "").strip()
+            answer_text = str(raw_answer.get("text") or "").strip()
+            correct = bool(raw_answer.get("correct"))
+
+            if not answer_id:
+                raise HTTPException(status_code=400, detail=f"Quiz answer {answer_index + 1} id is required")
+            if answer_id in answer_ids:
+                raise HTTPException(status_code=400, detail=f"Duplicate quiz answer id: {answer_id}")
+            if not answer_text:
+                raise HTTPException(status_code=400, detail=f"Quiz answer {answer_id} text is required")
+
+            answer_ids.add(answer_id)
+            correct_answers += 1 if correct else 0
+            answers.append(
+                {
+                    "id": answer_id,
+                    "text": answer_text,
+                    "correct": correct,
+                }
+            )
+
+        if correct_answers == 0:
+            raise HTTPException(status_code=400, detail="Quiz questions need at least one correct answer")
+
+        question = {
+            "type": "multiple-choice",
+            "prompt": prompt,
+            "answers": answers,
+            "timeLimitSeconds": time_limit_seconds,
+            "points": points,
+        }
+        media = normalize_quiz_media(raw_question.get("media"))
+        if media:
+            question["media"] = media
+
+        questions.append(question)
+
+    return questions
+
+
+def create_quiz_session_state(questions: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "quiz_questions": questions,
+        "current_question_index": 0,
+        "answers": [],
+        "answer_count": 0,
+        "question_open": False,
+        "question_started_at": None,
+        "quiz_phase": "waiting",
+        "phase_started_at": now_iso(),
+    }
+
+
+def require_quiz_session(session: dict[str, Any]) -> None:
+    if session.get("mode") != "quiz":
+        raise HTTPException(status_code=400, detail="Session is not in quiz mode")
+
+
+def get_current_quiz_question(session: dict[str, Any]) -> dict[str, Any]:
+    questions = session.get("quiz_questions")
+    question_index = int(session.get("current_question_index") or 0)
+
+    if not isinstance(questions, list) or question_index < 0 or question_index >= len(questions):
+        raise HTTPException(status_code=409, detail="No active quiz question")
+
+    return questions[question_index]
+
+
+def count_current_quiz_answers(session: dict[str, Any]) -> int:
+    question_index = int(session.get("current_question_index") or 0)
+    answers = session.get("answers") if isinstance(session.get("answers"), list) else []
+
+    return sum(1 for answer in answers if answer.get("question_index") == question_index)
+
+
+def score_quiz_answer(question: dict[str, Any], answer_id: str) -> int:
+    for answer in question["answers"]:
+        if answer["id"] == answer_id:
+            return int(question["points"]) if answer.get("correct") else 0
+
+    raise HTTPException(status_code=400, detail="Unknown answer")
 
 
 async def read_json_body(request: Request) -> dict[str, Any]:
@@ -362,14 +653,20 @@ def qr_code(value: str) -> Response:
 def list_games() -> list[dict[str, str]]:
     ensure_data_dirs()
     games: list[dict[str, str]] = []
+    paths = [
+        *JEOPARDY_GAMES_DIR.glob("*.json"),
+        *KANUUNTT_GAMES_DIR.glob("*.json"),
+        *GAMES_DIR.glob("*.json"),
+    ]
 
-    for path in sorted(GAMES_DIR.glob("*.json")):
+    for path in sorted(paths):
         data = read_game(path)
         game_id = validate_game_id(str(data.get("id") or path.stem))
         games.append(
             {
                 "id": game_id,
                 "title": str(data.get("title") or game_id),
+                "mode": game_mode_from_path(path),
             }
         )
 
@@ -378,12 +675,7 @@ def list_games() -> list[dict[str, str]]:
 
 @app.get("/api/games/{game_id}")
 def get_game(game_id: str) -> dict[str, Any]:
-    path = game_path(game_id)
-
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Game not found")
-
-    return read_game(path)
+    return read_game(find_game_path(game_id))
 
 
 @app.put("/api/games/{game_id}")
@@ -399,7 +691,8 @@ async def save_game(
         raise HTTPException(status_code=400, detail="Invalid JSON") from error
 
     payload = validate_game_payload(game_id, body)
-    path = game_path(game_id)
+    path = game_write_path(game_id, payload)
+    path.parent.mkdir(parents=True, exist_ok=True)
 
     with path.open("w", encoding="utf-8") as file:
         json.dump(payload, file, ensure_ascii=False, indent="\t")
@@ -443,10 +736,12 @@ async def create_live_session(
 ) -> dict[str, Any]:
     body = await read_json_body(request)
     game_id = validate_game_id(str(body.get("game_id") or ""))
-    mode = str(body.get("mode") or "jeopardy")
-    teams = get_game_teams(game_id)
+    mode = normalize_session_mode(str(body.get("mode") or "jeopardy"))
+    game = get_game_data(game_id, mode)
+    teams = get_game_teams_from_data(game)
     timestamp = now_iso()
     host_token = generate_host_token()
+    quiz_state = create_quiz_session_state(validate_quiz_questions(game)) if mode == "quiz" else {}
 
     async with live_session_lock:
         session_id = generate_session_id()
@@ -458,7 +753,7 @@ async def create_live_session(
             "teams": teams,
             "players": [],
             "current_question": None,
-            "scores": {team["id"]: 0 for team in teams},
+            "scores": {} if mode == "quiz" else {team["id"]: 0 for team in teams},
             "used_questions": [],
             "buzzers": [],
             "buzzer_locked": False,
@@ -467,6 +762,7 @@ async def create_live_session(
             "status": "active",
             "participant_mode": "team",
         }
+        session.update(quiz_state)
         live_sessions[session_id] = session
         session_snapshot = copy_public_session(session)
         session_snapshot["host_token"] = host_token
@@ -503,6 +799,8 @@ async def join_live_session(session_id: str, request: Request) -> dict[str, Any]
             "joined_at": now_iso(),
         }
         session["players"].append(player)
+        if session.get("mode") == "quiz":
+            session["scores"][player["id"]] = 0
         session["updated_at"] = now_iso()
         session_snapshot = copy_public_session(session)
 
@@ -511,6 +809,212 @@ async def join_live_session(session_id: str, request: Request) -> dict[str, Any]
         "player": player,
         "session": session_snapshot,
     }
+
+
+@app.post("/api/sessions/{session_id}/quiz/start-question")
+async def start_quiz_question(
+    session_id: str,
+    reveal_jeopardy_admin: str | None = Cookie(default=None),
+    live_host_token: str | None = Header(default=None, alias=LIVE_HOST_TOKEN_HEADER),
+) -> dict[str, Any]:
+    async with live_session_lock:
+        session = get_live_session(session_id)
+        require_live_host(session, reveal_jeopardy_admin, live_host_token)
+        require_quiz_session(session)
+        get_current_quiz_question(session)
+        timestamp = now_iso()
+        session["question_open"] = True
+        session["question_started_at"] = timestamp
+        session["quiz_phase"] = "question_open"
+        session["phase_started_at"] = timestamp
+        session["answer_count"] = count_current_quiz_answers(session)
+        session["updated_at"] = timestamp
+        session_snapshot = copy_public_session(session)
+
+    await broadcast_session_state(session_snapshot["session_id"], session_snapshot)
+    return session_snapshot
+
+
+@app.post("/api/sessions/{session_id}/quiz/submit-answer")
+async def submit_quiz_answer(session_id: str, request: Request) -> dict[str, Any]:
+    body = await read_json_body(request)
+    player_id = str(body.get("player_id") or "").strip()
+    answer_id = str(body.get("answer_id") or "").strip()
+
+    if not player_id:
+        raise HTTPException(status_code=400, detail="Player id is required")
+    if not answer_id:
+        raise HTTPException(status_code=400, detail="Answer id is required")
+
+    should_broadcast = False
+    expired_snapshot: dict[str, Any] | None = None
+
+    async with live_session_lock:
+        session = get_live_session(session_id)
+        require_quiz_session(session)
+
+        if not session.get("question_open"):
+            raise HTTPException(status_code=409, detail="Question is closed")
+
+        question = get_current_quiz_question(session)
+
+        if is_quiz_question_expired(session, question):
+            timestamp = now_iso()
+            session["question_open"] = False
+            session["quiz_phase"] = "result_distribution"
+            session["phase_started_at"] = timestamp
+            session["answer_count"] = count_current_quiz_answers(session)
+            session["updated_at"] = timestamp
+            expired_snapshot = copy_public_session(session)
+
+        player = None if expired_snapshot is not None else next((item for item in session["players"] if item["id"] == player_id), None)
+        if not player:
+            if expired_snapshot is None:
+                raise HTTPException(status_code=404, detail="Player not found")
+            quiz_answer = None
+            session_snapshot = expired_snapshot
+        else:
+            question_index = int(session.get("current_question_index") or 0)
+            existing_answer = next(
+                (
+                    answer
+                    for answer in session["answers"]
+                    if answer.get("question_index") == question_index and answer.get("player_id") == player_id
+                ),
+                None,
+            )
+
+            if existing_answer:
+                quiz_answer = existing_answer
+            else:
+                earned_points = score_quiz_answer(question, answer_id)
+                quiz_answer = {
+                    "question_index": question_index,
+                    "player_id": player_id,
+                    "player_name": player["name"],
+                    "team_id": player.get("team_id"),
+                    "answer_id": answer_id,
+                    "earned_points": earned_points,
+                    "answered_at": now_iso(),
+                }
+                session["answers"].append(quiz_answer)
+                session["scores"][player_id] = int(session["scores"].get(player_id) or 0) + earned_points
+                session["answer_count"] = count_current_quiz_answers(session)
+                session["updated_at"] = now_iso()
+                should_broadcast = True
+
+            session_snapshot = copy_public_session(session)
+
+    if expired_snapshot is not None:
+        await broadcast_session_state(expired_snapshot["session_id"], expired_snapshot)
+        raise HTTPException(status_code=409, detail="Question time has expired")
+
+    if should_broadcast:
+        await broadcast_session_state(session_snapshot["session_id"], session_snapshot)
+
+    return {
+        "answer": copy_session(quiz_answer),
+        "session": session_snapshot,
+    }
+
+
+@app.post("/api/sessions/{session_id}/quiz/close-question")
+async def close_quiz_question(
+    session_id: str,
+    reveal_jeopardy_admin: str | None = Cookie(default=None),
+    live_host_token: str | None = Header(default=None, alias=LIVE_HOST_TOKEN_HEADER),
+) -> dict[str, Any]:
+    async with live_session_lock:
+        session = get_live_session(session_id)
+        require_live_host(session, reveal_jeopardy_admin, live_host_token)
+        require_quiz_session(session)
+        get_current_quiz_question(session)
+        timestamp = now_iso()
+        session["question_open"] = False
+        session["answer_count"] = count_current_quiz_answers(session)
+        session["quiz_phase"] = "result_distribution"
+        session["phase_started_at"] = timestamp
+        session["updated_at"] = timestamp
+        session_snapshot = copy_public_session(session)
+
+    await broadcast_session_state(session_snapshot["session_id"], session_snapshot)
+    return session_snapshot
+
+
+@app.post("/api/sessions/{session_id}/quiz/next-question")
+async def next_quiz_question(
+    session_id: str,
+    reveal_jeopardy_admin: str | None = Cookie(default=None),
+    live_host_token: str | None = Header(default=None, alias=LIVE_HOST_TOKEN_HEADER),
+) -> dict[str, Any]:
+    async with live_session_lock:
+        session = get_live_session(session_id)
+        require_live_host(session, reveal_jeopardy_admin, live_host_token)
+        require_quiz_session(session)
+        questions = session.get("quiz_questions") if isinstance(session.get("quiz_questions"), list) else []
+        question_index = int(session.get("current_question_index") or 0)
+
+        if question_index >= len(questions) - 1:
+            timestamp = now_iso()
+            session["question_open"] = False
+            session["quiz_phase"] = "final_scoreboard"
+            session["phase_started_at"] = timestamp
+            session["answer_count"] = count_current_quiz_answers(session)
+            session["updated_at"] = timestamp
+            session_snapshot = copy_public_session(session)
+        else:
+            timestamp = now_iso()
+            session["current_question_index"] = question_index + 1
+            session["question_open"] = False
+            session["question_started_at"] = None
+            session["answer_count"] = count_current_quiz_answers(session)
+            session["quiz_phase"] = "question_intro"
+            session["phase_started_at"] = timestamp
+            session["updated_at"] = timestamp
+            session_snapshot = copy_public_session(session)
+
+
+    await broadcast_session_state(session_snapshot["session_id"], session_snapshot)
+    return session_snapshot
+
+
+@app.post("/api/sessions/{session_id}/quiz/phase")
+async def set_quiz_phase(
+    session_id: str,
+    request: Request,
+    reveal_jeopardy_admin: str | None = Cookie(default=None),
+    live_host_token: str | None = Header(default=None, alias=LIVE_HOST_TOKEN_HEADER),
+) -> dict[str, Any]:
+    body = await read_json_body(request)
+    quiz_phase = str(body.get("quiz_phase") or "").strip()
+    allowed_phases = {
+        "waiting",
+        "question_intro",
+        "question_open",
+        "result_distribution",
+        "answer_reveal",
+        "scoreboard",
+        "final_scoreboard",
+    }
+
+    if quiz_phase not in allowed_phases:
+        raise HTTPException(status_code=400, detail="Unknown quiz phase")
+
+    async with live_session_lock:
+        session = get_live_session(session_id)
+        require_live_host(session, reveal_jeopardy_admin, live_host_token)
+        require_quiz_session(session)
+        timestamp = now_iso()
+        session["quiz_phase"] = quiz_phase
+        session["phase_started_at"] = timestamp
+        if quiz_phase != "question_open":
+            session["question_open"] = False
+        session["answer_count"] = count_current_quiz_answers(session)
+        session["updated_at"] = timestamp
+        session_snapshot = copy_public_session(session)
+
+    await broadcast_session_state(session_snapshot["session_id"], session_snapshot)
+    return session_snapshot
 
 
 @app.post("/api/sessions/{session_id}/current-question")
@@ -583,8 +1087,19 @@ async def reset_live_session(
     async with live_session_lock:
         session = get_live_session(session_id)
         require_live_host(session, reveal_jeopardy_admin, live_host_token)
+        if session.get("mode") == "quiz":
+            timestamp = now_iso()
+            session["scores"] = {player["id"]: 0 for player in session["players"]}
+            session["current_question_index"] = 0
+            session["answers"] = []
+            session["answer_count"] = 0
+            session["question_open"] = False
+            session["question_started_at"] = None
+            session["quiz_phase"] = "waiting"
+            session["phase_started_at"] = timestamp
+        else:
+            session["scores"] = {team["id"]: 0 for team in session["teams"]}
         session["current_question"] = None
-        session["scores"] = {team["id"]: 0 for team in session["teams"]}
         session["used_questions"] = []
         session["buzzers"] = []
         session["buzzer_locked"] = False
@@ -796,6 +1311,16 @@ def favicon_svg() -> FileResponse:
 @app.get("/play/{session_id}")
 def play(session_id: str) -> FileResponse:
     return FileResponse(BASE_DIR / "play.html")
+
+
+@app.get("/kanuuntt/display/{session_id}")
+def kanuuntt_display(session_id: str) -> FileResponse:
+    return FileResponse(BASE_DIR / "kanuuntt-display.html")
+
+
+@app.get("/kanuuntt/backend/{session_id}")
+def kanuuntt_backend(session_id: str) -> FileResponse:
+    return FileResponse(BASE_DIR / "kanuuntt-backend.html")
 
 
 @app.get("/{path:path}")
