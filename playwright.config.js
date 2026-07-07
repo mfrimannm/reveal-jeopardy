@@ -25,7 +25,6 @@ process.env.SESSION_SECRET = "playwright-secret";
 process.env.MAX_UPLOAD_MB = "1";
 process.env.PYTHON = PYTHON;
 process.env.PORT = String(PORT);
-process.env.UI_SERVER_MAX_MS = process.env.UI_SERVER_MAX_MS || "90000";
 process.env.PLAYWRIGHT_BROWSERS_PATH =
 	process.env.PLAYWRIGHT_BROWSERS_PATH || path.join(__dirname, ".playwright-browsers");
 

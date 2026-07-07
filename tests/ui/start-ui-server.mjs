@@ -1,9 +1,17 @@
 import { spawn, spawnSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 import "./seed-ui-data.mjs";
 
-const python = process.env.PYTHON || "python";
+const rootDir = process.cwd();
+const localPython =
+	process.platform === "win32"
+		? path.join(rootDir, ".venv", "Scripts", "python.exe")
+		: path.join(rootDir, ".venv", "bin", "python");
+const systemPython = process.platform === "win32" ? "python" : "python3";
+const python = process.env.PYTHON || (fs.existsSync(localPython) ? localPython : systemPython);
 const port = process.env.PORT || "8010";
-const maxRuntimeMs = Number(process.env.UI_SERVER_MAX_MS || 45000);
+const maxRuntimeMs = Number(process.env.UI_SERVER_MAX_MS || 0);
 const server = spawn(
 	python,
 	["-m", "uvicorn", "server:app", "--host", "127.0.0.1", "--port", port],
@@ -39,4 +47,6 @@ server.on("exit", (code, signal) => {
 	process.exit(code || 0);
 });
 
-setTimeout(stopServer, maxRuntimeMs);
+if (maxRuntimeMs > 0) {
+	setTimeout(stopServer, maxRuntimeMs);
+}

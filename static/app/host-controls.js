@@ -404,14 +404,24 @@ function updateLiveSessionButtons() {
 
 	if (startButton) {
 		startButton.disabled = active;
+		startButton.textContent = active ? "Session kører" : "Start live session";
+		startButton.title = active
+			? "Der kører allerede en live session. Stop den før du starter en ny."
+			: "";
 	}
 
 	if (quizStartButton) {
 		quizStartButton.disabled = active;
+		quizStartButton.title = active
+			? "Der kører allerede en live session. Stop den før du starter en ny."
+			: "";
 	}
 
 	if (selectedQuizStartButton) {
 		selectedQuizStartButton.disabled = active;
+		selectedQuizStartButton.title = active
+			? "Der kører allerede en live session. Stop den før du starter en ny."
+			: "";
 	}
 
 	if (displayButton) {
@@ -511,7 +521,8 @@ function updateSessionStatus() {
 
 	if (statusElement) {
 		statusElement.textContent = active
-			? "Live: " +
+			? "Live session kører. Stop sessionen før du starter en ny. " +
+				"Status: " +
 				liveSessionStatus +
 				" / " +
 				(liveSessionState.buzzer_locked ? "buzzers låst" : "buzzers åbne")

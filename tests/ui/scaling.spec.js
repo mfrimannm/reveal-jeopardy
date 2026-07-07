@@ -138,7 +138,15 @@ test("menus scale across desktop, tablet and mobile resolutions", async ({ page 
 
 		await page.locator("#live-session-start").click();
 		await expect(page.locator("#live-session-id")).toHaveText(/^[A-Z2-9]{8}$/);
+		await expect(page.locator("#live-session-status")).toContainText(
+			"Stop sessionen før du starter en ny"
+		);
+		await expect(page.locator("#live-session-start")).toBeDisabled();
+		await expect(page.locator("#live-session-start")).toHaveText("Session kører");
 		await expectMenuSurfaceFits(page, "#live-session-panel", `live session panel at ${viewport.name}`);
+		await page.locator("#live-session-stop").click();
+		await expect(page.locator("#live-session-id")).toHaveText("-");
+		await expect(page.locator("#live-session-start")).toBeEnabled();
 	}
 });
 
