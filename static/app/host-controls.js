@@ -6,6 +6,7 @@ function isQuizLiveSession() {
 	return Boolean(liveSessionState && liveSessionState.mode === "quiz");
 }
 
+const QUIZ_AUTO_ADVANCE_STORAGE_KEY = "reveal-jeopardy-kanuuntt-auto-advance";
 const quizFlowConfig = {
 	questionIntroSeconds: 3,
 	resultSeconds: 6,
@@ -22,6 +23,28 @@ let quizCountdownTimer = null;
 let quizAutomationTimer = null;
 let quizAutomationKey = "";
 let quizAutoCloseKey = "";
+
+function loadHostQuizAutoAdvanceSetting() {
+	try {
+		const stored = localStorage.getItem(QUIZ_AUTO_ADVANCE_STORAGE_KEY);
+
+		if (stored !== null) {
+			quizFlowConfig.autoAdvance = stored === "true";
+		}
+	} catch (error) {
+		console.warn("Could not load KanUUNTt auto setting.", error);
+	}
+}
+
+function toggleHostQuizAutoAdvance(enabled) {
+	quizFlowConfig.autoAdvance = Boolean(enabled);
+	try {
+		localStorage.setItem(QUIZ_AUTO_ADVANCE_STORAGE_KEY, quizFlowConfig.autoAdvance ? "true" : "false");
+	} catch (error) {
+		console.warn("Could not save KanUUNTt auto setting.", error);
+	}
+	renderHostLiveSession();
+}
 
 function getStoredLiveSessionKey() {
 	return LIVE_SESSION_STORAGE_KEY + gameKey;
@@ -377,6 +400,7 @@ function updateLiveSessionButtons() {
 	const quizStartQuestionButton = document.getElementById("quiz-start-question");
 	const quizCloseQuestionButton = document.getElementById("quiz-close-question");
 	const quizNextQuestionButton = document.getElementById("quiz-next-question");
+	const quizAutoAdvance = document.getElementById("quiz-auto-advance");
 	const active = Boolean(liveSessionState);
 	const quizActive = isQuizLiveSession();
 	const questionOpen = quizActive && liveSessionState.question_open;
@@ -417,6 +441,9 @@ function updateLiveSessionButtons() {
 		lockButton.disabled = !active;
 		lockButton.textContent =
 			active && liveSessionState.buzzer_locked ? "Åbn buzzers" : "Lås buzzers";
+	}
+	if (quizAutoAdvance) {
+		quizAutoAdvance.checked = quizFlowConfig.autoAdvance;
 	}
 }
 
@@ -739,14 +766,10 @@ function getQuizScoreRows() {
 		return [];
 	}
 
-	const scores = liveSessionState.scores || {};
-
-	return [...(liveSessionState.players || [])]
-		.map((player) => ({
-			player,
-			score: Number(scores[player.id] || 0),
-		}))
-		.sort((left, right) => right.score - left.score || left.player.name.localeCompare(right.player.name));
+	return getKanuunttRankedScoreRows(
+		liveSessionState.players || [],
+		liveSessionState.scores || {}
+	);
 }
 
 function renderQuizAnswerGrid(container, question, options) {
@@ -841,44 +864,7 @@ function renderQuizResultDetails(container, question) {
 }
 
 function renderQuizScoreboard(container, finalMode) {
-	container.replaceChildren();
-
-	const title = document.createElement("div");
-	title.className = "quiz-scoreboard-title";
-	title.textContent = finalMode ? "Final scoreboard" : "Scoreboard";
-	container.appendChild(title);
-
-	const rows = getQuizScoreRows();
-
-	if (!rows.length) {
-		const empty = document.createElement("div");
-		empty.className = "quiz-result-empty";
-		empty.textContent = "Ingen deltagere endnu.";
-		container.appendChild(empty);
-		return;
-	}
-
-	rows.forEach((entry, index) => {
-		const row = document.createElement("div");
-		row.className = "quiz-scoreboard-row";
-
-		const rank = document.createElement("span");
-		rank.className = "quiz-scoreboard-rank";
-		rank.textContent = String(index + 1);
-
-		const name = document.createElement("span");
-		name.className = "quiz-scoreboard-name";
-		name.textContent = entry.player.name;
-
-		const points = document.createElement("span");
-		points.className = "quiz-scoreboard-points";
-		points.textContent = entry.score + " point";
-
-		row.appendChild(rank);
-		row.appendChild(name);
-		row.appendChild(points);
-		container.appendChild(row);
-	});
+	renderKanuunttScoreboardElement(container, getQuizScoreRows(), finalMode);
 }
 
 function scheduleQuizAutomation(phase, question, remainingSeconds) {
@@ -1139,6 +1125,7 @@ async function restoreHostLiveSession() {
 }
 
 async function initializeHostControls() {
+	loadHostQuizAutoAdvanceSetting();
 	await restoreHostLiveSession();
 	renderHostLiveSession();
 }

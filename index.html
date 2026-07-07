@@ -68,6 +68,37 @@
 									KanUUNTt maker
 								</button>
 							</div>
+
+							<div class="mode-divider"></div>
+							<div class="upload-manager" id="upload-manager">
+								<h2>Uploadede filer</h2>
+								<div class="upload-manager-controls">
+									<div>
+										<label for="upload-manager-file">Upload ny fil</label>
+										<input id="upload-manager-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm" />
+									</div>
+									<button class="game-button secondary upload-manager-admin-control" id="upload-manager-upload-button" type="button" onclick="uploadManagedFile()">
+										Upload
+									</button>
+								</div>
+								<div class="upload-manager-status" id="upload-manager-status"></div>
+								<div class="upload-manager-table-wrap">
+									<table class="upload-manager-table">
+										<thead>
+											<tr>
+												<th>Preview</th>
+												<th>Link</th>
+												<th>Handling</th>
+											</tr>
+										</thead>
+										<tbody id="upload-manager-list">
+											<tr>
+												<td colspan="3">Ingen uploadede filer.</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
 						</div>
 
 						<div class="home-panel">
@@ -152,6 +183,10 @@
 											<div class="quiz-session-timer" id="quiz-session-timer" data-testid="quiz-session-timer">Klar</div>
 											<div class="quiz-live-answer-count" id="quiz-live-answer-count" data-testid="quiz-live-answer-count">0 / 0 har svaret</div>
 										</div>
+										<label class="kanuuntt-toggle-row" for="quiz-auto-advance">
+											<input id="quiz-auto-advance" type="checkbox" checked onchange="toggleHostQuizAutoAdvance(this.checked)" />
+											<span>Auto start / fortsaet</span>
+										</label>
 										<div class="quiz-session-question" id="quiz-session-question" data-testid="quiz-session-question">-</div>
 										<div class="quiz-session-media" id="quiz-session-media" data-testid="quiz-session-media"></div>
 										<div class="quiz-session-answers" id="quiz-session-answers" data-testid="quiz-session-answers"></div>
@@ -260,24 +295,6 @@
 												<div class="question-text builder-inline-preview builder-preview-content" id="builder-question-preview" tabindex="0" role="textbox" aria-label="Spørgsmål preview"></div>
 												<textarea id="builder-question-text"></textarea>
 
-												<div class="builder-upload-row">
-													<div>
-														<label for="builder-image-upload">Upload billede til spørgsmål</label>
-														<input id="builder-image-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
-													</div>
-													<button class="game-button secondary builder-upload-button" id="builder-upload-button" type="button" onclick="uploadBuilderImage('question')">
-														Upload
-													</button>
-												</div>
-												<div class="builder-upload-row">
-													<div>
-														<label for="builder-question-video-upload">Upload video til spørgsmål</label>
-														<input id="builder-question-video-upload" type="file" accept="video/mp4,video/webm" />
-													</div>
-													<button class="game-button secondary builder-upload-button" id="builder-question-video-upload-button" type="button" onclick="uploadBuilderVideo('question')">
-														Upload
-													</button>
-												</div>
 											</div>
 
 											<div class="builder-content-panel builder-live-editor" data-builder-editor="answer">
@@ -297,24 +314,6 @@
 												<div class="answer visible builder-inline-preview builder-preview-content" id="builder-answer-preview" tabindex="0" role="textbox" aria-label="Svar preview"></div>
 												<textarea id="builder-answer-text"></textarea>
 
-												<div class="builder-upload-row">
-													<div>
-														<label for="builder-answer-image-upload">Upload billede til svar</label>
-														<input id="builder-answer-image-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
-													</div>
-													<button class="game-button secondary builder-upload-button" id="builder-answer-upload-button" type="button" onclick="uploadBuilderImage('answer')">
-														Upload
-													</button>
-												</div>
-												<div class="builder-upload-row">
-													<div>
-														<label for="builder-answer-video-upload">Upload video til svar</label>
-														<input id="builder-answer-video-upload" type="file" accept="video/mp4,video/webm" />
-													</div>
-													<button class="game-button secondary builder-upload-button" id="builder-answer-video-upload-button" type="button" onclick="uploadBuilderVideo('answer')">
-														Upload
-													</button>
-												</div>
 											</div>
 										</div>
 
@@ -451,7 +450,8 @@
 						</div>
 					</div>
 					<div class="builder-stage">
-						<div class="kanuuntt-maker-list" id="kanuuntt-maker-questions"></div>
+						<div class="kanuuntt-maker-question-nav" id="kanuuntt-maker-question-nav" aria-label="KanUUNTt spørgsmål"></div>
+						<div class="kanuuntt-maker-list" id="kanuuntt-maker-editor"></div>
 						<div class="home-actions">
 							<button class="game-button secondary" type="button" onclick="addKanuunttQuestion()">
 								Nyt spørgsmål
@@ -522,6 +522,7 @@
 		<script src="static/app/game-model.js"></script>
 		<script src="static/app/question-maker.js"></script>
 		<script src="static/app/kanuuntt-maker.js"></script>
+		<script src="static/app/kanuuntt-common.js"></script>
 		<script src="static/app/renderer.js"></script>
 		<script src="static/app/live-session.js"></script>
 		<script src="static/app/qr-code.js"></script>

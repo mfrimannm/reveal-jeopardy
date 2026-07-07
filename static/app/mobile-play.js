@@ -165,10 +165,11 @@ function renderMobileQuizPanel(question, existingAnswer) {
 	const status = document.getElementById("mobile-quiz-status");
 	const phase = getMobileQuizPhase();
 	const revealAnswer = ["result_distribution", "answer_reveal", "scoreboard", "final_scoreboard"].includes(phase);
+	const showQuestion = Boolean(question) && (phase === "question_open" || revealAnswer || existingAnswer);
 	const canAnswer =
 		Boolean(mobilePlayer) &&
 		isMobileQuizSession() &&
-		Boolean(question) &&
+		showQuestion &&
 		phase === "question_open" &&
 		mobileSession.question_open &&
 		!existingAnswer;
@@ -194,13 +195,20 @@ function renderMobileQuizPanel(question, existingAnswer) {
 	}
 
 	if (prompt) {
-		prompt.textContent = question ? question.prompt : "Afventer spørgsmål";
+		if (typeof renderRichContent === "function") {
+			renderRichContent(prompt, {
+				format: "rich",
+				content: showQuestion ? question.prompt : "Afventer spørgsmål",
+			});
+		} else {
+			prompt.textContent = showQuestion ? question.prompt : "Afventer spørgsmål";
+		}
 	}
 
 	if (answers) {
 		answers.replaceChildren();
 
-		if (question && Array.isArray(question.answers)) {
+		if (showQuestion && Array.isArray(question.answers)) {
 			question.answers.forEach((answer, index) => {
 				const button = document.createElement("button");
 				const symbols = ["▲", "◆", "●", "■"];
@@ -221,8 +229,15 @@ function renderMobileQuizPanel(question, existingAnswer) {
 				symbol.className = "mobile-answer-symbol";
 				symbol.textContent = symbols[index % symbols.length];
 
-				const text = document.createElement("span");
-				text.textContent = answer.text;
+				const text = document.createElement("div");
+				if (typeof renderRichContent === "function") {
+					renderRichContent(text, {
+						format: "rich",
+						content: String(answer.text || ""),
+					});
+				} else {
+					text.textContent = answer.text;
+				}
 
 				button.appendChild(symbol);
 				button.appendChild(text);
@@ -235,7 +250,7 @@ function renderMobileQuizPanel(question, existingAnswer) {
 	if (status) {
 		if (!mobilePlayer) {
 			status.textContent = "Join for at svare";
-		} else if (!question) {
+		} else if (!showQuestion) {
 			status.textContent = "Afventer host";
 		} else if (existingAnswer) {
 			status.textContent = revealAnswer

@@ -113,19 +113,170 @@ function getKanuunttCurrentAnswers(session) {
 	);
 }
 
+function getKanuunttRankedScoreRows(players, scores) {
+	let previousScore = null;
+	let previousRank = 0;
+
+	return [...(players || [])]
+		.map((player) => ({
+			player,
+			score: Number((scores || {})[player.id] || 0),
+		}))
+		.sort((left, right) => right.score - left.score || left.player.name.localeCompare(right.player.name))
+		.map((entry, index) => {
+			const rank = previousScore === entry.score ? previousRank : index + 1;
+
+			previousScore = entry.score;
+			previousRank = rank;
+
+			return {
+				...entry,
+				rank,
+			};
+		});
+}
+
 function getKanuunttScoreRows(session) {
 	if (!session) {
 		return [];
 	}
 
-	const scores = session.scores || {};
+	return getKanuunttRankedScoreRows(session.players || [], session.scores || {});
+}
 
-	return [...(session.players || [])]
-		.map((player) => ({
-			player,
-			score: Number(scores[player.id] || 0),
-		}))
-		.sort((left, right) => right.score - left.score || left.player.name.localeCompare(right.player.name));
+function getKanuunttRankGroups(rows) {
+	const groups = [];
+
+	(rows || []).forEach((entry) => {
+		const currentGroup = groups[groups.length - 1];
+
+		if (currentGroup && currentGroup.rank === entry.rank) {
+			currentGroup.entries.push(entry);
+			return;
+		}
+
+		groups.push({
+			rank: entry.rank,
+			score: entry.score,
+			entries: [entry],
+		});
+	});
+
+	return groups;
+}
+
+function formatKanuunttNames(entries) {
+	const names = (entries || []).map((entry) => entry.player.name);
+
+	if (names.length <= 2) {
+		return names.join(" og ");
+	}
+
+	return names.slice(0, -1).join(", ") + " og " + names[names.length - 1];
+}
+
+function appendKanuunttScoreboardRow(container, entry) {
+	const row = document.createElement("div");
+	const rank = document.createElement("span");
+	const name = document.createElement("span");
+	const points = document.createElement("span");
+
+	row.className = "quiz-scoreboard-row";
+	rank.className = "quiz-scoreboard-rank";
+	name.className = "quiz-scoreboard-name";
+	points.className = "quiz-scoreboard-points";
+	rank.textContent = String(entry.rank || 0);
+	name.textContent = entry.player.name;
+	points.textContent = entry.score + " point";
+	row.appendChild(rank);
+	row.appendChild(name);
+	row.appendChild(points);
+	container.appendChild(row);
+}
+
+function appendKanuunttFinalScoreboard(container, rows) {
+	const groups = getKanuunttRankGroups(rows);
+	const winners = groups[0] ? groups[0].entries : [];
+	const winner = document.createElement("div");
+	const podium = document.createElement("div");
+	const rest = document.createElement("div");
+	const restTitle = document.createElement("div");
+	const restGroups = groups.filter((group) => group.rank > 3);
+
+	winner.className = "quiz-final-winner";
+	winner.textContent =
+		(winners.length > 1 ? "Vindere: " : "Vinder: ") +
+		formatKanuunttNames(winners);
+	container.appendChild(winner);
+
+	podium.className = "quiz-final-podium";
+	groups
+		.filter((group) => group.rank <= 3)
+		.forEach((group) => {
+			const place = document.createElement("div");
+			const placeLabel = document.createElement("div");
+			const name = document.createElement("div");
+			const points = document.createElement("div");
+
+			place.className = "quiz-final-podium-place rank-" + group.rank;
+			place.dataset.rank = String(group.rank);
+			placeLabel.className = "quiz-final-podium-rank";
+			name.className = "quiz-final-podium-name";
+			points.className = "quiz-final-podium-points";
+			placeLabel.textContent = group.rank + ". plads";
+			name.textContent = formatKanuunttNames(group.entries);
+			points.textContent = group.score + " point";
+			place.appendChild(placeLabel);
+			place.appendChild(name);
+			place.appendChild(points);
+			podium.appendChild(place);
+		});
+	container.appendChild(podium);
+
+	if (!restGroups.length) {
+		return;
+	}
+
+	rest.className = "quiz-final-rest";
+	restTitle.className = "quiz-final-rest-title";
+	restTitle.textContent = "Resten";
+	rest.appendChild(restTitle);
+
+	restGroups.forEach((group) => {
+		group.entries.forEach((entry) => {
+			appendKanuunttScoreboardRow(rest, entry);
+		});
+	});
+
+	container.appendChild(rest);
+}
+
+function renderKanuunttScoreboardElement(container, rows, finalMode) {
+	container.replaceChildren();
+
+	const title = document.createElement("div");
+
+	title.className = "quiz-scoreboard-title";
+	title.textContent = finalMode ? "Final scoreboard" : "Scoreboard";
+	container.appendChild(title);
+
+	if (!rows.length) {
+		const empty = document.createElement("div");
+
+		empty.className = "quiz-result-empty";
+		empty.textContent = "Ingen deltagere endnu.";
+		container.appendChild(empty);
+		return;
+	}
+
+	if (finalMode) {
+		appendKanuunttFinalScoreboard(container, rows);
+		return;
+	}
+
+	rows.forEach((entry) => {
+		appendKanuunttScoreboardRow(container, entry);
+	});
 }
 
 function setKanuunttText(id, text) {
@@ -134,6 +285,219 @@ function setKanuunttText(id, text) {
 	if (element) {
 		element.textContent = text;
 	}
+}
+
+function setKanuunttRichContent(id, value) {
+	const element = document.getElementById(id);
+
+	if (!element) {
+		return;
+	}
+
+	if (typeof renderRichContent === "function") {
+		renderRichContent(element, {
+			format: "rich",
+			content: String(value || ""),
+		});
+		return;
+	}
+
+	element.textContent = String(value || "");
+}
+
+function getKanuunttQuestionContentKey(question, fallback) {
+	const media = question && question.media ? question.media : null;
+
+	return JSON.stringify({
+		prompt: String((question && question.prompt) || fallback || ""),
+		media: media
+			? {
+					type: media.type || "",
+					src: media.src || media.url || "",
+					alt: media.alt || "",
+					poster: media.poster || "",
+					title: media.title || "",
+					start: media.start ?? null,
+					end: media.end ?? null,
+					loop: Boolean(media.loop),
+					controls: media.controls !== false,
+					muted: Boolean(media.muted),
+				}
+			: null,
+	});
+}
+
+function setKanuunttMediaAutoplaySource(iframe) {
+	if (!iframe || !iframe.src) {
+		return;
+	}
+
+	if (!iframe.dataset.baseSrc) {
+		iframe.dataset.baseSrc = iframe.src;
+	}
+
+	if (iframe.dataset.autoplaySrc) {
+		return;
+	}
+
+	try {
+		const url = new URL(iframe.dataset.baseSrc, window.location.href);
+
+		url.searchParams.set("autoplay", "1");
+		if (url.hostname.includes("youtube") || url.hostname.includes("youtu.be")) {
+			url.searchParams.set("mute", "1");
+		}
+		iframe.dataset.autoplaySrc = url.toString();
+	} catch (error) {
+		iframe.dataset.autoplaySrc =
+			iframe.dataset.baseSrc +
+			(iframe.dataset.baseSrc.includes("?") ? "&" : "?") +
+			"autoplay=1";
+	}
+}
+
+function setKanuunttQuestionMediaAutoplay(container, enabled) {
+	if (!container) {
+		return;
+	}
+
+	container.querySelectorAll("video, audio").forEach((media) => {
+		if (enabled) {
+			media.dataset.autoplay = "true";
+			return;
+		}
+
+		delete media.dataset.autoplay;
+		media.pause();
+	});
+
+	container.querySelectorAll("iframe").forEach((iframe) => {
+		if (enabled) {
+			iframe.dataset.autoplay = "true";
+			setKanuunttMediaAutoplaySource(iframe);
+			return;
+		}
+
+		delete iframe.dataset.autoplay;
+		if (iframe.dataset.baseSrc && iframe.src !== iframe.dataset.baseSrc) {
+			iframe.src = iframe.dataset.baseSrc;
+		}
+	});
+
+	if (typeof syncRenderedMediaPlayback === "function") {
+		syncRenderedMediaPlayback(container);
+	}
+}
+
+function appendKanuunttQuestionMedia(container, media) {
+	if (!container || !media || !media.type) {
+		return;
+	}
+
+	const wrapper = document.createElement("div");
+
+	wrapper.className = "question-media";
+
+	if (media.type === "image" && media.src) {
+		const image = document.createElement("img");
+
+		image.src = media.src;
+		image.alt = media.alt || "";
+		image.loading = "eager";
+		wrapper.appendChild(image);
+	} else if (typeof createMediaElement === "function") {
+		const element = createMediaElement(media);
+
+		if (element) {
+			wrapper.appendChild(element);
+		}
+	} else if (media.type === "embed" && media.src) {
+		const iframe = document.createElement("iframe");
+
+		iframe.src = media.src;
+		iframe.title = media.title || "Quiz embed";
+		iframe.allowFullscreen = true;
+		iframe.referrerPolicy = "strict-origin-when-cross-origin";
+		wrapper.appendChild(iframe);
+	}
+
+	if (!wrapper.children.length) {
+		return;
+	}
+
+	container.appendChild(wrapper);
+}
+
+function renderKanuunttQuestionContent(id, question, fallback, options) {
+	const element = document.getElementById(id);
+	const prompt = String((question && question.prompt) || fallback || "");
+	const media = question && question.media;
+	const settings = options || {};
+	const contentKey = getKanuunttQuestionContentKey(question, fallback);
+
+	if (!element) {
+		return;
+	}
+
+	if (element.dataset.kanuunttQuestionContentKey !== contentKey) {
+		if (typeof renderRichContent === "function") {
+			renderRichContent(element, {
+				format: "rich",
+				content: prompt,
+			});
+		} else {
+			element.textContent = prompt;
+		}
+
+		element.querySelectorAll(".question-media-source").forEach((source) => {
+			source.remove();
+		});
+
+		if (media && media.src && !prompt.includes(media.src)) {
+			appendKanuunttQuestionMedia(element, media);
+		}
+
+		element.dataset.kanuunttQuestionContentKey = contentKey;
+	}
+
+	setKanuunttQuestionMediaAutoplay(element, Boolean(settings.autoplayMedia));
+}
+
+function getKanuunttPromptEmbeddedMedia(line) {
+	const imageMatch = String(line || "").trim().match(/^!\[([^\]\n]*)\]\(([^)\s]+)\)$/);
+
+	if (!imageMatch) {
+		return null;
+	}
+
+	return {
+		type: "image",
+		src: imageMatch[2],
+		alt: imageMatch[1] || "",
+	};
+}
+
+function getKanuunttQuestionDisplayParts(question) {
+	const prompt = String((question && question.prompt) || "");
+	const lines = prompt.split(/\r?\n/);
+	let embeddedMedia = null;
+	const promptLines = [];
+
+	lines.forEach((line) => {
+		const media = getKanuunttPromptEmbeddedMedia(line);
+
+		if (!embeddedMedia && media) {
+			embeddedMedia = media;
+			return;
+		}
+
+		promptLines.push(line);
+	});
+
+	return {
+		prompt: promptLines.join("\n").trim(),
+		media: (question && question.media) || embeddedMedia,
+	};
 }
 
 function setKanuunttHidden(id, hidden) {
@@ -206,14 +570,32 @@ function renderKanuunttMedia(id, media) {
 		return;
 	}
 
-	container.replaceChildren();
-
 	if (!media || !media.type || !media.src) {
+		if (container.dataset.mediaKey === "empty") {
+			return;
+		}
+
 		const empty = document.createElement("div");
 
 		empty.className = "quiz-media-empty";
 		empty.textContent = "Tekstspørgsmål";
-		container.appendChild(empty);
+		container.replaceChildren(empty);
+		container.dataset.mediaKey = "empty";
+		return;
+	}
+
+	const mediaKey = JSON.stringify({
+		type: media.type,
+		src: media.src,
+		alt: media.alt || "",
+		autoplay: Boolean(media.autoplay),
+		loop: Boolean(media.loop),
+		muted: Boolean(media.muted || media.autoplay),
+		poster: media.poster || "",
+		title: media.title || "",
+	});
+
+	if (container.dataset.mediaKey === mediaKey) {
 		return;
 	}
 
@@ -259,7 +641,8 @@ function renderKanuunttMedia(id, media) {
 		wrapper.appendChild(iframe);
 	}
 
-	container.appendChild(wrapper);
+	container.replaceChildren(wrapper);
+	container.dataset.mediaKey = mediaKey;
 }
 
 function renderKanuunttAnswerCards(id, session, question, options) {
@@ -300,12 +683,19 @@ function renderKanuunttAnswerCards(id, session, question, options) {
 		}
 
 		const symbol = document.createElement("span");
-		const text = document.createElement("span");
+		const text = document.createElement("div");
 
 		symbol.className = "quiz-answer-symbol";
 		symbol.textContent = style.symbol;
 		text.className = "quiz-answer-text";
-		text.textContent = answer.text;
+		if (typeof renderRichContent === "function") {
+			renderRichContent(text, {
+				format: "rich",
+				content: String(answer.text || ""),
+			});
+		} else {
+			text.textContent = answer.text;
+		}
 		card.appendChild(symbol);
 		card.appendChild(text);
 
@@ -374,41 +764,5 @@ function renderKanuunttScoreboard(id, session, finalMode) {
 		return;
 	}
 
-	container.replaceChildren();
-
-	const title = document.createElement("div");
-
-	title.className = "quiz-scoreboard-title";
-	title.textContent = finalMode ? "Final scoreboard" : "Scoreboard";
-	container.appendChild(title);
-
-	const rows = getKanuunttScoreRows(session);
-
-	if (!rows.length) {
-		const empty = document.createElement("div");
-
-		empty.className = "quiz-result-empty";
-		empty.textContent = "Ingen deltagere endnu.";
-		container.appendChild(empty);
-		return;
-	}
-
-	rows.forEach((entry, index) => {
-		const row = document.createElement("div");
-		const rank = document.createElement("span");
-		const name = document.createElement("span");
-		const points = document.createElement("span");
-
-		row.className = "quiz-scoreboard-row";
-		rank.className = "quiz-scoreboard-rank";
-		name.className = "quiz-scoreboard-name";
-		points.className = "quiz-scoreboard-points";
-		rank.textContent = String(index + 1);
-		name.textContent = entry.player.name;
-		points.textContent = entry.score + " point";
-		row.appendChild(rank);
-		row.appendChild(name);
-		row.appendChild(points);
-		container.appendChild(row);
-	});
+	renderKanuunttScoreboardElement(container, getKanuunttScoreRows(session), finalMode);
 }

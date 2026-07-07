@@ -358,6 +358,56 @@ async def test_upload_image(client, server_module):
 
 
 @pytest.mark.anyio
+async def test_list_uploads_returns_files(client, server_module):
+    first = server_module.UPLOADS_DIR / "first-12345678.png"
+    second = server_module.UPLOADS_DIR / "second-abcdef12.mp4"
+    first.write_bytes(b"png")
+    second.write_bytes(b"video")
+
+    response = await client.get("/api/uploads")
+
+    assert response.status_code == 200
+    uploads = response.json()
+    filenames = {upload["filename"] for upload in uploads}
+    assert {"first-12345678.png", "second-abcdef12.mp4"}.issubset(filenames)
+    first_upload = next(upload for upload in uploads if upload["filename"] == "first-12345678.png")
+    assert first_upload["url"] == "/uploads/first-12345678.png"
+    assert first_upload["contentType"] == "image/png"
+    assert first_upload["sizeBytes"] == 3
+    assert "modifiedAt" in first_upload
+
+
+@pytest.mark.anyio
+async def test_delete_upload_requires_admin_and_deletes_file(client, server_module):
+    path = server_module.UPLOADS_DIR / "delete-me-12345678.webp"
+    path.write_bytes(b"image")
+
+    unauthorized = await client.delete("/api/uploads/delete-me-12345678.webp")
+    assert unauthorized.status_code == 401
+    assert path.exists()
+
+    await login(client)
+    response = await client.delete("/api/uploads/delete-me-12345678.webp")
+
+    assert response.status_code == 200
+    assert response.json() == {"filename": "delete-me-12345678.webp", "status": "deleted"}
+    assert not path.exists()
+
+
+@pytest.mark.anyio
+async def test_delete_upload_rejects_unsafe_or_missing_filename(client, server_module):
+    await login(client)
+
+    unsafe = await client.delete("/api/uploads/bad.png")
+    missing = await client.delete("/api/uploads/missing-12345678.png")
+
+    assert unsafe.status_code == 400
+    assert unsafe.json()["detail"] == "Invalid upload filename"
+    assert missing.status_code == 404
+    assert missing.json()["detail"] == "Upload not found"
+
+
+@pytest.mark.anyio
 async def test_upload_video(client, server_module):
     await login(client)
 
@@ -577,6 +627,27 @@ async def test_start_quiz_question_opens_current_question(client):
 
 
 @pytest.mark.anyio
+async def test_jump_quiz_question_selects_question_without_opening_it(client):
+    session = await create_quiz_session(client)
+    host_headers = {"X-Live-Host-Token": session["host_token"]}
+
+    response = await client.post(
+        f"/api/sessions/{session['session_id']}/quiz/jump-question",
+        headers=host_headers,
+        json={"question_index": 1},
+    )
+
+    assert response.status_code == 200
+    updated = response.json()
+    assert updated["current_question_index"] == 1
+    assert updated["question_open"] is False
+    assert updated["question_started_at"] is None
+    assert updated["quiz_phase"] == "question_intro"
+    assert updated["answer_count"] == 0
+    assert "host_token" not in updated
+
+
+@pytest.mark.anyio
 async def test_submit_correct_quiz_answer_scores_question_points(client):
     session = await create_quiz_session(client)
     session_id = session["session_id"]
@@ -717,6 +788,30 @@ async def test_next_quiz_question_advances_and_resets_open_state(client):
     assert updated["quiz_phase"] == "question_intro"
     assert updated["answer_count"] == 0
     assert len(updated["answers"]) == 1
+
+
+@pytest.mark.anyio
+async def test_next_quiz_question_on_last_question_shows_final_scoreboard(client):
+    session = await create_quiz_session(client)
+    session_id = session["session_id"]
+    host_headers = {"X-Live-Host-Token": session["host_token"]}
+
+    await client.post(
+        f"/api/sessions/{session_id}/quiz/jump-question",
+        headers=host_headers,
+        json={"question_index": 1},
+    )
+
+    next_response = await client.post(
+        f"/api/sessions/{session_id}/quiz/next-question",
+        headers=host_headers,
+    )
+
+    assert next_response.status_code == 200
+    updated = next_response.json()
+    assert updated["current_question_index"] == 1
+    assert updated["question_open"] is False
+    assert updated["quiz_phase"] == "final_scoreboard"
 
 
 @pytest.mark.anyio

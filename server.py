@@ -209,6 +209,33 @@ def safe_upload_name(original_name: str, content_type: str) -> str:
     return f"{stem}-{secrets.token_hex(4)}{suffix}"
 
 
+def validate_upload_filename(filename: str) -> str:
+    if not filename or Path(filename).name != filename:
+        raise HTTPException(status_code=400, detail="Invalid upload filename")
+
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*-[a-f0-9]{8}\.(gif|jpg|png|webp|mp4|webm)", filename):
+        raise HTTPException(status_code=400, detail="Invalid upload filename")
+
+    return filename
+
+
+def get_upload_content_type(path: Path) -> str:
+    content_type, _ = mimetypes.guess_type(path.name)
+    return content_type or "application/octet-stream"
+
+
+def serialize_upload(path: Path) -> dict[str, Any]:
+    stat = path.stat()
+
+    return {
+        "filename": path.name,
+        "url": f"/uploads/{path.name}",
+        "contentType": get_upload_content_type(path),
+        "sizeBytes": stat.st_size,
+        "modifiedAt": datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat(),
+    }
+
+
 def upload_size_limit(content_type: str) -> tuple[int, int]:
     if content_type.startswith("video/"):
         return MAX_VIDEO_UPLOAD_BYTES, MAX_VIDEO_UPLOAD_MB
@@ -674,8 +701,10 @@ def list_games() -> list[dict[str, str]]:
 
 
 @app.get("/api/games/{game_id}")
-def get_game(game_id: str) -> dict[str, Any]:
-    return read_game(find_game_path(game_id))
+def get_game(game_id: str, mode: str | None = None) -> dict[str, Any]:
+    normalized_mode = normalize_session_mode(mode) if mode else None
+
+    return read_game(find_game_path(game_id, normalized_mode))
 
 
 @app.put("/api/games/{game_id}")
@@ -699,6 +728,17 @@ async def save_game(
         file.write("\n")
 
     return {"id": payload["id"], "title": payload["title"]}
+
+
+@app.get("/api/uploads")
+async def list_uploads() -> list[dict[str, Any]]:
+    files = [
+        serialize_upload(path)
+        for path in UPLOADS_DIR.iterdir()
+        if path.is_file() and path.name != ".gitkeep"
+    ]
+
+    return sorted(files, key=lambda upload: upload["modifiedAt"], reverse=True)
 
 
 @app.post("/api/uploads")
@@ -728,6 +768,23 @@ async def upload_image(
             output.write(chunk)
 
     return {"url": f"/uploads/{filename}", "filename": filename}
+
+
+@app.delete("/api/uploads/{filename}")
+async def delete_upload(
+    filename: str,
+    reveal_jeopardy_admin: str | None = Cookie(default=None),
+) -> dict[str, str]:
+    require_admin(reveal_jeopardy_admin)
+    safe_filename = validate_upload_filename(filename)
+    path = UPLOADS_DIR / safe_filename
+
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Upload not found")
+
+    path.unlink()
+
+    return {"filename": safe_filename, "status": "deleted"}
 
 
 @app.post("/api/sessions")
@@ -973,6 +1030,43 @@ async def next_quiz_question(
             session["updated_at"] = timestamp
             session_snapshot = copy_public_session(session)
 
+
+    await broadcast_session_state(session_snapshot["session_id"], session_snapshot)
+    return session_snapshot
+
+
+@app.post("/api/sessions/{session_id}/quiz/jump-question")
+async def jump_quiz_question(
+    session_id: str,
+    request: Request,
+    reveal_jeopardy_admin: str | None = Cookie(default=None),
+    live_host_token: str | None = Header(default=None, alias=LIVE_HOST_TOKEN_HEADER),
+) -> dict[str, Any]:
+    body = await read_json_body(request)
+
+    try:
+        question_index = int(body.get("question_index"))
+    except (TypeError, ValueError) as error:
+        raise HTTPException(status_code=400, detail="Question index is required") from error
+
+    async with live_session_lock:
+        session = get_live_session(session_id)
+        require_live_host(session, reveal_jeopardy_admin, live_host_token)
+        require_quiz_session(session)
+        questions = session.get("quiz_questions") if isinstance(session.get("quiz_questions"), list) else []
+
+        if question_index < 0 or question_index >= len(questions):
+            raise HTTPException(status_code=400, detail="Question index is out of range")
+
+        timestamp = now_iso()
+        session["current_question_index"] = question_index
+        session["question_open"] = False
+        session["question_started_at"] = None
+        session["answer_count"] = count_current_quiz_answers(session)
+        session["quiz_phase"] = "question_intro"
+        session["phase_started_at"] = timestamp
+        session["updated_at"] = timestamp
+        session_snapshot = copy_public_session(session)
 
     await broadcast_session_state(session_snapshot["session_id"], session_snapshot)
     return session_snapshot

@@ -38,17 +38,30 @@
 					</div>
 
 					<h2>Kontrol</h2>
+					<div class="kanuuntt-control-help">
+						<strong id="kanuuntt-control-current-step">Klar til at starte.</strong>
+						<span id="kanuuntt-control-next-step">Start quizzen, luk for svar, vis resultat/scoreboard og gå derefter til næste spørgsmål.</span>
+					</div>
+					<label class="kanuuntt-toggle-row" for="kanuuntt-auto-advance">
+						<input id="kanuuntt-auto-advance" type="checkbox" />
+						<span>Auto fortsæt gennem resultat og scoreboard</span>
+					</label>
 					<div class="kanuuntt-control-actions">
 						<button class="game-button primary" id="kanuuntt-start-question" type="button">Start spørgsmål</button>
-						<button class="game-button secondary" id="kanuuntt-close-question" type="button">Luk spørgsmål</button>
+						<button class="game-button secondary" id="kanuuntt-close-question" type="button">Luk for svar</button>
 						<button class="game-button secondary" id="kanuuntt-show-results" type="button">Vis resultat</button>
 						<button class="game-button secondary" id="kanuuntt-show-scoreboard" type="button">Scoreboard</button>
-						<button class="game-button secondary" id="kanuuntt-next-question" type="button">Næste</button>
+						<button class="game-button primary" id="kanuuntt-next-question" type="button">Næste spørgsmål</button>
 						<button class="game-button secondary" id="kanuuntt-pause" type="button">Pause</button>
 						<button class="game-button reset" id="kanuuntt-reset" type="button">Reset</button>
 						<button class="game-button reset" id="kanuuntt-stop" type="button">Stop</button>
 					</div>
 					<div class="kanuuntt-error" id="kanuuntt-backend-error" hidden></div>
+				</div>
+
+				<div class="kanuuntt-control-panel kanuuntt-question-list-panel">
+					<h2>Spoergsmaal</h2>
+					<div class="kanuuntt-question-list" id="kanuuntt-backend-question-list">Ingen spoergsmaal.</div>
 				</div>
 
 				<div class="kanuuntt-control-panel">
@@ -82,6 +95,8 @@
 		</main>
 
 		<script src="/static/app/api.js"></script>
+		<script src="/static/app/media.js"></script>
+		<script src="/static/app/content-renderer.js"></script>
 		<script src="/static/app/live-session.js"></script>
 		<script src="/static/app/qr-code.js"></script>
 		<script src="/static/app/kanuuntt-common.js"></script>

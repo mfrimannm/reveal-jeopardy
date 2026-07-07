@@ -177,6 +177,19 @@ function nextQuizQuestion(sessionId, hostToken) {
 	);
 }
 
+function jumpQuizQuestion(sessionId, hostToken, questionIndex) {
+	return liveSessionRequest(
+		"/" + encodeURIComponent(sessionId) + "/quiz/jump-question",
+		{
+			method: "POST",
+			headers: getLiveHostHeaders(hostToken),
+			body: JSON.stringify({
+				question_index: questionIndex,
+			}),
+		}
+	);
+}
+
 function setQuizPhase(sessionId, hostToken, quizPhase) {
 	return liveSessionRequest(
 		"/" + encodeURIComponent(sessionId) + "/quiz/phase",

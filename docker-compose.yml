@@ -4,7 +4,7 @@ services:
     container_name: reveal-jeopardy
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       ADMIN_PASSWORD: "change-me"
       DATA_DIR: "/app/data"
