@@ -6,6 +6,7 @@ const dataDir =
 	process.env.DATA_DIR || path.join(os.tmpdir(), "reveal-jeopardy-playwright-data");
 const gamesDir = path.join(dataDir, "games");
 const uploadsDir = path.join(dataDir, "uploads");
+const fixtureDir = path.join(process.cwd(), "tests", "ui", "fixtures");
 
 fs.rmSync(dataDir, { recursive: true, force: true });
 fs.mkdirSync(gamesDir, { recursive: true });
@@ -89,6 +90,10 @@ fs.writeFileSync(
 
 const kanuunttDir = path.join(gamesDir, "kanuuntt");
 fs.mkdirSync(kanuunttDir, { recursive: true });
+fs.copyFileSync(
+	path.join(fixtureDir, "kanuuntt-demo.json"),
+	path.join(kanuunttDir, "kanuuntt-demo.json")
+);
 
 fs.writeFileSync(
 	path.join(kanuunttDir, "ui-quiz.json"),

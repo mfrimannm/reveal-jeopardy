@@ -1,9 +1,12 @@
 const { expect, test } = require("@playwright/test");
 
+const JEOPARDY_TEST_GAME_ID = "ui-scaling";
+const JEOPARDY_TEST_GAME_TITLE = "UI Scaling Test";
+
 async function openHome(page) {
 	await page.addInitScript(() => localStorage.clear());
-	await page.goto("/?game=ui-scaling#/home");
-	await expect(page.locator("#game-title")).toHaveText("UI Scaling Test");
+	await page.goto(`/?game=${JEOPARDY_TEST_GAME_ID}#/home`);
+	await expect(page.locator("#game-title")).toHaveText(JEOPARDY_TEST_GAME_TITLE);
 }
 
 test("upload manager can upload, show and delete files", async ({ page }) => {

@@ -51,7 +51,7 @@ body,
 
 .home-layout {
 	display: grid;
-	grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
 	gap: 18px;
 	height: auto;
 	min-height: calc(100% - 78px);
@@ -63,6 +63,7 @@ body,
 	background: rgba(255, 255, 255, 0.06);
 	padding: 18px;
 	min-height: 0;
+	min-width: 0;
 	overflow: visible;
 }
 
@@ -120,6 +121,7 @@ body,
 	border: 2px solid rgba(255, 255, 255, 0.7);
 	color: #ffffff;
 	display: block;
+	overflow-wrap: anywhere;
 	padding: 12px;
 	text-decoration: none;
 }
@@ -153,6 +155,7 @@ body,
 	display: grid;
 	gap: 8px;
 	margin-top: 14px;
+	overflow-wrap: anywhere;
 }
 
 .team-field-list {
@@ -173,18 +176,17 @@ body,
 	margin-top: 12px;
 }
 
-.home-actions .game-button {
-	/* font-size: 0.8em; */
-}
-
 .game-button {
 	border: 2px solid #ffffff;
 	background: #161616;
 	color: #ffffff;
+	box-sizing: border-box;
 	padding: 10px 16px;
 	font-weight: 800;
 	line-height: 1;
 	cursor: pointer;
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 
 .game-button:hover,
@@ -224,7 +226,7 @@ body,
 	align-items: end;
 	display: grid;
 	gap: 10px;
-	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
 }
 
 .upload-manager-status {
@@ -337,15 +339,16 @@ body,
 .live-session-grid {
 	display: grid;
 	gap: 12px;
-	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
 }
 
 .live-session-code {
 	color: var(--jeopardy-gold);
-	font-size: 0.62em;
+	font-size: clamp(0.4em, 5vw, 0.62em);
 	font-weight: 900;
 	letter-spacing: 0;
 	line-height: 1;
+	overflow-wrap: anywhere;
 }
 
 .live-session-link {
@@ -387,6 +390,8 @@ body,
 	color: #dddddd;
 	font-size: 1em;
 	line-height: 1;
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 
 .live-session-list[data-empty="true"] {
@@ -474,6 +479,7 @@ body,
 	font-size: 0.22em;
 	font-weight: 900;
 	line-height: 1.1;
+	overflow-wrap: anywhere;
 	padding: 7px 10px;
 	text-transform: uppercase;
 }
@@ -483,6 +489,7 @@ body,
 	font-size: 0.48em;
 	font-weight: 800;
 	line-height: 1.12;
+	overflow-wrap: anywhere;
 }
 
 .quiz-session-meta,
@@ -560,7 +567,7 @@ body,
 .quiz-session-answers {
 	display: grid;
 	gap: 10px;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
 }
 
 .quiz-answer-card {
@@ -774,7 +781,7 @@ body,
 .kanuuntt-backend {
 	box-sizing: border-box;
 	min-height: 100vh;
-	padding: 28px;
+	padding: clamp(14px, 2vw, 28px);
 }
 
 .kanuuntt-display {
@@ -798,6 +805,7 @@ body,
 	flex-wrap: wrap;
 	gap: 14px;
 	justify-content: space-between;
+	min-width: 0;
 }
 
 .kanuuntt-display-status {
@@ -818,18 +826,20 @@ body,
 
 .kanuuntt-display h1,
 .kanuuntt-backend h1 {
-	font-size: clamp(2.1rem, 4vw, 4.7rem);
+	font-size: clamp(1.8rem, 4vw, 4.7rem);
 	line-height: 1;
 	margin: 6px 0 0;
+	overflow-wrap: anywhere;
 }
 
 .kanuuntt-stage-pill {
 	background: rgba(255, 255, 255, 0.1);
 	border: 2px solid rgba(255, 255, 255, 0.4);
 	border-radius: 8px;
-	font-size: clamp(1rem, 2vw, 1.6rem);
+	font-size: clamp(0.85rem, 2vw, 1.6rem);
 	font-weight: 900;
-	padding: 12px 16px;
+	overflow-wrap: anywhere;
+	padding: clamp(8px, 1.3vw, 12px) clamp(10px, 1.6vw, 16px);
 	text-transform: uppercase;
 }
 
@@ -883,10 +893,11 @@ body,
 	font-size: clamp(4.5rem, 15vw, 12rem);
 	font-weight: 900;
 	line-height: 0.95;
+	overflow-wrap: anywhere;
 }
 
 .kanuuntt-session-code.small {
-	font-size: 3rem;
+	font-size: clamp(2rem, 5vw, 3rem);
 }
 
 .kanuuntt-join-link {
@@ -926,6 +937,8 @@ body,
 	font-size: clamp(1rem, 1.8vw, 1.35rem);
 	font-weight: 800;
 	grid-column: 1 / -1;
+	min-width: 0;
+	overflow-wrap: anywhere;
 	padding: 16px;
 }
 
@@ -1252,7 +1265,7 @@ body,
 .kanuuntt-backend-grid {
 	display: grid;
 	gap: 16px;
-	grid-template-columns: minmax(280px, 0.9fr) minmax(240px, 0.7fr) minmax(240px, 0.75fr) minmax(320px, 1.1fr);
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
 }
 
 .kanuuntt-control-panel {
@@ -1272,13 +1285,15 @@ body,
 
 .kanuuntt-control-panel h2 {
 	color: var(--jeopardy-gold);
-	font-size: 1.2rem;
+	font-size: clamp(1rem, 1.4vw, 1.2rem);
+	overflow-wrap: anywhere;
 	text-transform: uppercase;
 }
 
 .kanuuntt-preview-panel h3 {
-	font-size: 1.6rem;
+	font-size: clamp(1.15rem, 1.8vw, 1.6rem);
 	line-height: 1.12;
+	overflow-wrap: anywhere;
 }
 
 .kanuuntt-preview-panel h3 {
@@ -1314,7 +1329,7 @@ body,
 .kanuuntt-control-actions {
 	display: grid;
 	gap: 10px;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
 	justify-content: stretch;
 }
 
@@ -1351,6 +1366,8 @@ body,
 	font-size: 0.95rem;
 	font-weight: 900;
 	line-height: 1.2;
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 
 .kanuuntt-toggle-row input {
@@ -1361,7 +1378,7 @@ body,
 
 .kanuuntt-control-actions .game-button,
 .kanuuntt-link-actions .game-button {
-	font-size: 0.95rem;
+	font-size: clamp(0.82rem, 1.2vw, 0.95rem);
 	padding: 10px 12px;
 	text-decoration: none;
 }
@@ -1374,7 +1391,7 @@ body,
 .kanuuntt-stat-grid {
 	display: grid;
 	gap: 10px;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 110px), 1fr));
 }
 
 .kanuuntt-stat-grid div {
@@ -1396,9 +1413,10 @@ body,
 }
 
 .kanuuntt-stat-grid strong {
-	font-size: 1.6rem;
+	font-size: clamp(1.25rem, 2vw, 1.6rem);
 	line-height: 1.1;
 	margin-top: 4px;
+	overflow-wrap: anywhere;
 }
 
 .kanuuntt-question-list-panel {
@@ -1467,7 +1485,7 @@ body,
 	left: 50%;
 	max-width: 1880px;
 	overflow: auto;
-	padding: 20px;
+	padding: clamp(12px, 1.5vw, 20px);
 	position: fixed;
 	top: 50%;
 	transform: translate(-50%, -50%);
@@ -1487,7 +1505,7 @@ body,
 .kanuuntt-maker-question-nav {
 	display: grid;
 	gap: 8px;
-	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr));
 }
 
 .kanuuntt-maker-tile {
@@ -1546,8 +1564,10 @@ body,
 .kanuuntt-maker-question-header {
 	align-items: center;
 	display: flex;
+	flex-wrap: wrap;
 	gap: 12px;
 	justify-content: space-between;
+	min-width: 0;
 }
 
 .kanuuntt-maker-question-header h3 {
@@ -1559,7 +1579,7 @@ body,
 .kanuuntt-maker-answers {
 	display: grid;
 	gap: 10px;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
 }
 
 .kanuuntt-maker-answer {
@@ -1631,9 +1651,7 @@ body,
 
 @media (max-width: 980px) {
 	.kanuuntt-waiting,
-	.kanuuntt-backend-grid,
-	.kanuuntt-answer-grid,
-	.kanuuntt-maker-answers {
+	.kanuuntt-answer-grid {
 		grid-template-columns: 1fr;
 	}
 

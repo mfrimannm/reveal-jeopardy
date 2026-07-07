@@ -1,17 +1,22 @@
 const { expect, test } = require("@playwright/test");
 
+const JEOPARDY_TEST_GAME_ID = "ui-scaling";
+const JEOPARDY_TEST_GAME_TITLE = "UI Scaling Test";
+const KANUUNTT_FLOW_GAME_ID = "ui-quiz";
+const KANUUNTT_FLOW_GAME_TITLE = "UI Quiz Test";
+
 async function openHost(page) {
 	await page.goto("/");
 	await page.evaluate(() => localStorage.clear());
-	await page.goto("/?game=ui-scaling#/home");
-	await expect(page.locator("#game-title")).toHaveText("UI Scaling Test");
+	await page.goto(`/?game=${JEOPARDY_TEST_GAME_ID}#/home`);
+	await expect(page.locator("#game-title")).toHaveText(JEOPARDY_TEST_GAME_TITLE);
 }
 
 async function openQuizHost(page) {
 	await page.goto("/");
 	await page.evaluate(() => localStorage.clear());
-	await page.goto("/?game=ui-quiz#/home");
-	await expect(page.locator("#game-title")).toHaveText("UI Quiz Test");
+	await page.goto(`/?game=${KANUUNTT_FLOW_GAME_ID}#/home`);
+	await expect(page.locator("#game-title")).toHaveText(KANUUNTT_FLOW_GAME_TITLE);
 }
 
 async function joinMobilePlayer(page, joinUrl, name, teamId) {
