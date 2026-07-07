@@ -105,8 +105,8 @@ test("host can run a quiz question with mobile answers and scoreboard", async ({
 
 	const joinUrl = await page.locator("#live-session-join-link").getAttribute("href");
 	const sessionId = await page.locator("#live-session-id").textContent();
-	const displayPage = await page.context().newPage();
-	const backendPage = await page.context().newPage();
+	const displayPage = await browser.newContext().then(ctx => ctx.newPage());
+	const backendPage = await browser.newContext().then(ctx => ctx.newPage());
 
 	await displayPage.goto("/kanuuntt/display/" + sessionId);
 	await backendPage.goto("/kanuuntt/backend/" + sessionId);

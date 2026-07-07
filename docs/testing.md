@@ -1,6 +1,6 @@
 # Testing
 
-Projektet har backend API-tests, frontend unit tests og Playwright UI-tests.
+Projektet har backend API-tests, frontend unit tests og Playwright UI-tests under `tests/`.
 
 ## Installer afhængigheder
 
@@ -38,6 +38,7 @@ npm run test:frontend
 ```
 
 Disse tests kører med Node test runner og loader rene frontendmoduler i en VM-context. De tester blandt andet game-id normalisering, scoring, Question maker-serialisering og media parsing.
+Testfilen ligger i `tests/frontend/`.
 
 ## UI-tests
 
@@ -50,6 +51,8 @@ Playwright-konfigurationen starter selv appen via:
 ```sh
 node tests/ui/start-ui-server.mjs
 ```
+
+UI-tests ligger i `tests/ui/` og køres samlet af `npm run test:ui`.
 
 Standard testserver:
 
