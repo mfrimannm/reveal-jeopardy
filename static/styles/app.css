@@ -446,9 +446,12 @@ body,
 
 .quiz-session-panel {
 	border: 2px solid rgba(255, 211, 72, 0.7);
+	box-sizing: border-box;
 	display: grid;
 	gap: 14px;
 	margin-top: 14px;
+	max-width: 100%;
+	min-width: 0;
 	padding: 12px;
 }
 
@@ -565,9 +568,12 @@ body,
 }
 
 .quiz-session-answers {
+	box-sizing: border-box;
 	display: grid;
 	gap: 10px;
 	grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+	min-width: 0;
+	width: 100%;
 }
 
 .quiz-answer-card {
@@ -579,6 +585,7 @@ body,
 	gap: 10px;
 	grid-template-columns: auto minmax(0, 1fr);
 	min-height: 86px;
+	min-width: 0;
 	padding: 12px;
 }
 

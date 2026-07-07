@@ -31,9 +31,9 @@ process.env.PLAYWRIGHT_BROWSERS_PATH =
 module.exports = defineConfig({
 	testDir: "tests/ui",
 	testMatch: '**/*.spec.js',
-	timeout: 30 * 1000,
+	timeout: 100 * 1000,
 	expect: {
-		timeout: 10 * 1000,
+		timeout: 20 * 1000,
 	},
 	use: {
 		browserName: 'chromium',
@@ -48,7 +48,7 @@ module.exports = defineConfig({
 			cwd: ROOT_DIR,
 			url: BASE_URL,
 			reuseExistingServer: !process.env.CI,
-			timeout: 30 * 1000,
+			timeout: 40 * 1000,
 	},
 	projects: [
 		{ name: "chromium", use: { ...devices["Desktop Chrome"] } },

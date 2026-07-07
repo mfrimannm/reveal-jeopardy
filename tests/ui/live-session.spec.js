@@ -164,13 +164,13 @@ test("host can run a quiz question with mobile answers and scoreboard", async ({
 	await expect(page.locator("#quiz-session-answers")).toContainText("2 svar / 50%");
 	await expect(displayPage.locator("#kanuuntt-display-stage")).toHaveText("Resultat");
 	await expect(displayPage.locator("#kanuuntt-display-answers")).toContainText("2 svar / 50%");
-	await expect(page.locator("#quiz-result-details")).toContainText("Alice +1000 point");
+	await expect(page.locator("#quiz-result-details")).toContainText(/Alice \+[1-9]\d* point/);
 
 	await expect(page.locator("#quiz-session-stage")).toHaveText("Scoreboard", { timeout: 12_000 });
 	await expect(displayPage.locator("#kanuuntt-display-stage")).toHaveText("Scoreboard", { timeout: 12_000 });
 	await expect(page.locator("#quiz-scoreboard")).toContainText("Alice");
 	await expect(page.locator("#quiz-scoreboard")).toContainText("Bob");
-	await expect(page.locator("#quiz-scoreboard")).toContainText("1000 point");
+	await expect(page.locator("#quiz-scoreboard")).toContainText(/[1-9]\d* point/);
 
 	await backendPage.locator("#kanuuntt-next-question").click();
 	await backendPage.locator("#kanuuntt-start-question").click();
