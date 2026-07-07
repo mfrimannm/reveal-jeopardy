@@ -587,6 +587,7 @@ async def test_create_quiz_session_initializes_quiz_state(client):
     assert session["question_started_at"] is None
     assert session["quiz_phase"] == "waiting"
     assert isinstance(session["phase_started_at"], str)
+    assert session["auto_advance_enabled"] is False
     assert session["quiz_questions"][0]["type"] == "multiple-choice"
     assert session["quiz_questions"][0]["media"] == {
         "type": "image",
@@ -665,6 +666,28 @@ async def test_submit_correct_quiz_answer_scores_question_points(client):
     assert body["answer"]["earned_points"] == 1000
     assert body["session"]["scores"][player["id"]] == 1000
     assert body["session"]["answer_count"] == 1
+
+
+@pytest.mark.anyio
+async def test_submit_correct_quiz_answer_scores_by_remaining_time(client, server_module):
+    session = await create_quiz_session(client)
+    session_id = session["session_id"]
+    host_headers = {"X-Live-Host-Token": session["host_token"]}
+    player = await join_player(client, session_id)
+    await client.post(f"/api/sessions/{session_id}/quiz/start-question", headers=host_headers)
+    server_module.live_sessions[session_id]["question_started_at"] = (
+        datetime.now(timezone.utc) - timedelta(seconds=15)
+    ).isoformat()
+
+    response = await client.post(
+        f"/api/sessions/{session_id}/quiz/submit-answer",
+        json={"player_id": player["id"], "answer_id": "b"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["answer"]["earned_points"] == 500
+    assert body["session"]["scores"][player["id"]] == 500
 
 
 @pytest.mark.anyio
@@ -812,6 +835,24 @@ async def test_next_quiz_question_on_last_question_shows_final_scoreboard(client
     assert updated["current_question_index"] == 1
     assert updated["question_open"] is False
     assert updated["quiz_phase"] == "final_scoreboard"
+
+
+@pytest.mark.anyio
+async def test_set_quiz_auto_advance_updates_public_session(client):
+    session = await create_quiz_session(client)
+    session_id = session["session_id"]
+    host_headers = {"X-Live-Host-Token": session["host_token"]}
+
+    response = await client.post(
+        f"/api/sessions/{session_id}/quiz/auto-advance",
+        headers=host_headers,
+        json={"auto_advance_enabled": True},
+    )
+
+    assert response.status_code == 200
+    updated = response.json()
+    assert updated["auto_advance_enabled"] is True
+    assert "host_token" not in updated
 
 
 @pytest.mark.anyio

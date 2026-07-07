@@ -101,6 +101,22 @@ function getKanuunttRemainingSeconds(session, question) {
 	return Math.max(0, Math.ceil(remaining));
 }
 
+function getKanuunttPhaseRemainingSeconds(session, durationSeconds) {
+	if (!session || !session.phase_started_at || !durationSeconds) {
+		return null;
+	}
+
+	const startedAt = Date.parse(session.phase_started_at);
+
+	if (!Number.isFinite(startedAt)) {
+		return null;
+	}
+
+	const elapsedSeconds = (Date.now() - startedAt) / 1000;
+
+	return Math.max(0, Math.ceil(Number(durationSeconds) - elapsedSeconds));
+}
+
 function getKanuunttCurrentAnswers(session) {
 	if (!session || !Array.isArray(session.answers)) {
 		return [];

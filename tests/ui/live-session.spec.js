@@ -161,7 +161,6 @@ test("host can run a quiz question with mobile answers and scoreboard", async ({
 	await expect(displayPage.locator("#kanuuntt-display-answers")).toContainText("2 svar / 50%");
 	await expect(page.locator("#quiz-result-details")).toContainText("Alice +1000 point");
 
-	await backendPage.locator("#kanuuntt-show-scoreboard").click();
 	await expect(page.locator("#quiz-session-stage")).toHaveText("Scoreboard", { timeout: 12_000 });
 	await expect(displayPage.locator("#kanuuntt-display-stage")).toHaveText("Scoreboard", { timeout: 12_000 });
 	await expect(page.locator("#quiz-scoreboard")).toContainText("Alice");
@@ -180,11 +179,11 @@ test("host can run a quiz question with mobile answers and scoreboard", async ({
 	await expect(page.locator("#quiz-live-answer-count")).toHaveText("4 / 4 har svaret");
 
 	await backendPage.locator("#kanuuntt-close-question").click();
-	await backendPage.locator("#kanuuntt-show-scoreboard").click();
 	await expect(page.locator("#quiz-session-stage")).toHaveText("Scoreboard", { timeout: 12_000 });
 	await backendPage.locator("#kanuuntt-next-question").click();
 	await expect(page.locator("#quiz-session-stage")).toHaveText("Final scoreboard");
 	await expect(displayPage.locator("#kanuuntt-display-stage")).toHaveText("Final scoreboard");
+	await expect(displayPage.locator("#kanuuntt-display-final")).toBeVisible();
 	await expect(page.locator("#quiz-scoreboard")).toContainText("Vinder: Alice");
 	await expect(page.locator("#quiz-scoreboard .quiz-final-podium")).toContainText("1. plads");
 	await expect(page.locator("#quiz-scoreboard .quiz-final-podium")).toContainText("Alice");

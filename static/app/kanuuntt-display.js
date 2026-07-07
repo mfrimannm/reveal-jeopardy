@@ -24,6 +24,7 @@ const KANUUNTT_DISPLAY_SOUND_VOLUMES = {
 	answerReveal: 0.85,
 	scoreboard: 0.8,
 };
+const KANUUNTT_DISPLAY_SCOREBOARD_SECONDS = 6;
 const kanuunttDisplayFileSounds = {};
 const kanuunttDisplayMissingFileSounds = new Set();
 
@@ -372,6 +373,7 @@ function renderKanuunttDisplay() {
 	const questionKey = getKanuunttDisplayQuestionKey(session);
 	const revealResults = ["result_distribution", "answer_reveal", "scoreboard", "final_scoreboard"].includes(phase);
 	const showScoreboard = ["scoreboard", "final_scoreboard"].includes(phase);
+	const finalScoreboard = phase === "final_scoreboard";
 	const playerCount = session && Array.isArray(session.players) ? session.players.length : 0;
 	const answerCount = session ? Number(session.answer_count || 0) : 0;
 	const joinUrl = getKanuunttJoinUrl(sessionId);
@@ -386,11 +388,21 @@ function renderKanuunttDisplay() {
 	renderKanuunttPlayers("kanuuntt-display-players", session);
 
 	setKanuunttHidden("kanuuntt-display-waiting", phase !== "waiting");
-	setKanuunttHidden("kanuuntt-display-question", phase === "waiting");
+	setKanuunttHidden("kanuuntt-display-question", phase === "waiting" || finalScoreboard);
+	setKanuunttHidden("kanuuntt-display-final", !finalScoreboard);
 	setKanuunttHidden("kanuuntt-display-corner-join", phase === "waiting");
 
 	if (!session || session.mode !== "quiz") {
 		scheduleKanuunttDisplayFit();
+		return;
+	}
+
+	if (finalScoreboard) {
+		renderKanuunttScoreboard("kanuuntt-display-final-scoreboard", session, true);
+		playKanuunttDisplayPhaseSound(phase, questionKey);
+		updateKanuunttDisplayCountdown();
+		scheduleKanuunttDisplayFit();
+		window.setTimeout(scheduleKanuunttDisplayFit, 120);
 		return;
 	}
 
@@ -404,7 +416,25 @@ function renderKanuunttDisplay() {
 	renderKanuunttQuestionContent("kanuuntt-display-prompt", question, "Afventer Spørgsmål", {
 		autoplayMedia: phase === "question_open",
 	});
-	setKanuunttText("kanuuntt-display-answer-count", answerCount + " / " + playerCount + " har svaret");
+	if (phase === "scoreboard" && session.auto_advance_enabled) {
+		const autoAdvanceRemaining = getKanuunttPhaseRemainingSeconds(
+			session,
+			KANUUNTT_DISPLAY_SCOREBOARD_SECONDS
+		);
+		const lastQuestion =
+			Array.isArray(session.quiz_questions) &&
+			Number(session.current_question_index || 0) >= session.quiz_questions.length - 1;
+
+		setKanuunttText(
+			"kanuuntt-display-answer-count",
+			(lastQuestion ? "Final scoreboard" : "Næste spørgsmål") +
+				" om " +
+				(autoAdvanceRemaining ?? KANUUNTT_DISPLAY_SCOREBOARD_SECONDS) +
+				"s"
+		);
+	} else {
+		setKanuunttText("kanuuntt-display-answer-count", answerCount + " / " + playerCount + " har svaret");
+	}
 	setKanuunttHidden("kanuuntt-display-media", true);
 	renderKanuunttAnswerCards("kanuuntt-display-answers", session, question, {
 		showCorrect: revealResults,

@@ -203,6 +203,19 @@ function setQuizPhase(sessionId, hostToken, quizPhase) {
 	);
 }
 
+function setQuizAutoAdvance(sessionId, hostToken, enabled) {
+	return liveSessionRequest(
+		"/" + encodeURIComponent(sessionId) + "/quiz/auto-advance",
+		{
+			method: "POST",
+			headers: getLiveHostHeaders(hostToken),
+			body: JSON.stringify({
+				auto_advance_enabled: Boolean(enabled),
+			}),
+		}
+	);
+}
+
 function connectLiveSessionSocket(sessionId, handlers) {
 	const socket = new WebSocket(getLiveWebSocketUrl(sessionId));
 

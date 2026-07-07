@@ -4,28 +4,14 @@ let kanuunttBackendTimer = null;
 let kanuunttBackendHostToken = "";
 let kanuunttBackendAutomationTimer = null;
 let kanuunttBackendAutomationKey = "";
-const KANUUNTT_BACKEND_AUTO_KEY = "reveal-jeopardy-kanuuntt-auto-advance";
 const KANUUNTT_BACKEND_AUTO_CONFIG = {
-	questionIntroSeconds: 3,
 	resultSeconds: 6,
 	scoreboardSeconds: 6,
 	answerRevealSeconds: 1.6,
 };
 
 function getKanuunttBackendAutoAdvance() {
-	try {
-		return localStorage.getItem(KANUUNTT_BACKEND_AUTO_KEY) === "true";
-	} catch (error) {
-		return false;
-	}
-}
-
-function setKanuunttBackendAutoAdvance(enabled) {
-	try {
-		localStorage.setItem(KANUUNTT_BACKEND_AUTO_KEY, enabled ? "true" : "false");
-	} catch (error) {
-		console.warn("Could not save KanUUNTt backend auto setting.", error);
-	}
+	return Boolean(kanuunttBackendSession && kanuunttBackendSession.auto_advance_enabled);
 }
 
 function clearKanuunttBackendAutomationTimer() {
@@ -71,7 +57,7 @@ function getKanuunttBackendControlCopy(session, phase) {
 	if (phase === "question_open") {
 		return {
 			current: "Spørgsmålet er åbent.",
-			next: "Tryk Luk for svar for at stoppe timeren og låse deltagernes svar.",
+			next: "Svar lukker automatisk når timeren er færdig. Du kan også trykke Luk for svar.",
 		};
 	}
 
@@ -85,14 +71,16 @@ function getKanuunttBackendControlCopy(session, phase) {
 	if (phase === "answer_reveal") {
 		return {
 			current: "Det korrekte svar vises.",
-			next: "Tryk Scoreboard for stillingen, eller Næste spørgsmål for at holde pause før næste start.",
+			next: "Scoreboard vises automatisk om lidt.",
 		};
 	}
 
 	if (phase === "scoreboard") {
 		return {
 			current: "Scoreboard vises.",
-			next: "Tryk Næste spørgsmål. Spillet stopper på næste spørgsmål, indtil du trykker Start.",
+			next: getKanuunttBackendAutoAdvance()
+				? "Auto fortsæt går videre til næste spørgsmål eller final scoreboard."
+				: "Tryk Næste spørgsmål. Spillet stopper på næste spørgsmål, indtil du trykker Start.",
 		};
 	}
 
@@ -177,7 +165,7 @@ function renderKanuunttBackendQuestionList(session) {
 }
 
 function scheduleKanuunttBackendAutomation(phase, question, remainingSeconds) {
-	if (!getKanuunttBackendAutoAdvance() || !kanuunttBackendSession) {
+	if (!kanuunttBackendSession) {
 		clearKanuunttBackendAutomationTimer();
 		return;
 	}
@@ -196,35 +184,44 @@ function scheduleKanuunttBackendAutomation(phase, question, remainingSeconds) {
 	clearKanuunttBackendAutomationTimer();
 	kanuunttBackendAutomationKey = key;
 
-	if (phase === "question_intro") {
-		kanuunttBackendAutomationTimer = window.setTimeout(
-			() => runKanuunttBackendAction(startQuizQuestion),
-			KANUUNTT_BACKEND_AUTO_CONFIG.questionIntroSeconds * 1000
-		);
-	} else if (phase === "question_open" && remainingSeconds !== null) {
+	if (phase === "question_open" && remainingSeconds !== null) {
 		kanuunttBackendAutomationTimer = window.setTimeout(
 			() => runKanuunttBackendAction(closeQuizQuestion),
-			Math.max(remainingSeconds, 1) * 1000
+			Math.max(remainingSeconds, 0) * 1000
 		);
 	} else if (phase === "result_distribution") {
+		const resultRemaining = getKanuunttPhaseRemainingSeconds(
+			kanuunttBackendSession,
+			KANUUNTT_BACKEND_AUTO_CONFIG.resultSeconds
+		);
 		kanuunttBackendAutomationTimer = window.setTimeout(
 			() => runKanuunttBackendAction((sessionId, hostToken) =>
 				setQuizPhase(sessionId, hostToken, "answer_reveal")
 			),
-			KANUUNTT_BACKEND_AUTO_CONFIG.resultSeconds * 1000
+			Math.max(resultRemaining ?? KANUUNTT_BACKEND_AUTO_CONFIG.resultSeconds, 0) * 1000
 		);
 	} else if (phase === "answer_reveal") {
+		const answerRemaining = getKanuunttPhaseRemainingSeconds(
+			kanuunttBackendSession,
+			KANUUNTT_BACKEND_AUTO_CONFIG.answerRevealSeconds
+		);
 		kanuunttBackendAutomationTimer = window.setTimeout(
 			() => runKanuunttBackendAction((sessionId, hostToken) =>
 				setQuizPhase(sessionId, hostToken, "scoreboard")
 			),
-			KANUUNTT_BACKEND_AUTO_CONFIG.answerRevealSeconds * 1000
+			Math.max(answerRemaining ?? KANUUNTT_BACKEND_AUTO_CONFIG.answerRevealSeconds, 0) * 1000
 		);
 	} else if (phase === "scoreboard") {
-		kanuunttBackendAutomationTimer = window.setTimeout(
-			() => runKanuunttBackendAction(nextQuizQuestion),
-			KANUUNTT_BACKEND_AUTO_CONFIG.scoreboardSeconds * 1000
-		);
+		if (getKanuunttBackendAutoAdvance()) {
+			const scoreboardRemaining = getKanuunttPhaseRemainingSeconds(
+				kanuunttBackendSession,
+				KANUUNTT_BACKEND_AUTO_CONFIG.scoreboardSeconds
+			);
+			kanuunttBackendAutomationTimer = window.setTimeout(
+				() => runKanuunttBackendAction(nextQuizQuestion),
+				Math.max(scoreboardRemaining ?? KANUUNTT_BACKEND_AUTO_CONFIG.scoreboardSeconds, 0) * 1000
+			);
+		}
 	}
 }
 
@@ -288,9 +285,27 @@ function renderKanuunttBackend() {
 	const autoAdvance = document.getElementById("kanuuntt-auto-advance");
 	const hasSession = Boolean(session);
 	const controlCopy = getKanuunttBackendControlCopy(session, phase);
+	const autoAdvanceRemaining =
+		phase === "scoreboard" && getKanuunttBackendAutoAdvance()
+			? getKanuunttPhaseRemainingSeconds(session, KANUUNTT_BACKEND_AUTO_CONFIG.scoreboardSeconds)
+			: null;
 
 	setKanuunttText("kanuuntt-control-current-step", controlCopy.current);
-	setKanuunttText("kanuuntt-control-next-step", controlCopy.next);
+	if (autoAdvanceRemaining !== null) {
+		const lastQuestion =
+			hasSession &&
+			Array.isArray(session.quiz_questions) &&
+			Number(session.current_question_index || 0) >= session.quiz_questions.length - 1;
+		setKanuunttText(
+			"kanuuntt-control-next-step",
+			(lastQuestion ? "Final scoreboard" : "Næste spørgsmål") +
+				" om " +
+				autoAdvanceRemaining +
+				"s."
+		);
+	} else {
+		setKanuunttText("kanuuntt-control-next-step", controlCopy.next);
+	}
 
 	if (startButton) {
 		startButton.disabled =
@@ -331,6 +346,7 @@ function renderKanuunttBackend() {
 	}
 	if (autoAdvance) {
 		autoAdvance.checked = getKanuunttBackendAutoAdvance();
+		autoAdvance.disabled = !hasSession;
 	}
 
 	scheduleKanuunttBackendAutomation(phase, question, remainingSeconds);
@@ -422,9 +438,10 @@ function wireKanuunttBackendControls() {
 	}
 	const autoAdvance = document.getElementById("kanuuntt-auto-advance");
 	if (autoAdvance) {
-		autoAdvance.onchange = () => {
-			setKanuunttBackendAutoAdvance(autoAdvance.checked);
-			renderKanuunttBackend();
+		autoAdvance.onchange = async () => {
+			await runKanuunttBackendAction((sessionId, hostToken) =>
+				setQuizAutoAdvance(sessionId, hostToken, autoAdvance.checked)
+			);
 		};
 	}
 }

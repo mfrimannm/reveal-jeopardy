@@ -6,12 +6,10 @@ function isQuizLiveSession() {
 	return Boolean(liveSessionState && liveSessionState.mode === "quiz");
 }
 
-const QUIZ_AUTO_ADVANCE_STORAGE_KEY = "reveal-jeopardy-kanuuntt-auto-advance";
 const quizFlowConfig = {
-	questionIntroSeconds: 3,
 	resultSeconds: 6,
 	scoreboardSeconds: 6,
-	autoAdvance: true,
+	answerRevealSeconds: 1.6,
 };
 const quizAnswerStyles = [
 	{ symbol: "▲", className: "quiz-answer-a" },
@@ -24,26 +22,25 @@ let quizAutomationTimer = null;
 let quizAutomationKey = "";
 let quizAutoCloseKey = "";
 
-function loadHostQuizAutoAdvanceSetting() {
-	try {
-		const stored = localStorage.getItem(QUIZ_AUTO_ADVANCE_STORAGE_KEY);
-
-		if (stored !== null) {
-			quizFlowConfig.autoAdvance = stored === "true";
-		}
-	} catch (error) {
-		console.warn("Could not load KanUUNTt auto setting.", error);
-	}
+function getHostQuizAutoAdvance() {
+	return Boolean(liveSessionState && liveSessionState.auto_advance_enabled);
 }
 
-function toggleHostQuizAutoAdvance(enabled) {
-	quizFlowConfig.autoAdvance = Boolean(enabled);
+async function toggleHostQuizAutoAdvance(enabled) {
+	const sessionId = getLiveHostSessionId();
+
+	if (!sessionId) {
+		renderHostLiveSession();
+		return;
+	}
+
 	try {
-		localStorage.setItem(QUIZ_AUTO_ADVANCE_STORAGE_KEY, quizFlowConfig.autoAdvance ? "true" : "false");
+		setHostLiveSession(await setQuizAutoAdvance(sessionId, liveSessionHostToken, enabled));
+		renderHostLiveSession();
 	} catch (error) {
 		console.warn("Could not save KanUUNTt auto setting.", error);
+		setLiveSessionError(error.message || "Kunne ikke opdatere auto fortsæt.");
 	}
-	renderHostLiveSession();
 }
 
 function getStoredLiveSessionKey() {
@@ -443,7 +440,8 @@ function updateLiveSessionButtons() {
 			active && liveSessionState.buzzer_locked ? "Åbn buzzers" : "Lås buzzers";
 	}
 	if (quizAutoAdvance) {
-		quizAutoAdvance.checked = quizFlowConfig.autoAdvance;
+		quizAutoAdvance.checked = getHostQuizAutoAdvance();
+		quizAutoAdvance.disabled = !quizActive;
 	}
 }
 
@@ -679,6 +677,22 @@ function getQuizQuestionRemainingSeconds(question) {
 	return Math.max(0, Math.ceil(remaining));
 }
 
+function getQuizPhaseRemainingSeconds(durationSeconds) {
+	if (!liveSessionState || !liveSessionState.phase_started_at || !durationSeconds) {
+		return null;
+	}
+
+	const startedAt = Date.parse(liveSessionState.phase_started_at);
+
+	if (!Number.isFinite(startedAt)) {
+		return null;
+	}
+
+	const elapsedSeconds = (Date.now() - startedAt) / 1000;
+
+	return Math.max(0, Math.ceil(Number(durationSeconds) - elapsedSeconds));
+}
+
 function clearQuizCountdownTimer() {
 	if (quizCountdownTimer) {
 		clearInterval(quizCountdownTimer);
@@ -868,7 +882,7 @@ function renderQuizScoreboard(container, finalMode) {
 }
 
 function scheduleQuizAutomation(phase, question, remainingSeconds) {
-	if (!quizFlowConfig.autoAdvance || !isQuizLiveSession()) {
+	if (!isQuizLiveSession()) {
 		clearQuizAutomationTimer();
 		return;
 	}
@@ -890,19 +904,31 @@ function scheduleQuizAutomation(phase, question, remainingSeconds) {
 	clearQuizAutomationTimer();
 	quizAutomationKey = key;
 
-	if (phase === "question_intro") {
-		quizAutomationTimer = setTimeout(startHostQuizQuestion, quizFlowConfig.questionIntroSeconds * 1000);
-	} else if (phase === "result_distribution") {
-		quizAutomationTimer = setTimeout(() => setHostQuizPhase("answer_reveal"), quizFlowConfig.resultSeconds * 1000);
+	if (phase === "result_distribution") {
+		const resultRemaining = getQuizPhaseRemainingSeconds(quizFlowConfig.resultSeconds);
+		quizAutomationTimer = setTimeout(
+			() => setHostQuizPhase("answer_reveal"),
+			Math.max(resultRemaining ?? quizFlowConfig.resultSeconds, 0) * 1000
+		);
 	} else if (phase === "answer_reveal") {
-		quizAutomationTimer = setTimeout(() => setHostQuizPhase("scoreboard"), 1600);
+		const answerRemaining = getQuizPhaseRemainingSeconds(quizFlowConfig.answerRevealSeconds);
+		quizAutomationTimer = setTimeout(
+			() => setHostQuizPhase("scoreboard"),
+			Math.max(answerRemaining ?? quizFlowConfig.answerRevealSeconds, 0) * 1000
+		);
 	} else if (phase === "scoreboard") {
-		quizAutomationTimer = setTimeout(nextHostQuizQuestion, quizFlowConfig.scoreboardSeconds * 1000);
+		if (getHostQuizAutoAdvance()) {
+			const scoreboardRemaining = getQuizPhaseRemainingSeconds(quizFlowConfig.scoreboardSeconds);
+			quizAutomationTimer = setTimeout(
+				nextHostQuizQuestion,
+				Math.max(scoreboardRemaining ?? quizFlowConfig.scoreboardSeconds, 0) * 1000
+			);
+		}
 	} else if (phase === "question_open" && remainingSeconds !== null) {
 		const closeKey = key + ":close";
 		if (quizAutoCloseKey !== closeKey) {
 			quizAutoCloseKey = closeKey;
-			quizAutomationTimer = setTimeout(closeHostQuizQuestion, Math.max(remainingSeconds, 1) * 1000);
+			quizAutomationTimer = setTimeout(closeHostQuizQuestion, Math.max(remainingSeconds, 0) * 1000);
 		}
 	}
 }
@@ -961,14 +987,27 @@ function updateQuizPanel() {
 	if (metaElement) {
 		const questionIndex = Number(liveSessionState.current_question_index || 0) + 1;
 		const questionTotal = (liveSessionState.quiz_questions || []).length;
-		metaElement.textContent =
-			"Spørgsmål " +
-			questionIndex +
-			" / " +
-			questionTotal +
-			" - " +
-			(liveSessionState.players || []).length +
-			" deltagere";
+		const autoAdvanceRemaining =
+			phase === "scoreboard" && getHostQuizAutoAdvance()
+				? getQuizPhaseRemainingSeconds(quizFlowConfig.scoreboardSeconds)
+				: null;
+
+		if (autoAdvanceRemaining !== null) {
+			metaElement.textContent =
+				(questionIndex >= questionTotal ? "Final scoreboard" : "Næste spørgsmål") +
+				" om " +
+				autoAdvanceRemaining +
+				"s";
+		} else {
+			metaElement.textContent =
+				"Spørgsmål " +
+				questionIndex +
+				" / " +
+				questionTotal +
+				" - " +
+				(liveSessionState.players || []).length +
+				" deltagere";
+		}
 	}
 
 	if (mediaElement) {
@@ -1125,7 +1164,6 @@ async function restoreHostLiveSession() {
 }
 
 async function initializeHostControls() {
-	loadHostQuizAutoAdvanceSetting();
 	await restoreHostLiveSession();
 	renderHostLiveSession();
 }

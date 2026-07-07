@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import io
 import json
+import math
 import mimetypes
 import os
 import re
@@ -273,13 +274,26 @@ def parse_iso_datetime(value: Any) -> datetime | None:
 
 def is_quiz_question_expired(session: dict[str, Any], question: dict[str, Any]) -> bool:
     started_at = parse_iso_datetime(session.get("question_started_at"))
+    time_limit_seconds = int(question.get("timeLimitSeconds") or 0)
 
-    if not started_at:
+    if not started_at or time_limit_seconds <= 0:
         return False
 
     elapsed_seconds = (datetime.now(timezone.utc) - started_at).total_seconds()
 
-    return elapsed_seconds >= int(question.get("timeLimitSeconds") or 0)
+    return elapsed_seconds >= time_limit_seconds
+
+
+def get_quiz_remaining_seconds(session: dict[str, Any], question: dict[str, Any]) -> int | None:
+    started_at = parse_iso_datetime(session.get("question_started_at"))
+    time_limit_seconds = int(question.get("timeLimitSeconds") or 0)
+
+    if not started_at or time_limit_seconds <= 0:
+        return None
+
+    elapsed_seconds = (datetime.now(timezone.utc) - started_at).total_seconds()
+
+    return max(0, math.ceil(time_limit_seconds - elapsed_seconds))
 
 
 def copy_session(session: dict[str, Any]) -> dict[str, Any]:
@@ -536,6 +550,7 @@ def create_quiz_session_state(questions: list[dict[str, Any]]) -> dict[str, Any]
         "question_started_at": None,
         "quiz_phase": "waiting",
         "phase_started_at": now_iso(),
+        "auto_advance_enabled": False,
     }
 
 
@@ -561,10 +576,20 @@ def count_current_quiz_answers(session: dict[str, Any]) -> int:
     return sum(1 for answer in answers if answer.get("question_index") == question_index)
 
 
-def score_quiz_answer(question: dict[str, Any], answer_id: str) -> int:
+def score_quiz_answer(session: dict[str, Any], question: dict[str, Any], answer_id: str) -> int:
     for answer in question["answers"]:
         if answer["id"] == answer_id:
-            return int(question["points"]) if answer.get("correct") else 0
+            if not answer.get("correct"):
+                return 0
+
+            points = int(question["points"])
+            time_limit_seconds = int(question.get("timeLimitSeconds") or 0)
+            remaining_seconds = get_quiz_remaining_seconds(session, question)
+
+            if time_limit_seconds <= 0 or remaining_seconds is None:
+                return points
+
+            return max(0, min(points, math.ceil(points * remaining_seconds / time_limit_seconds)))
 
     raise HTTPException(status_code=400, detail="Unknown answer")
 
@@ -944,7 +969,7 @@ async def submit_quiz_answer(session_id: str, request: Request) -> dict[str, Any
             if existing_answer:
                 quiz_answer = existing_answer
             else:
-                earned_points = score_quiz_answer(question, answer_id)
+                earned_points = score_quiz_answer(session, question, answer_id)
                 quiz_answer = {
                     "question_index": question_index,
                     "player_id": player_id,
@@ -1104,6 +1129,28 @@ async def set_quiz_phase(
         if quiz_phase != "question_open":
             session["question_open"] = False
         session["answer_count"] = count_current_quiz_answers(session)
+        session["updated_at"] = timestamp
+        session_snapshot = copy_public_session(session)
+
+    await broadcast_session_state(session_snapshot["session_id"], session_snapshot)
+    return session_snapshot
+
+
+@app.post("/api/sessions/{session_id}/quiz/auto-advance")
+async def set_quiz_auto_advance(
+    session_id: str,
+    request: Request,
+    reveal_jeopardy_admin: str | None = Cookie(default=None),
+    live_host_token: str | None = Header(default=None, alias=LIVE_HOST_TOKEN_HEADER),
+) -> dict[str, Any]:
+    body = await read_json_body(request)
+
+    async with live_session_lock:
+        session = get_live_session(session_id)
+        require_live_host(session, reveal_jeopardy_admin, live_host_token)
+        require_quiz_session(session)
+        timestamp = now_iso()
+        session["auto_advance_enabled"] = bool(body.get("auto_advance_enabled"))
         session["updated_at"] = timestamp
         session_snapshot = copy_public_session(session)
 
