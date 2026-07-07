@@ -85,112 +85,6 @@ function createManagedUploadPreview(upload) {
 	return preview;
 }
 
-function getActiveBuilderTarget() {
-	const active = document.activeElement;
-	const id = active && active.id ? active.id : "";
-
-	if (id.includes("answer")) {
-		return "answer";
-	}
-
-	return "question";
-}
-
-function insertManagedUploadInJeopardy(upload) {
-	const target = getActiveBuilderTarget();
-	const field = document.getElementById("builder-" + target + "-text");
-	const type = getManagedUploadType(upload);
-
-	if (!field || typeof appendTextToField !== "function") {
-		setUploadManagerStatus("Åbn en Jeopardy-editor først.");
-		return false;
-	}
-
-	if (type === "image") {
-		appendTextToField(field, "![" + upload.filename.replace(/]/g, "\\]") + "](" + upload.url + ")");
-	} else if (type === "video" || type === "audio") {
-		appendTextToField(
-			field,
-			createBuilderMediaSnippet(type, {
-				src: upload.url,
-				start: type === "video" ? 0 : undefined,
-				autoplay: false,
-				loop: false,
-				controls: true,
-				muted: false,
-			})
-		);
-	} else {
-		appendTextToField(field, upload.url);
-	}
-
-	if (typeof handleBuilderFormInput === "function") {
-		handleBuilderFormInput();
-	}
-
-	setUploadManagerStatus("Link indsat i Jeopardy-" + (target === "answer" ? "svaret." : "spørgsmålet."));
-	return true;
-}
-
-function insertManagedUploadInKanuuntt(upload) {
-	const type = getManagedUploadType(upload);
-	const editor = document.getElementById("kanuuntt-maker-editor");
-	const prompt = editor && editor.querySelector("[data-kanuuntt-prompt]");
-
-	if (!prompt || typeof appendTextToField !== "function") {
-		setUploadManagerStatus("Åbn KanUUNTt maker først.");
-		return false;
-	}
-
-	if (type === "image") {
-		appendTextToField(prompt, "![" + upload.filename.replace(/]/g, "\\]") + "](" + upload.url + ")");
-	} else if (type === "video" || type === "audio") {
-		appendTextToField(
-			prompt,
-			createKanuunttMakerMediaSnippet(type, {
-				src: upload.url,
-				start: type === "video" ? 0 : undefined,
-				autoplay: false,
-				loop: false,
-				controls: true,
-				muted: false,
-			})
-		);
-	} else {
-		appendTextToField(prompt, upload.url);
-	}
-
-	if (typeof handleKanuunttMakerInput === "function") {
-		handleKanuunttMakerInput();
-	}
-
-	setUploadManagerStatus("Link indsat i KanUUNTt-spørgsmålet.");
-	return true;
-}
-
-function useManagedUpload(filename) {
-	const upload = (window.managedUploads || []).find((item) => item.filename === filename);
-	const questionMaker = document.getElementById("question-maker");
-	const kanuunttMaker = document.getElementById("kanuuntt-maker");
-
-	if (!upload) {
-		setUploadManagerStatus("Filen findes ikke i listen.");
-		return;
-	}
-
-	if (kanuunttMaker && !kanuunttMaker.hidden) {
-		insertManagedUploadInKanuuntt(upload);
-		return;
-	}
-
-	if (questionMaker && !questionMaker.hidden) {
-		insertManagedUploadInJeopardy(upload);
-		return;
-	}
-
-	copyManagedUploadLink(filename);
-}
-
 async function copyManagedUploadLink(filename) {
 	const upload = (window.managedUploads || []).find((item) => item.filename === filename);
 
@@ -235,7 +129,6 @@ function renderUploadManager(uploads) {
 		const actionCell = document.createElement("td");
 		const link = document.createElement("code");
 		const actions = document.createElement("div");
-		const useButton = document.createElement("button");
 		const copyButton = document.createElement("button");
 		const deleteButton = document.createElement("button");
 
@@ -243,10 +136,6 @@ function renderUploadManager(uploads) {
 		link.textContent = upload.url;
 		linkCell.appendChild(link);
 		actions.className = "upload-manager-actions";
-		useButton.className = "game-button secondary";
-		useButton.type = "button";
-		useButton.textContent = "Brug link";
-		useButton.onclick = () => useManagedUpload(upload.filename);
 		copyButton.className = "game-button secondary";
 		copyButton.type = "button";
 		copyButton.textContent = "Kopier";
@@ -256,7 +145,6 @@ function renderUploadManager(uploads) {
 		deleteButton.textContent = "Slet";
 		deleteButton.disabled = !isAdmin();
 		deleteButton.onclick = () => deleteManagedUpload(upload.filename);
-		actions.appendChild(useButton);
 		actions.appendChild(copyButton);
 		actions.appendChild(deleteButton);
 		actionCell.appendChild(actions);
@@ -410,6 +298,10 @@ function updateAdminControls() {
 	const loginButton = document.getElementById("admin-login-button");
 	const logoutButton = document.getElementById("admin-logout-button");
 	const saveButton = document.getElementById("builder-save-game-button");
+	const uploadStatus = document.getElementById("upload-manager-admin-status");
+	const uploadPassword = document.getElementById("upload-manager-admin-password");
+	const uploadLoginButton = document.getElementById("upload-manager-admin-login-button");
+	const uploadLogoutButton = document.getElementById("upload-manager-admin-logout-button");
 
 	if (status) {
 		status.textContent = isAdmin()
@@ -434,6 +326,25 @@ function updateAdminControls() {
 		saveButton.disabled = !isAdmin();
 	}
 
+	if (uploadStatus) {
+		uploadStatus.textContent = isAdmin()
+			? "Logget ind som admin. Du kan uploade og slette filer."
+			: "Log ind som admin for at uploade og slette filer.";
+	}
+
+	if (uploadPassword) {
+		uploadPassword.hidden = isAdmin();
+		uploadPassword.disabled = isAdmin();
+	}
+
+	if (uploadLoginButton) {
+		uploadLoginButton.hidden = isAdmin();
+	}
+
+	if (uploadLogoutButton) {
+		uploadLogoutButton.hidden = !isAdmin();
+	}
+
 	document.querySelectorAll(".upload-manager-admin-control").forEach((uploadButton) => {
 		uploadButton.disabled = !isAdmin();
 	});
@@ -449,8 +360,8 @@ function updateAdminControls() {
 	}
 }
 
-async function loginAdmin() {
-	const password = document.getElementById("admin-password");
+async function loginAdminFromField(fieldId, onSuccess, onFailure) {
+	const password = document.getElementById(fieldId);
 
 	try {
 		await fetchJson("/api/login", {
@@ -462,11 +373,27 @@ async function loginAdmin() {
 			password.value = "";
 		}
 		await refreshAdminState();
-		setBuilderStatus("Admin login OK.");
+		onSuccess();
 	} catch (error) {
 		console.warn("Could not log in.", error);
-		setBuilderStatus("Admin login fejlede.");
+		onFailure();
 	}
+}
+
+async function loginAdmin() {
+	await loginAdminFromField(
+		"admin-password",
+		() => setBuilderStatus("Admin login OK."),
+		() => setBuilderStatus("Admin login fejlede.")
+	);
+}
+
+async function loginUploadManagerAdmin() {
+	await loginAdminFromField(
+		"upload-manager-admin-password",
+		() => setUploadManagerStatus("Admin login OK."),
+		() => setUploadManagerStatus("Admin login fejlede.")
+	);
 }
 
 async function logoutAdmin() {
@@ -478,4 +405,5 @@ async function logoutAdmin() {
 
 	await refreshAdminState();
 	setBuilderStatus("Logget ud.");
+	setUploadManagerStatus("Logget ud.");
 }

@@ -72,6 +72,19 @@
 							<div class="mode-divider"></div>
 							<div class="upload-manager" id="upload-manager">
 								<h2>Uploadede filer</h2>
+								<div class="admin-panel">
+									<div>
+										<label for="upload-manager-admin-password">Admin kode kræves for upload og sletning</label>
+										<input id="upload-manager-admin-password" type="password" autocomplete="current-password" />
+									</div>
+									<button class="game-button secondary" id="upload-manager-admin-login-button" type="button" onclick="loginUploadManagerAdmin()">
+										Log ind
+									</button>
+									<button class="game-button reset" id="upload-manager-admin-logout-button" type="button" onclick="logoutAdmin()" hidden>
+										Log ud
+									</button>
+								</div>
+								<div class="admin-status" id="upload-manager-admin-status"></div>
 								<div class="upload-manager-controls">
 									<div>
 										<label for="upload-manager-file">Upload ny fil</label>

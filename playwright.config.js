@@ -13,7 +13,8 @@ const LOCAL_PYTHON =
 		? path.join(ROOT_DIR, ".venv", "Scripts", "python.exe")
 		: path.join(ROOT_DIR, ".venv", "bin", "python");
 
-const PYTHON = process.env.PYTHON || (fs.existsSync(LOCAL_PYTHON) ? LOCAL_PYTHON : "python");
+const SYSTEM_PYTHON = process.platform === "win32" ? "python" : "python3";
+const PYTHON = process.env.PYTHON || (fs.existsSync(LOCAL_PYTHON) ? LOCAL_PYTHON : SYSTEM_PYTHON);
 
 const NODE = process.execPath;
 const START_UI_SERVER = path.join(ROOT_DIR, "tests", "ui", "start-ui-server.mjs");

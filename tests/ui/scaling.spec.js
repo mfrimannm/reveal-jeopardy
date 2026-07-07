@@ -247,17 +247,18 @@ test("question maker stays usable on laptop viewport", async ({ page }) => {
 	await page.setViewportSize({ width: 1280, height: 720 });
 	await openGame(page, "home");
 
-	await page.getByRole("button", { name: "Question maker" }).click();
+	await expect(page.locator("#upload-manager")).toBeVisible();
+	await page.getByRole("button", { name: "Byg Jeopardy" }).click();
 	await expect(page.locator("#question-maker")).toBeVisible();
 	await page.locator("#builder-title").fill("UI Test Draft");
 	await page.locator("#builder-id").fill("ui-test-draft");
 	await page.getByRole("button", { name: "Lav board" }).click();
 	await expect(page.locator("#builder-question-type")).toHaveCount(0);
 	await expect(page.locator("#builder-answer-type")).toHaveCount(0);
-	await expect(page.locator("#builder-image-upload")).toBeVisible();
-	await expect(page.locator("#builder-answer-image-upload")).toBeVisible();
-	await expect(page.locator("#builder-question-video-upload")).toBeVisible();
-	await expect(page.locator("#builder-answer-video-upload")).toBeVisible();
+	await expect(page.locator("#builder-image-upload")).toHaveCount(0);
+	await expect(page.locator("#builder-answer-image-upload")).toHaveCount(0);
+	await expect(page.locator("#builder-question-video-upload")).toHaveCount(0);
+	await expect(page.locator("#builder-answer-video-upload")).toHaveCount(0);
 	await expect(page.locator("#builder-video-upload")).toHaveCount(0);
 	await expect(page.locator(".builder-media-settings")).toHaveCount(0);
 	await expect(page.locator(".builder-media-note")).toContainText("src, start, autoplay, loop, controls og muted");
