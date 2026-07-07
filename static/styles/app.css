@@ -1677,4 +1677,49 @@ body,
 	.kanuuntt-backend {
 		padding: 16px;
 	}
+
+	.quiz-session-panel {
+		width: min(100%, calc(100vw - 48px));
+	}
+}
+
+@media (max-width: 600px) {
+	.kanuuntt-display {
+		gap: 8px;
+		padding: 16px;
+	}
+
+	.kanuuntt-display .kanuuntt-display-header,
+	.kanuuntt-display .kanuuntt-question-top {
+		gap: 8px;
+	}
+
+	.kanuuntt-display .kanuuntt-question-view {
+		gap: 8px;
+	}
+
+	.kanuuntt-display .kanuuntt-question-view h2 {
+		font-size: clamp(1.35rem, 7vw, 1.9rem);
+		line-height: 1.08;
+	}
+
+	.kanuuntt-display .kanuuntt-answer-grid {
+		gap: 8px;
+	}
+
+	.kanuuntt-display .kanuuntt-answer-grid .quiz-answer-card {
+		min-height: 58px;
+		padding: 8px 10px;
+	}
+
+	.kanuuntt-display .kanuuntt-answer-grid .quiz-answer-symbol {
+		font-size: 0.95rem;
+		height: 40px;
+		width: 40px;
+	}
+
+	.kanuuntt-display .kanuuntt-answer-grid .quiz-answer-text {
+		font-size: clamp(0.78rem, 3.7vw, 0.95rem);
+		line-height: 1.1;
+	}
 }
