@@ -19,7 +19,7 @@ dist/reveal.es5.js
 react/dist
 react/demo/dist
 dev.html
-data/uploads/*
+data/*
 !data/uploads/.gitkeep
 .TODO
 AGENTS.override.md
