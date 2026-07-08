@@ -372,11 +372,12 @@ function renderKanuunttDisplay() {
 	const question = getKanuunttQuestion(session);
 	const questionKey = getKanuunttDisplayQuestionKey(session);
 	const revealResults = ["result_distribution", "answer_reveal", "scoreboard", "final_scoreboard"].includes(phase);
-	const showScoreboard = ["scoreboard", "final_scoreboard"].includes(phase);
+	const showScoreboard = ["answer_reveal", "scoreboard", "final_scoreboard"].includes(phase);
 	const finalScoreboard = phase === "final_scoreboard";
 	const playerCount = session && Array.isArray(session.players) ? session.players.length : 0;
 	const answerCount = session ? Number(session.answer_count || 0) : 0;
 	const joinUrl = getKanuunttJoinUrl(sessionId);
+	const questionView = document.getElementById("kanuuntt-display-question");
 
 	setKanuunttText("kanuuntt-display-title", session ? "Live quiz: " + session.game_id : "Live quiz");
 	setKanuunttText("kanuuntt-display-stage", getKanuunttPhaseLabel(phase));
@@ -391,6 +392,9 @@ function renderKanuunttDisplay() {
 	setKanuunttHidden("kanuuntt-display-question", phase === "waiting" || finalScoreboard);
 	setKanuunttHidden("kanuuntt-display-final", !finalScoreboard);
 	setKanuunttHidden("kanuuntt-display-corner-join", phase === "waiting");
+	if (questionView) {
+		questionView.classList.toggle("is-results-visible", revealResults);
+	}
 
 	if (!session || session.mode !== "quiz") {
 		scheduleKanuunttDisplayFit();

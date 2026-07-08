@@ -817,9 +817,10 @@ body,
 
 .kanuuntt-display-status {
 	align-items: flex-end;
-	display: grid;
+	display: flex;
+	flex-wrap: wrap;
 	gap: 10px;
-	justify-items: end;
+	justify-content: flex-end;
 }
 
 .kanuuntt-kicker,
@@ -833,20 +834,24 @@ body,
 
 .kanuuntt-display h1,
 .kanuuntt-backend h1 {
-	font-size: clamp(1.8rem, 4vw, 4.7rem);
+	font-size: clamp(1.6rem, 3vw, 3.7rem);
 	line-height: 1;
-	margin: 6px 0 0;
+	margin: 4px 0 0;
 	overflow-wrap: anywhere;
+}
+
+.kanuuntt-display h1 {
+	max-width: min(68vw, 1280px);
 }
 
 .kanuuntt-stage-pill {
 	background: rgba(255, 255, 255, 0.1);
 	border: 2px solid rgba(255, 255, 255, 0.4);
 	border-radius: 8px;
-	font-size: clamp(0.85rem, 2vw, 1.6rem);
+	font-size: clamp(0.8rem, 1.55vw, 1.35rem);
 	font-weight: 900;
 	overflow-wrap: anywhere;
-	padding: clamp(8px, 1.3vw, 12px) clamp(10px, 1.6vw, 16px);
+	padding: clamp(7px, 1vw, 10px) clamp(9px, 1.2vw, 14px);
 	text-transform: uppercase;
 }
 
@@ -868,7 +873,7 @@ body,
 
 .kanuuntt-corner-code {
 	color: var(--jeopardy-gold);
-	font-size: clamp(1.4rem, 3vw, 2.4rem);
+	font-size: clamp(1.2rem, 2.4vw, 2rem);
 	font-weight: 900;
 	line-height: 0.95;
 }
@@ -876,7 +881,7 @@ body,
 .kanuuntt-corner-link {
 	color: #ffffff;
 	display: block;
-	font-size: clamp(0.68rem, 1.1vw, 0.9rem);
+	font-size: clamp(0.62rem, 0.9vw, 0.8rem);
 	font-weight: 800;
 	line-height: 1.18;
 	max-width: min(32vw, 360px);
@@ -968,11 +973,91 @@ body,
 }
 
 .kanuuntt-question-view {
+	align-content: start;
 	display: grid;
 	gap: clamp(10px, 1.35vh, 20px);
-	grid-template-rows: auto auto minmax(0, auto) auto minmax(0, 1fr) auto auto;
+	grid-template-areas:
+		"top"
+		"prompt"
+		"media"
+		"answers"
+		"countdown"
+		"result"
+		"scoreboard";
+	grid-template-rows:
+		auto
+		minmax(min-content, max-content)
+		minmax(0, 1fr)
+		auto
+		auto
+		minmax(0, max-content)
+		minmax(0, 0.45fr);
 	min-height: 0;
-	overflow: hidden;
+	overflow: visible;
+}
+
+.kanuuntt-question-view.is-results-visible {
+	gap: clamp(8px, 1vh, 14px);
+	grid-template-areas:
+		"top top"
+		"prompt result"
+		"prompt scoreboard"
+		"answers answers"
+		"countdown countdown";
+	grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.65fr);
+	grid-template-rows:
+		auto
+		minmax(0, 0.45fr)
+		minmax(0, 1fr)
+		auto
+		auto;
+}
+
+.kanuuntt-question-view > .kanuuntt-question-top {
+	align-items: start;
+	display: grid;
+	grid-area: top;
+	gap: clamp(6px, 0.8vw, 10px) clamp(12px, 1.5vw, 20px);
+	grid-template-areas: "meta answers";
+	grid-template-columns: minmax(0, 1fr) auto;
+	justify-content: stretch;
+}
+
+.kanuuntt-question-view > .kanuuntt-question-top .kanuuntt-question-count {
+	grid-area: meta;
+}
+
+.kanuuntt-question-view > .kanuuntt-question-top .kanuuntt-timer {
+	grid-area: timer;
+}
+
+.kanuuntt-question-view > .kanuuntt-question-top .kanuuntt-answer-count {
+	grid-area: answers;
+	justify-self: end;
+}
+
+.kanuuntt-question-view > #kanuuntt-display-prompt {
+	grid-area: prompt;
+}
+
+.kanuuntt-question-view > #kanuuntt-display-media {
+	grid-area: media;
+}
+
+.kanuuntt-question-view > #kanuuntt-display-countdown-bar {
+	grid-area: countdown;
+}
+
+.kanuuntt-question-view > #kanuuntt-display-answers {
+	grid-area: answers;
+}
+
+.kanuuntt-question-view > #kanuuntt-display-result {
+	grid-area: result;
+}
+
+.kanuuntt-question-view > #kanuuntt-display-scoreboard {
+	grid-area: scoreboard;
 }
 
 .kanuuntt-question-view[hidden] {
@@ -991,7 +1076,7 @@ body,
 }
 
 .kanuuntt-question-view h2 {
-	align-content: center;
+	align-content: start;
 	display: grid;
 	font-size: clamp(1.7rem, 4.4vw, 5.2rem);
 	gap: clamp(8px, 1.2vh, 18px);
@@ -999,7 +1084,19 @@ body,
 	line-height: 1.03;
 	margin: 0;
 	min-height: 0;
+	overflow: visible;
 	text-align: center;
+}
+
+.kanuuntt-display .kanuuntt-question-view h2 {
+	font-size: clamp(1.28rem, 2.2vw, 2.85rem);
+	line-height: 1.08;
+	max-height: none;
+}
+
+.kanuuntt-display .kanuuntt-question-view.is-results-visible h2 {
+	font-size: clamp(1.15rem, 1.75vw, 2.25rem);
+	max-height: none;
 }
 
 .kanuuntt-question-count,
@@ -1016,6 +1113,10 @@ body,
 	min-width: 90px;
 	padding: 12px 16px;
 	text-align: center;
+}
+
+.kanuuntt-display .kanuuntt-timer {
+	display: none;
 }
 
 .kanuuntt-media {
@@ -1035,6 +1136,14 @@ body,
 
 .kanuuntt-media[hidden] {
 	display: none;
+}
+
+.kanuuntt-display .kanuuntt-media {
+	max-height: none;
+}
+
+.kanuuntt-display .kanuuntt-question-view.is-results-visible .kanuuntt-media {
+	max-height: min(10vh, 110px);
 }
 
 .kanuuntt-countdown-bar {
@@ -1062,28 +1171,61 @@ body,
 	display: grid;
 	gap: clamp(10px, 1.4vw, 16px);
 	grid-template-columns: repeat(2, minmax(0, 1fr));
-	min-height: 0;
+	max-height: min(36vh, 520px);
+	overflow: hidden;
+}
+
+.kanuuntt-answer-grid .quiz-answer-text img {
+	max-width: 100%;
+	max-height: min(10vh, 240px);
+	object-fit: contain;
 }
 
 .kanuuntt-answer-grid .quiz-answer-card {
-	align-items: start;
+	align-content: center;
+	align-items: center;
+	grid-template-areas:
+		"symbol text"
+		"symbol result";
 	min-height: clamp(74px, 9vh, 126px);
 	padding: clamp(10px, 1.25vw, 18px);
 }
 
+.kanuuntt-answer-grid .quiz-answer-card {
+	display: grid;
+	grid-template-columns: minmax(4rem, 7rem) minmax(0, 1fr) minmax(4rem, 7rem);
+	grid-template-areas: "symbol text result";
+	align-items: center;
+}
+
+.kanuuntt-display .kanuuntt-question-view.is-results-visible .kanuuntt-answer-grid {
+	gap: clamp(8px, 1vw, 12px);
+}
+
+.kanuuntt-display .kanuuntt-question-view.is-results-visible .quiz-answer-card {
+	min-height: clamp(64px, 7vh, 88px);
+	padding: clamp(8px, 1vw, 12px);
+}
+
 .kanuuntt-answer-grid .quiz-answer-symbol {
 	font-size: clamp(1.05rem, 1.55vw, 1.7rem);
+	grid-area: symbol;
 	height: clamp(44px, 4.6vw, 64px);
 	width: clamp(44px, 4.6vw, 64px);
 }
 
 .kanuuntt-answer-grid .quiz-answer-text {
 	font-size: clamp(0.9rem, 1.45vw, 1.65rem);
+	grid-area: text;
 	line-height: 1.08;
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 
 .kanuuntt-answer-grid .quiz-answer-result {
 	font-size: clamp(0.9rem, 1.25vw, 1.4rem);
+	grid-area: result;
+	grid-column: auto;
 }
 
 .kanuuntt-answer-grid.compact {
@@ -1197,7 +1339,22 @@ body,
 .kanuuntt-display .kanuuntt-scoreboard {
 	gap: clamp(8px, 1vh, 12px);
 	margin-top: 0;
+	min-height: 0;
+	overflow: auto;
 	padding: clamp(12px, 1.5vw, 18px);
+}
+
+.kanuuntt-display .kanuuntt-question-view.is-results-visible .kanuuntt-result-details,
+.kanuuntt-display .kanuuntt-question-view.is-results-visible .kanuuntt-scoreboard {
+	padding: clamp(8px, 1vw, 12px);
+}
+
+.kanuuntt-display .kanuuntt-question-view.is-results-visible .kanuuntt-result-details {
+	max-height: min(11vh, 96px);
+}
+
+.kanuuntt-display .kanuuntt-question-view.is-results-visible .kanuuntt-scoreboard {
+	max-height: min(20vh, 176px);
 }
 
 .kanuuntt-display .kanuuntt-final-scoreboard {
@@ -1676,6 +1833,26 @@ body,
 	.kanuuntt-display,
 	.kanuuntt-backend {
 		padding: 16px;
+	}
+
+	.kanuuntt-display .kanuuntt-question-view.is-results-visible {
+		grid-template-areas:
+			"top"
+			"prompt"
+			"media"
+			"answers"
+			"result"
+			"scoreboard"
+			"countdown";
+		grid-template-columns: 1fr;
+		grid-template-rows:
+			auto
+			minmax(min-content, max-content)
+			minmax(0, 0.2fr)
+			auto
+			minmax(0, auto)
+			minmax(0, 0.45fr)
+			auto;
 	}
 
 	.quiz-session-panel {

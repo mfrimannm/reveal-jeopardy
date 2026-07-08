@@ -9,6 +9,43 @@
       "problemMatcher": []
     },
     {
+      "label": "Serve: Reveal Jeopardy",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "-m",
+        "uvicorn",
+        "server:app",
+        "--reload",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "${input:serverPort}"
+      ],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "uvicorn",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Will watch for changes",
+          "endsPattern": "Application startup complete"
+        }
+      }
+    },
+    {
+      "label": "Serve: Stop Reveal Jeopardy Servers",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "pkill -f 'uvicorn server:app' || true"
+      ],
+      "problemMatcher": []
+    },
+    {
       "label": "GitHub: Create release",
       "type": "shell",
       "command": "gh",
@@ -25,6 +62,12 @@
     }
   ],
   "inputs": [
+    {
+      "id": "serverPort",
+      "type": "promptString",
+      "description": "Local server port",
+      "default": "8010"
+    },
     {
       "id": "releaseTag",
       "type": "promptString",
