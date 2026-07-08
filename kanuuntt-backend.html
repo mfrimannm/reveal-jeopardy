@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="da">
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+		/>
+		<meta name="theme-color" content="#121212" />
+		<title>KanUUNTt Backend</title>
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="/static/styles/app.css" />
+	</head>
+	<body class="kanuuntt-screen kanuuntt-backend-screen">
+		<main class="kanuuntt-backend">
+			<header class="kanuuntt-backend-header">
+				<div>
+					<div class="kanuuntt-kicker">KanUUNTt backend</div>
+					<h1 id="kanuuntt-backend-title">Live quiz</h1>
+				</div>
+				<div class="kanuuntt-stage-pill" id="kanuuntt-backend-stage">Waiting room</div>
+			</header>
+
+			<section class="kanuuntt-backend-grid">
+				<div class="kanuuntt-control-panel">
+					<h2>Session</h2>
+					<div class="kanuuntt-session-row">
+						<div>
+							<div class="kanuuntt-session-label">Kode</div>
+							<div class="kanuuntt-session-code small" id="kanuuntt-backend-session-id">-</div>
+						</div>
+						<div class="kanuuntt-qr compact" id="kanuuntt-backend-qr"></div>
+					</div>
+					<a class="kanuuntt-join-link" id="kanuuntt-backend-join-link" href="#">-</a>
+					<div class="kanuuntt-link-actions">
+						<a class="game-button secondary" id="kanuuntt-open-display" href="#" target="_blank" rel="noreferrer">Åben display</a>
+						<a class="game-button secondary" id="kanuuntt-open-mobile" href="#" target="_blank" rel="noreferrer">Åben mobil</a>
+					</div>
+
+					<h2>Kontrol</h2>
+					<div class="kanuuntt-control-help">
+						<strong id="kanuuntt-control-current-step">Klar til at starte.</strong>
+						<span id="kanuuntt-control-next-step">Start quizzen, luk for svar, vis resultat/scoreboard og gå derefter til næste spørgsmål.</span>
+					</div>
+					<label class="kanuuntt-toggle-row" for="kanuuntt-auto-advance">
+						<input id="kanuuntt-auto-advance" type="checkbox" />
+						<span>Auto fortsæt fra scoreboard</span>
+					</label>
+					<div class="kanuuntt-control-actions">
+						<button class="game-button primary" id="kanuuntt-start-question" type="button">Start spørgsmål</button>
+						<button class="game-button secondary" id="kanuuntt-close-question" type="button">Luk for svar</button>
+						<button class="game-button secondary" id="kanuuntt-show-results" type="button">Vis resultat</button>
+						<button class="game-button secondary" id="kanuuntt-show-scoreboard" type="button">Scoreboard</button>
+						<button class="game-button primary" id="kanuuntt-next-question" type="button">Næste spørgsmål</button>
+						<button class="game-button secondary" id="kanuuntt-pause" type="button">Pause</button>
+						<button class="game-button reset" id="kanuuntt-reset" type="button">Reset</button>
+						<button class="game-button reset" id="kanuuntt-stop" type="button">Luk spillet</button>
+					</div>
+					<div class="kanuuntt-error" id="kanuuntt-backend-error" hidden></div>
+				</div>
+
+				<div class="kanuuntt-control-panel kanuuntt-question-list-panel">
+					<h2>Spoergsmaal</h2>
+					<div class="kanuuntt-question-list" id="kanuuntt-backend-question-list">Ingen spoergsmaal.</div>
+				</div>
+
+				<div class="kanuuntt-control-panel">
+					<h2>Live status</h2>
+					<div class="kanuuntt-stat-grid">
+						<div>
+							<span>Spillere</span>
+							<strong id="kanuuntt-backend-player-count">0</strong>
+						</div>
+						<div>
+							<span>Svar</span>
+							<strong id="kanuuntt-backend-answer-count">0 / 0</strong>
+						</div>
+						<div>
+							<span>Timer</span>
+							<strong id="kanuuntt-backend-timer">Klar</strong>
+						</div>
+					</div>
+					<div class="kanuuntt-player-list" id="kanuuntt-backend-players">Ingen deltagere endnu.</div>
+				</div>
+
+				<div class="kanuuntt-control-panel kanuuntt-preview-panel">
+					<h2 id="kanuuntt-backend-meta">Spørgsmål</h2>
+					<h3 id="kanuuntt-backend-prompt">-</h3>
+					<div class="kanuuntt-media small" id="kanuuntt-backend-media"></div>
+					<div class="kanuuntt-answer-grid compact" id="kanuuntt-backend-answers"></div>
+					<div class="kanuuntt-result-details" id="kanuuntt-backend-result" hidden></div>
+					<div class="kanuuntt-scoreboard" id="kanuuntt-backend-scoreboard" hidden></div>
+				</div>
+			</section>
+		</main>
+
+		<script src="/static/app/api.js"></script>
+		<script src="/static/app/media.js"></script>
+		<script src="/static/app/content-renderer.js"></script>
+		<script src="/static/app/live-session.js"></script>
+		<script src="/static/app/qr-code.js"></script>
+		<script src="/static/app/kanuuntt-common.js"></script>
+		<script src="/static/app/kanuuntt-backend.js"></script>
+	</body>
+</html>

@@ -68,7 +68,7 @@ async function loadGameFile() {
 
 	try {
 		window.JEOPARDY_GAME = await fetchJson(
-			"/api/games/" + encodeURIComponent(gameKey)
+			"/api/games/" + encodeURIComponent(gameKey) + "?mode=jeopardy"
 		);
 		gameKey = window.JEOPARDY_GAME.id || gameKey;
 	} catch (error) {

@@ -1215,12 +1215,15 @@ function insertBuilderSnippet(target, snippetType) {
 	}
 }
 
-async function uploadBuilderImage(target) {
+async function legacyDirectImageUploadRemoved(target) {
+	setBuilderStatus("Upload filer fra den fælles uploadfil-menu.");
+	return;
+
 	const contentTarget = target === "answer" ? "answer" : "question";
 	const input = document.getElementById(
 		contentTarget === "answer"
-			? "builder-answer-image-upload"
-			: "builder-image-upload"
+			? "removed-answer-image-upload"
+			: "removed-question-image-upload"
 	);
 	const contentText = document.getElementById("builder-" + contentTarget + "-text");
 
@@ -1240,7 +1243,7 @@ async function uploadBuilderImage(target) {
 	formData.append("file", file);
 
 	try {
-		const uploaded = await fetchJson("/api/uploads", {
+		const uploaded = await fetchJson("/api/direct-builder-upload-removed", {
 			method: "POST",
 			body: formData,
 		});
@@ -1260,12 +1263,15 @@ async function uploadBuilderImage(target) {
 	}
 }
 
-async function uploadBuilderVideo(target) {
+async function legacyDirectVideoUploadRemoved(target) {
+	setBuilderStatus("Upload filer fra den fælles uploadfil-menu.");
+	return;
+
 	const contentTarget = target === "answer" ? "answer" : "question";
 	const input = document.getElementById(
 		contentTarget === "answer"
-			? "builder-answer-video-upload"
-			: "builder-question-video-upload"
+			? "removed-answer-video-upload"
+			: "removed-question-video-upload"
 	);
 	const contentText = document.getElementById("builder-" + contentTarget + "-text");
 
@@ -1284,7 +1290,7 @@ async function uploadBuilderVideo(target) {
 	formData.append("file", input.files[0]);
 
 	try {
-		const uploaded = await fetchJson("/api/uploads", {
+		const uploaded = await fetchJson("/api/direct-builder-upload-removed", {
 			method: "POST",
 			body: formData,
 		});

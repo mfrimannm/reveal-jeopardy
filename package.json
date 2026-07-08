@@ -1,9 +1,16 @@
 {
-	"scripts": {
-		"test:frontend": "node --test test/frontend-pure.test.js",
-		"test:ui": "node node_modules/@playwright/test/cli.js test"
-	},
-	"devDependencies": {
-		"@playwright/test": "1.49.1"
-	}
+  "scripts": {
+    "check:js": "node --check static/app/kanuuntt-common.js && node --check static/app/host-controls.js",
+
+    "test:frontend": "node --test tests/frontend/frontend-pure.test.js",
+
+    "test:backend": "python -m pytest tests/backend/test_api.py",
+    "test:backend:quiz-final": "python -m pytest tests/backend/test_api.py -k \"test_next_quiz_question_on_last_question_shows_final_scoreboard\"",
+
+    "test:ui": "playwright test tests/ui",
+    "test:ui:quiz-live": "playwright test tests/ui/live-session.spec.js -g \"host can run a quiz question with mobile answers and scoreboard\""
+  },
+  "devDependencies": {
+    "@playwright/test": "1.49.1"
+  }
 }

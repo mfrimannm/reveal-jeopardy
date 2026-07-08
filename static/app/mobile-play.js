@@ -24,8 +24,50 @@ function getMobilePlayerBuzzer() {
 		return null;
 	}
 
-	return mobileSession.buzzers.find(
+	return (mobileSession.buzzers || []).find(
 		(buzzer) => buzzer.player_id === mobilePlayer.id
+	);
+}
+
+function isMobileQuizSession() {
+	return Boolean(mobileSession && mobileSession.mode === "quiz");
+}
+
+function getMobileQuizQuestion() {
+	if (!isMobileQuizSession() || !Array.isArray(mobileSession.quiz_questions)) {
+		return null;
+	}
+
+	return (
+		mobileSession.quiz_questions[
+			Number(mobileSession.current_question_index || 0)
+		] || null
+	);
+}
+
+function getMobileQuizPhase() {
+	if (!isMobileQuizSession()) {
+		return "waiting";
+	}
+
+	if (mobileSession.quiz_phase) {
+		return mobileSession.quiz_phase;
+	}
+
+	return mobileSession.question_open ? "question_open" : "waiting";
+}
+
+function getMobilePlayerAnswer() {
+	if (!isMobileQuizSession() || !mobilePlayer || !Array.isArray(mobileSession.answers)) {
+		return null;
+	}
+
+	const questionIndex = Number(mobileSession.current_question_index || 0);
+
+	return mobileSession.answers.find(
+		(answer) =>
+			answer.player_id === mobilePlayer.id &&
+			Number(answer.question_index) === questionIndex
 	);
 }
 
@@ -51,10 +93,15 @@ function renderMobileSession() {
 	const sessionStatus = document.getElementById("mobile-session-status");
 	const joinPanel = document.getElementById("mobile-join-panel");
 	const buzzerPanel = document.getElementById("mobile-buzzer-panel");
+	const quizPanel = document.getElementById("mobile-quiz-panel");
 	const summary = document.getElementById("mobile-player-summary");
+	const quizSummary = document.getElementById("mobile-quiz-player-summary");
 	const buzzButton = document.getElementById("mobile-buzz-button");
 	const buzzStatus = document.getElementById("mobile-buzz-status");
 	const buzzer = getMobilePlayerBuzzer();
+	const quizMode = isMobileQuizSession();
+	const quizQuestion = getMobileQuizQuestion();
+	const quizAnswer = getMobilePlayerAnswer();
 	const team =
 		mobileSession && mobilePlayer
 			? mobileSession.teams.find((entry) => entry.id === mobilePlayer.team_id)
@@ -73,11 +120,20 @@ function renderMobileSession() {
 	}
 
 	if (buzzerPanel) {
-		buzzerPanel.hidden = !mobilePlayer;
+		buzzerPanel.hidden = !mobilePlayer || quizMode;
+	}
+
+	if (quizPanel) {
+		quizPanel.hidden = !mobilePlayer || !quizMode;
 	}
 
 	if (summary && mobilePlayer) {
 		summary.textContent =
+			mobilePlayer.name + (team ? " / " + team.name : "");
+	}
+
+	if (quizSummary && mobilePlayer) {
+		quizSummary.textContent =
 			mobilePlayer.name + (team ? " / " + team.name : "");
 	}
 
@@ -96,6 +152,116 @@ function renderMobileSession() {
 			buzzStatus.textContent = "Du buzzede som nr. " + buzzer.order;
 		} else {
 			buzzStatus.textContent = "Klar";
+		}
+	}
+
+	renderMobileQuizPanel(quizQuestion, quizAnswer);
+}
+
+function renderMobileQuizPanel(question, existingAnswer) {
+	const meta = document.getElementById("mobile-quiz-meta");
+	const prompt = document.getElementById("mobile-quiz-prompt");
+	const answers = document.getElementById("mobile-quiz-answers");
+	const status = document.getElementById("mobile-quiz-status");
+	const phase = getMobileQuizPhase();
+	const revealAnswer = ["result_distribution", "answer_reveal", "scoreboard", "final_scoreboard"].includes(phase);
+	const showQuestion = Boolean(question) && (phase === "question_open" || revealAnswer || existingAnswer);
+	const canAnswer =
+		Boolean(mobilePlayer) &&
+		isMobileQuizSession() &&
+		showQuestion &&
+		phase === "question_open" &&
+		mobileSession.question_open &&
+		!existingAnswer;
+
+	if (meta) {
+		if (!isMobileQuizSession()) {
+			meta.textContent = "Afventer host";
+		} else {
+			meta.textContent =
+				"Spørgsmål " +
+				(Number(mobileSession.current_question_index || 0) + 1) +
+				" / " +
+				(mobileSession.quiz_questions || []).length +
+				" - " +
+				(phase === "question_open"
+					? "åbent"
+					: phase === "question_intro"
+						? "gør klar"
+						: phase === "waiting"
+							? "venter"
+							: "lukket");
+		}
+	}
+
+	if (prompt) {
+		if (typeof renderRichContent === "function") {
+			renderRichContent(prompt, {
+				format: "rich",
+				content: showQuestion ? question.prompt : "Afventer spørgsmål",
+			});
+		} else {
+			prompt.textContent = showQuestion ? question.prompt : "Afventer spørgsmål";
+		}
+	}
+
+	if (answers) {
+		answers.replaceChildren();
+
+		if (showQuestion && Array.isArray(question.answers)) {
+			question.answers.forEach((answer, index) => {
+				const button = document.createElement("button");
+				const symbols = ["▲", "◆", "●", "■"];
+
+				button.className = "mobile-answer-button";
+				button.type = "button";
+				button.disabled = !canAnswer;
+				button.onclick = () => submitMobileQuizAnswer(answer.id);
+
+				if (existingAnswer && existingAnswer.answer_id === answer.id) {
+					button.classList.add("selected");
+				}
+				if (revealAnswer && answer.correct) {
+					button.classList.add("correct");
+				}
+
+				const symbol = document.createElement("span");
+				symbol.className = "mobile-answer-symbol";
+				symbol.textContent = symbols[index % symbols.length];
+
+				const text = document.createElement("div");
+				if (typeof renderRichContent === "function") {
+					renderRichContent(text, {
+						format: "rich",
+						content: String(answer.text || ""),
+					});
+				} else {
+					text.textContent = answer.text;
+				}
+
+				button.appendChild(symbol);
+				button.appendChild(text);
+
+				answers.appendChild(button);
+			});
+		}
+	}
+
+	if (status) {
+		if (!mobilePlayer) {
+			status.textContent = "Join for at svare";
+		} else if (!showQuestion) {
+			status.textContent = "Afventer host";
+		} else if (existingAnswer) {
+			status.textContent = revealAnswer
+				? "Point: " + Number(existingAnswer.earned_points || 0)
+				: "Svar modtaget. Venter på de andre.";
+		} else if (phase === "question_intro") {
+			status.textContent = "Næste spørgsmål er på vej";
+		} else if (!mobileSession.question_open) {
+			status.textContent = "Spørgsmålet er lukket";
+		} else {
+			status.textContent = "Vælg et svar";
 		}
 	}
 }
@@ -189,6 +355,27 @@ async function buzzMobilePlay() {
 				status.textContent = "Buzzers låst";
 			}
 		}
+	}
+}
+
+async function submitMobileQuizAnswer(answerId) {
+	if (!mobilePlayer) {
+		return;
+	}
+
+	try {
+		const result = await submitQuizAnswer(
+			getMobileSessionId(),
+			mobilePlayer.id,
+			answerId
+		);
+
+		mobileSession = result.session;
+		setMobileError("");
+		renderMobileSession();
+	} catch (error) {
+		console.warn("Could not submit answer.", error);
+		setMobileError(error.message || "Kunne ikke sende svar.");
 	}
 }
 

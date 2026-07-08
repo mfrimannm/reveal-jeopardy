@@ -495,6 +495,8 @@ loadGameFile().then(() => {
 	initializeGameData();
 	renderHome();
 	initializeGameBuilder();
+	initializeKanuunttMaker();
+	refreshUploadManager();
 	renderGame();
 	loadGameState();
 	initializeHostControls();

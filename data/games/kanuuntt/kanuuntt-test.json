@@ -1,0 +1,98 @@
+{
+	"id": "kanuuntt-test",
+	"title": "KanUUNTt Backend Test",
+	"teams": [
+		"Red",
+		"Blue",
+		"Green"
+	],
+	"categories": [
+		{
+			"title": "Backend smoke",
+			"questions": [
+				{
+					"points": 100,
+					"question": {
+						"format": "rich",
+						"content": "This Jeopardy question is only here so the game file also works in the existing app."
+					},
+					"answer": {
+						"format": "rich",
+						"content": "KanUUNTt uses the top-level quiz_questions array."
+					}
+				}
+			]
+		}
+	],
+	"quiz_questions": [
+		{
+			"type": "multiple-choice",
+			"prompt": "Which answer is correct?",
+			"answers": [
+				{
+					"id": "a",
+					"text": "Wrong answer",
+					"correct": false
+				},
+				{
+					"id": "b",
+					"text": "Correct answer",
+					"correct": true
+				},
+				{
+					"id": "c",
+					"text": "Also wrong",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 30,
+			"points": 1000
+		},
+		{
+			"type": "multiple-choice",
+			"prompt": "What does the first backend version use for scoring?",
+			"answers": [
+				{
+					"id": "a",
+					"text": "Question points for a correct answer",
+					"correct": true
+				},
+				{
+					"id": "b",
+					"text": "Time-based bonus points",
+					"correct": false
+				},
+				{
+					"id": "c",
+					"text": "Negative points for wrong answers",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 20,
+			"points": 500
+		},
+		{
+			"type": "multiple-choice",
+			"prompt": "What happens if the same player submits twice for one question?",
+			"answers": [
+				{
+					"id": "a",
+					"text": "The first answer still counts",
+					"correct": true
+				},
+				{
+					"id": "b",
+					"text": "The latest answer replaces it",
+					"correct": false
+				},
+				{
+					"id": "c",
+					"text": "The player is removed",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 15,
+			"points": 750
+		}
+	]
+}

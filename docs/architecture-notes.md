@@ -36,7 +36,7 @@ The files are loaded as classic scripts so inline handlers such as `onclick="res
 ## Test Coverage
 
 - `tests/backend/test_api.py`: FastAPI endpoints for games, admin login, uploads, live sessions, buzzers and WebSockets.
-- `test/frontend-pure.test.js`: frontend pure logic with Node's built-in test runner.
+- `tests/frontend/frontend-pure.test.js`: frontend pure logic with Node's built-in test runner.
 - `tests/ui/*.spec.js`: Playwright coverage for board scaling, media rendering, Question maker, scoring and live buzzer sessions.
 
 ## Tight Coupling To Address Next

@@ -1,0 +1,272 @@
+{
+	"id": "kanuuntt-demo",
+	"title": "KanUUNTt Demo Show",
+	"teams": [
+		"Rød Scene",
+		"Blå Bølge",
+		"Grøn Energi",
+		"Gul Lyn"
+	],
+	"categories": [
+		{
+			"title": "KanUUNTt Demo",
+			"questions": [
+				{
+					"points": 100,
+					"question": {
+						"format": "rich",
+						"content": "Dette spil er lavet til KanUUNTt live quiz og bruger quiz_questions."
+					},
+					"answer": {
+						"format": "rich",
+						"content": "Start spillet i quiz-mode for at vise funktionerne."
+					}
+				}
+			]
+		}
+	],
+	"quiz_questions": [
+		{
+			"type": "multiple-choice",
+			"prompt": "# Velkommen til KanUUNTt\n\nHvad er pointen med dette demo-spil?\n\n- Hurtige spørgsmål\n- Live svar fra telefoner\n- Resultatfordeling og scoreboard",
+			"answers": [
+				{
+					"id": "a",
+					"text": "At vise live quiz-flowet fra lobby til final scoreboard",
+					"correct": true
+				},
+				{
+					"id": "b",
+					"text": "At lave et klassisk Jeopardy-board",
+					"correct": false
+				},
+				{
+					"id": "c",
+					"text": "At skjule svarmulighederne for spillerne",
+					"correct": false
+				},
+				{
+					"id": "d",
+					"text": "At teste login-siden alene",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 20,
+			"points": 500
+		},
+		{
+			"type": "multiple-choice",
+			"prompt": "## Billedspørgsmål\n\nHvilket eksempelbillede vises på storskærmen?",
+			"media": {
+				"type": "image",
+				"src": "/examples/assets/image1.png",
+				"alt": "Eksempelbillede fra Reveal"
+			},
+			"answers": [
+				{
+					"id": "a",
+					"text": "Det første eksempelbillede",
+					"correct": true
+				},
+				{
+					"id": "b",
+					"text": "En video",
+					"correct": false
+				},
+				{
+					"id": "c",
+					"text": "Et lydklip",
+					"correct": false
+				},
+				{
+					"id": "d",
+					"text": "Et tomt tekstspørgsmål",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 25,
+			"points": 800
+		},
+		{
+			"type": "multiple-choice",
+			"prompt": "## Video-demo\n\nHvad demonstrerer dette spørgsmål bedst?",
+			"media": {
+				"type": "video",
+				"src": "/examples/assets/video.mp4",
+				"autoplay": false,
+				"loop": false,
+				"muted": true
+			},
+			"answers": [
+				{
+					"id": "a",
+					"text": "At KanUUNTt kan vise video som separat media",
+					"correct": true
+				},
+				{
+					"id": "b",
+					"text": "At alle svar altid er tekst uden media",
+					"correct": false
+				},
+				{
+					"id": "c",
+					"text": "At timeren slås fra ved video",
+					"correct": false
+				},
+				{
+					"id": "d",
+					"text": "At scoreboard kun virker ved tekst",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 35,
+			"points": 1000
+		},
+		{
+			"type": "multiple-choice",
+			"prompt": "## Lydspørgsmål\n\nLyt til klippet og vælg den rigtige beskrivelse.",
+			"media": {
+				"type": "audio",
+				"src": "/examples/assets/beeping.wav",
+				"autoplay": false,
+				"loop": false
+			},
+			"answers": [
+				{
+					"id": "a",
+					"text": "Et bip-lydklip",
+					"correct": true
+				},
+				{
+					"id": "b",
+					"text": "En YouTube-video",
+					"correct": false
+				},
+				{
+					"id": "c",
+					"text": "Et uploadet billede",
+					"correct": false
+				},
+				{
+					"id": "d",
+					"text": "Ingen media",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 18,
+			"points": 1200
+		},
+		{
+			"type": "multiple-choice",
+			"prompt": "## Rich text i prompten\n\nHvilken markdown-feature vises her?\n\n| Feature | Status |\n| --- | --- |\n| Tabel | Aktiv |\n| Fed tekst | **Aktiv** |\n| Inline kode | `aktiv` |",
+			"answers": [
+				{
+					"id": "a",
+					"text": "Tabel, **fed tekst** og `inline kode`",
+					"correct": true
+				},
+				{
+					"id": "b",
+					"text": "Kun almindelig tekst",
+					"correct": false
+				},
+				{
+					"id": "c",
+					"text": "Kun scoreboard",
+					"correct": false
+				},
+				{
+					"id": "d",
+					"text": "Kun lyd",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 30,
+			"points": 900
+		},
+		{
+			"type": "multiple-choice",
+			"prompt": "## Billeder direkte i svar\n\nHvilket svar viser `image2.png`?\n\nSpørgsmålet tester rich content inde i svar-kortene.",
+			"answers": [
+				{
+					"id": "a",
+					"text": "![Eksempel 1](/examples/assets/image1.png)",
+					"correct": false
+				},
+				{
+					"id": "b",
+					"text": "![Eksempel 2](/examples/assets/image2.png)",
+					"correct": true
+				},
+				{
+					"id": "c",
+					"text": "**Fed tekst**, men intet billede",
+					"correct": false
+				},
+				{
+					"id": "d",
+					"text": "`kode` uden billede",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 22,
+			"points": 1100
+		},
+		{
+			"type": "multiple-choice",
+			"prompt": "## Flere korrekte svar\n\nHvilke faser viser resultatfordeling og korrekt svar?",
+			"answers": [
+				{
+					"id": "a",
+					"text": "Resultat",
+					"correct": true
+				},
+				{
+					"id": "b",
+					"text": "Korrekt svar",
+					"correct": true
+				},
+				{
+					"id": "c",
+					"text": "Waiting room",
+					"correct": false
+				},
+				{
+					"id": "d",
+					"text": "Login-feltet",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 28,
+			"points": 1500
+		},
+		{
+			"type": "multiple-choice",
+			"prompt": "## Hurtig finale\n\nDette spørgsmål har kort timer, højere point og er godt til at demonstrere nedtællingslyd og final scoreboard.\n\nHvad sker der efter sidste spørgsmål?",
+			"answers": [
+				{
+					"id": "a",
+					"text": "Final scoreboard vises",
+					"correct": true
+				},
+				{
+					"id": "b",
+					"text": "Spillet sletter deltagerne",
+					"correct": false
+				},
+				{
+					"id": "c",
+					"text": "Alle point nulstilles automatisk",
+					"correct": false
+				},
+				{
+					"id": "d",
+					"text": "Man sendes tilbage til forsiden uden resultat",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 10,
+			"points": 2000
+		}
+	]
+}

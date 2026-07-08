@@ -1,5 +1,8 @@
 const { expect, test } = require("@playwright/test");
 
+const JEOPARDY_TEST_GAME_ID = "ui-scaling";
+const JEOPARDY_TEST_GAME_TITLE = "UI Scaling Test";
+
 const VIEWPORTS = [
 	{ width: 1920, height: 1080 },
 	{ width: 1366, height: 768 },
@@ -9,10 +12,17 @@ const VIEWPORTS = [
 	{ width: 360, height: 740 },
 ];
 
+const MENU_VIEWPORTS = [
+	{ name: "desktop", width: 1440, height: 900 },
+	{ name: "tablet", width: 1024, height: 768 },
+	{ name: "mobile", width: 390, height: 844 },
+	{ name: "small mobile", width: 360, height: 640 },
+];
+
 async function openGame(page, hash = "board") {
 	await page.addInitScript(() => localStorage.clear());
-	await page.goto(`/?game=ui-scaling#/${hash}`);
-	await expect(page.locator("#game-title")).toHaveText("UI Scaling Test");
+	await page.goto(`/?game=${JEOPARDY_TEST_GAME_ID}#/${hash}`);
+	await expect(page.locator("#game-title")).toHaveText(JEOPARDY_TEST_GAME_TITLE);
 }
 
 async function expectNoHorizontalOverflow(page) {
@@ -23,6 +33,55 @@ async function expectNoHorizontalOverflow(page) {
 
 	expect(overflow.documentElement).toBeLessThanOrEqual(1);
 	expect(overflow.body).toBeLessThanOrEqual(1);
+}
+
+async function expectMenuSurfaceFits(page, selector, label) {
+	const result = await page.locator(selector).evaluate((surface) => {
+		const viewportWidth = document.documentElement.clientWidth;
+		const pageOverflow = Math.max(
+			document.documentElement.scrollWidth - viewportWidth,
+			document.body.scrollWidth - document.body.clientWidth
+		);
+		const rect = surface.getBoundingClientRect();
+		const visibleElements = Array.from(
+			surface.querySelectorAll("button, a, input, select, textarea, h1, h2, h3, label, table, .game-button")
+		).filter((element) => {
+			const style = window.getComputedStyle(element);
+			const bounds = element.getBoundingClientRect();
+
+			return (
+				style.display !== "none" &&
+				style.visibility !== "hidden" &&
+				bounds.width > 0 &&
+				bounds.height > 0
+			);
+		});
+		const overflowingElement = visibleElements.find((element) => {
+			const bounds = element.getBoundingClientRect();
+
+			return bounds.left < -2 || bounds.right > viewportWidth + 2;
+		});
+
+		return {
+			pageOverflow,
+			surfaceLeft: rect.left,
+			surfaceRight: rect.right,
+			viewportWidth,
+			overflowingElement: overflowingElement
+				? {
+					tag: overflowingElement.tagName.toLowerCase(),
+					id: overflowingElement.id,
+					className: String(overflowingElement.className || ""),
+					text: overflowingElement.textContent.trim().slice(0, 80),
+				}
+				: null,
+		};
+	});
+
+	expect(result.pageOverflow, `${label} should not create horizontal page scroll`).toBeLessThanOrEqual(2);
+	expect(result.surfaceLeft, `${label} surface should not start outside viewport`).toBeGreaterThanOrEqual(-2);
+	expect(result.surfaceRight, `${label} surface should not exceed viewport width`).toBeLessThanOrEqual(result.viewportWidth + 2);
+	expect(result.overflowingElement, `${label} has a visible element outside the viewport`).toBeNull();
 }
 
 async function openQuestion(page, label) {
@@ -63,6 +122,33 @@ async function expectMediaInsideSlide(page, selector) {
 	expect(box.bottomOverflow).toBeLessThanOrEqual(1);
 	expect(box.scrollOverflow).toBeLessThanOrEqual(1);
 }
+
+test("menus scale across desktop, tablet and mobile resolutions", async ({ page }) => {
+	for (const viewport of MENU_VIEWPORTS) {
+		await page.setViewportSize({ width: viewport.width, height: viewport.height });
+		await openGame(page, "home");
+		await expectMenuSurfaceFits(page, "#home", `home menu at ${viewport.name}`);
+		await expectMenuSurfaceFits(page, "#upload-manager", `upload manager at ${viewport.name}`);
+
+		await page.getByRole("button", { name: "Byg Jeopardy" }).click();
+		await expect(page.locator("#question-maker")).toBeVisible();
+		await expectMenuSurfaceFits(page, "#question-maker", `question maker at ${viewport.name}`);
+		await page.locator("#question-maker").getByRole("button", { name: "Luk" }).click();
+		await expect(page.locator("#question-maker")).toBeHidden();
+
+		await page.locator("#live-session-start").click();
+		await expect(page.locator("#live-session-id")).toHaveText(/^[A-Z2-9]{8}$/);
+		await expect(page.locator("#live-session-status")).toContainText(
+			"Stop sessionen før du starter en ny"
+		);
+		await expect(page.locator("#live-session-start")).toBeDisabled();
+		await expect(page.locator("#live-session-start")).toHaveText("Session kører");
+		await expectMenuSurfaceFits(page, "#live-session-panel", `live session panel at ${viewport.name}`);
+		await page.locator("#live-session-stop").click();
+		await expect(page.locator("#live-session-id")).toHaveText("-");
+		await expect(page.locator("#live-session-start")).toBeEnabled();
+	}
+});
 
 for (const viewport of VIEWPORTS) {
 	test(`board scales at ${viewport.width}x${viewport.height}`, async ({ page }) => {
@@ -247,17 +333,18 @@ test("question maker stays usable on laptop viewport", async ({ page }) => {
 	await page.setViewportSize({ width: 1280, height: 720 });
 	await openGame(page, "home");
 
-	await page.getByRole("button", { name: "Question maker" }).click();
+	await expect(page.locator("#upload-manager")).toBeVisible();
+	await page.getByRole("button", { name: "Byg Jeopardy" }).click();
 	await expect(page.locator("#question-maker")).toBeVisible();
 	await page.locator("#builder-title").fill("UI Test Draft");
 	await page.locator("#builder-id").fill("ui-test-draft");
 	await page.getByRole("button", { name: "Lav board" }).click();
 	await expect(page.locator("#builder-question-type")).toHaveCount(0);
 	await expect(page.locator("#builder-answer-type")).toHaveCount(0);
-	await expect(page.locator("#builder-image-upload")).toBeVisible();
-	await expect(page.locator("#builder-answer-image-upload")).toBeVisible();
-	await expect(page.locator("#builder-question-video-upload")).toBeVisible();
-	await expect(page.locator("#builder-answer-video-upload")).toBeVisible();
+	await expect(page.locator("#builder-image-upload")).toHaveCount(0);
+	await expect(page.locator("#builder-answer-image-upload")).toHaveCount(0);
+	await expect(page.locator("#builder-question-video-upload")).toHaveCount(0);
+	await expect(page.locator("#builder-answer-video-upload")).toHaveCount(0);
 	await expect(page.locator("#builder-video-upload")).toHaveCount(0);
 	await expect(page.locator(".builder-media-settings")).toHaveCount(0);
 	await expect(page.locator(".builder-media-note")).toContainText("src, start, autoplay, loop, controls og muted");

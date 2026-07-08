@@ -26,15 +26,92 @@
 		<div class="reveal">
 			<div class="slides" id="slides">
 				<section id="home" class="home-slide">
-					<h1>Jeopardy Games</h1>
+					<h1>UNF Quiz</h1>
 
 					<div class="home-layout">
 						<div class="home-panel">
-							<h2>Game filer</h2>
+							<h2>Jeopardy</h2>
 							<label for="game-select">Vælg game</label>
 							<select id="game-select"></select>
 							<div class="game-list" id="game-list"></div>
 							<div class="game-meta" id="game-meta"></div>
+							<div class="home-actions">
+								<button class="game-button primary" type="button" onclick="startConfiguredGame()">
+									Start spil
+								</button>
+								<button class="game-button secondary" type="button" onclick="toggleQuestionMaker(true)">
+									Byg Jeopardy
+								</button>
+								<button class="game-button secondary" type="button" onclick="startLiveSession()">
+									Live buzzer
+								</button>
+							</div>
+
+							<div class="mode-divider"></div>
+							<h2>KanUUNTt</h2>
+							<p class="settings-note">Live quiz med display, backend og mobil-svar.</p>
+							<label for="kanuuntt-game-select">Vaelg KanUUNTt-spil</label>
+							<select id="kanuuntt-game-select"></select>
+							<div class="game-list" id="kanuuntt-game-list"></div>
+							<div class="game-meta" id="kanuuntt-game-meta"></div>
+							<div class="home-actions">
+								<button class="game-button primary" id="kanuuntt-session-start" type="button" onclick="startSelectedQuizLiveSession()">
+									Start live quiz
+								</button>
+								<button class="game-button secondary" id="kanuuntt-open-display-button" type="button" onclick="openKanuunttDisplay()" disabled>
+									Åben display
+								</button>
+								<button class="game-button secondary" id="kanuuntt-open-backend-button" type="button" onclick="openKanuunttBackend()" disabled>
+									Åben backend
+								</button>
+								<button class="game-button secondary" type="button" onclick="toggleKanuunttMaker(true)">
+									KanUUNTt maker
+								</button>
+							</div>
+
+							<div class="mode-divider"></div>
+							<div class="upload-manager" id="upload-manager">
+								<h2>Uploadede filer</h2>
+								<div class="admin-panel">
+									<div>
+										<label for="upload-manager-admin-password">Admin kode kræves for upload og sletning</label>
+										<input id="upload-manager-admin-password" type="password" autocomplete="current-password" />
+									</div>
+									<button class="game-button secondary" id="upload-manager-admin-login-button" type="button" onclick="loginUploadManagerAdmin()">
+										Log ind
+									</button>
+									<button class="game-button reset" id="upload-manager-admin-logout-button" type="button" onclick="logoutAdmin()" hidden>
+										Log ud
+									</button>
+								</div>
+								<div class="admin-status" id="upload-manager-admin-status"></div>
+								<div class="upload-manager-controls">
+									<div>
+										<label for="upload-manager-file">Upload ny fil</label>
+										<input id="upload-manager-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm" />
+									</div>
+									<button class="game-button secondary upload-manager-admin-control" id="upload-manager-upload-button" type="button" onclick="uploadManagedFile()">
+										Upload
+									</button>
+								</div>
+								<div class="upload-manager-status" id="upload-manager-status"></div>
+								<div class="upload-manager-table-wrap">
+									<table class="upload-manager-table">
+										<thead>
+											<tr>
+												<th>Preview</th>
+												<th>Link</th>
+												<th>Handling</th>
+											</tr>
+										</thead>
+										<tbody id="upload-manager-list">
+											<tr>
+												<td colspan="3">Ingen uploadede filer.</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
 						</div>
 
 						<div class="home-panel">
@@ -55,9 +132,6 @@
 									<button class="game-button secondary" type="button" onclick="saveSettingsAndReload('/home')">
 										Gem settings
 									</button>
-									<button class="game-button secondary" id="question-maker-toggle" type="button" onclick="toggleQuestionMaker()">
-										Question maker
-									</button>
 									<button class="game-button reset" type="button" onclick="resetGameSettings()">
 										Reset settings
 									</button>
@@ -70,6 +144,9 @@
 									<div class="home-actions">
 										<button class="game-button primary" id="live-session-start" type="button" onclick="startLiveSession()">
 											Start live session
+										</button>
+										<button class="game-button primary" id="quiz-session-start" type="button" onclick="startQuizLiveSession()">
+											Start KanUUNTt
 										</button>
 										<button class="game-button secondary" id="live-session-reset" type="button" onclick="resetHostLiveSession()" disabled>
 											Reset session
@@ -108,6 +185,38 @@
 										</button>
 									</div>
 								</div>
+
+									<div class="quiz-session-panel" id="quiz-session-panel" hidden data-testid="quiz-session-panel">
+										<div class="quiz-session-topline">
+											<h3>KanUUNTt</h3>
+											<div class="quiz-session-stage" id="quiz-session-stage" data-testid="quiz-session-stage">Waiting room</div>
+										</div>
+										<div class="quiz-session-meta" id="quiz-session-meta">Ingen quiz session.</div>
+										<div class="quiz-session-live-row">
+											<div class="quiz-session-timer" id="quiz-session-timer" data-testid="quiz-session-timer">Klar</div>
+											<div class="quiz-live-answer-count" id="quiz-live-answer-count" data-testid="quiz-live-answer-count">0 / 0 har svaret</div>
+										</div>
+										<label class="kanuuntt-toggle-row" for="quiz-auto-advance">
+											<input id="quiz-auto-advance" type="checkbox" onchange="toggleHostQuizAutoAdvance(this.checked)" />
+											<span>Auto fortsæt fra scoreboard</span>
+										</label>
+										<div class="quiz-session-question" id="quiz-session-question" data-testid="quiz-session-question">-</div>
+										<div class="quiz-session-media" id="quiz-session-media" data-testid="quiz-session-media"></div>
+										<div class="quiz-session-answers" id="quiz-session-answers" data-testid="quiz-session-answers"></div>
+										<div class="quiz-result-details" id="quiz-result-details" data-testid="quiz-result-details" hidden></div>
+										<div class="quiz-scoreboard" id="quiz-scoreboard" data-testid="quiz-scoreboard" hidden></div>
+										<div class="home-actions">
+											<button class="game-button primary" id="quiz-start-question" type="button" onclick="startHostQuizQuestion()" disabled>
+												Start quiz
+											</button>
+											<button class="game-button secondary" id="quiz-close-question" type="button" onclick="closeHostQuizQuestion()" disabled>
+												Luk spørgsmål
+											</button>
+											<button class="game-button secondary" id="quiz-next-question" type="button" onclick="nextHostQuizQuestion()" disabled>
+												Næste spørgsmål
+											</button>
+										</div>
+									</div>
 
 								<div class="question-maker" id="question-maker" hidden>
 								<div class="question-maker-header">
@@ -199,24 +308,6 @@
 												<div class="question-text builder-inline-preview builder-preview-content" id="builder-question-preview" tabindex="0" role="textbox" aria-label="Spørgsmål preview"></div>
 												<textarea id="builder-question-text"></textarea>
 
-												<div class="builder-upload-row">
-													<div>
-														<label for="builder-image-upload">Upload billede til spørgsmål</label>
-														<input id="builder-image-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
-													</div>
-													<button class="game-button secondary builder-upload-button" id="builder-upload-button" type="button" onclick="uploadBuilderImage('question')">
-														Upload
-													</button>
-												</div>
-												<div class="builder-upload-row">
-													<div>
-														<label for="builder-question-video-upload">Upload video til spørgsmål</label>
-														<input id="builder-question-video-upload" type="file" accept="video/mp4,video/webm" />
-													</div>
-													<button class="game-button secondary builder-upload-button" id="builder-question-video-upload-button" type="button" onclick="uploadBuilderVideo('question')">
-														Upload
-													</button>
-												</div>
 											</div>
 
 											<div class="builder-content-panel builder-live-editor" data-builder-editor="answer">
@@ -236,24 +327,6 @@
 												<div class="answer visible builder-inline-preview builder-preview-content" id="builder-answer-preview" tabindex="0" role="textbox" aria-label="Svar preview"></div>
 												<textarea id="builder-answer-text"></textarea>
 
-												<div class="builder-upload-row">
-													<div>
-														<label for="builder-answer-image-upload">Upload billede til svar</label>
-														<input id="builder-answer-image-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
-													</div>
-													<button class="game-button secondary builder-upload-button" id="builder-answer-upload-button" type="button" onclick="uploadBuilderImage('answer')">
-														Upload
-													</button>
-												</div>
-												<div class="builder-upload-row">
-													<div>
-														<label for="builder-answer-video-upload">Upload video til svar</label>
-														<input id="builder-answer-video-upload" type="file" accept="video/mp4,video/webm" />
-													</div>
-													<button class="game-button secondary builder-upload-button" id="builder-answer-video-upload-button" type="button" onclick="uploadBuilderVideo('answer')">
-														Upload
-													</button>
-												</div>
 											</div>
 										</div>
 
@@ -354,6 +427,64 @@
 					</div>
 				</section>
 
+				<section class="kanuuntt-maker" id="kanuuntt-maker" hidden>
+					<div class="question-maker-header">
+						<h2>KanUUNTt maker</h2>
+						<button class="game-button secondary" type="button" onclick="toggleKanuunttMaker(false)">
+							Luk
+						</button>
+					</div>
+					<div class="builder-stage builder-setup">
+						<div class="admin-panel">
+							<div>
+								<label for="kanuuntt-admin-password">Admin kode</label>
+								<input id="kanuuntt-admin-password" type="password" autocomplete="current-password" />
+							</div>
+							<button class="game-button secondary" type="button" onclick="loginKanuunttAdmin()">
+								Log ind
+							</button>
+						</div>
+						<div class="admin-status" id="kanuuntt-admin-status"></div>
+					</div>
+					<div class="builder-stage builder-setup">
+						<div class="builder-grid">
+							<div>
+								<label for="kanuuntt-maker-title">Quiz titel</label>
+								<input id="kanuuntt-maker-title" type="text" autocomplete="off" />
+							</div>
+							<div>
+								<label for="kanuuntt-maker-id">Quiz id / filnavn</label>
+								<input id="kanuuntt-maker-id" type="text" autocomplete="off" />
+							</div>
+							<div>
+								<label for="kanuuntt-maker-teams">Teams, en per linje</label>
+								<textarea id="kanuuntt-maker-teams"></textarea>
+							</div>
+						</div>
+					</div>
+					<div class="builder-stage">
+						<div class="kanuuntt-maker-question-nav" id="kanuuntt-maker-question-nav" aria-label="KanUUNTt spørgsmål"></div>
+						<div class="kanuuntt-maker-list" id="kanuuntt-maker-editor"></div>
+						<div class="home-actions">
+							<button class="game-button secondary" type="button" onclick="addKanuunttQuestion()">
+								Nyt spørgsmål
+							</button>
+							<button class="game-button secondary" type="button" onclick="loadCurrentKanuunttGameIntoMaker()">
+								Hent valgt KanUUNTt
+							</button>
+							<button class="game-button reset" type="button" onclick="resetKanuunttMakerDraft()">
+								Reset kladde
+							</button>
+							<button class="game-button primary" id="kanuuntt-maker-save" type="button" onclick="saveKanuunttMakerFile()">
+								Gem KanUUNTt
+							</button>
+						</div>
+						<label for="kanuuntt-maker-output">Preview af quiz JSON</label>
+						<textarea class="builder-output" id="kanuuntt-maker-output" readonly></textarea>
+						<div class="builder-status" id="kanuuntt-maker-status"></div>
+					</div>
+				</section>
+
 				<section id="board" class="board-slide">
 					<div class="board-header">
 						<h1 id="game-title">Jeopardy</h1>
@@ -403,6 +534,8 @@
 		<script src="static/app/content-renderer.js"></script>
 		<script src="static/app/game-model.js"></script>
 		<script src="static/app/question-maker.js"></script>
+		<script src="static/app/kanuuntt-maker.js"></script>
+		<script src="static/app/kanuuntt-common.js"></script>
 		<script src="static/app/renderer.js"></script>
 		<script src="static/app/live-session.js"></script>
 		<script src="static/app/qr-code.js"></script>

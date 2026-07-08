@@ -1,0 +1,133 @@
+{
+	"id": "ui-scaling",
+	"title": "UI Scaling Test",
+	"teams": [
+		"Red",
+		"Blue",
+		"Green"
+	],
+	"categories": [
+		{
+			"title": "Media",
+			"questions": [
+				{
+					"points": 100,
+					"question": {
+						"format": "rich",
+						"content": "Billede\n\n![Test image](examples/assets/image1.png)"
+					},
+					"answer": {
+						"format": "rich",
+						"content": "Image answer"
+					},
+					"hints": [
+						"Billedet er hintet."
+					]
+				},
+				{
+					"points": 200,
+					"question": {
+						"format": "rich",
+						"content": "Video"
+					},
+					"answer": {
+						"format": "rich",
+						"content": "Video answer"
+					},
+					"media": {
+						"type": "video",
+						"src": "examples/assets/video.mp4",
+						"start": 0,
+						"autoplay": false,
+						"loop": false,
+						"controls": true,
+						"muted": false
+					}
+				},
+				{
+					"points": 300,
+					"question": {
+						"format": "html",
+						"content": "<p>Iframe</p><iframe src=\"examples/media.html\" title=\"Test iframe\"></iframe>"
+					},
+					"answer": {
+						"format": "rich",
+						"content": "Iframe answer"
+					}
+				},
+				{
+					"points": 400,
+					"question": {
+						"format": "html",
+						"content": "<p>Step through audio fragments:</p><div class=\"fragment\">Pika! <audio src=\"examples/assets/beeping.wav\" data-autoplay></audio></div><div class=\"fragment\">Chu! <audio src=\"examples/assets/beeping.wav\" data-autoplay></audio></div><p>Which class reveals elements step by step?</p>"
+					},
+					"answer": {
+						"format": "rich",
+						"content": "Media answer 400"
+					}
+				},
+				{
+					"points": 500,
+					"question": {
+						"format": "rich",
+						"content": "Media question 500"
+					},
+					"answer": {
+						"format": "rich",
+						"content": "Media answer 500"
+					}
+				}
+			]
+		},
+		{
+			"title": "Science",
+			"questions": [
+				{ "points": 100, "question": { "format": "rich", "content": "Science question 100" }, "answer": { "format": "rich", "content": "Science answer 100" } },
+				{ "points": 200, "question": { "format": "rich", "content": "Science question 200" }, "answer": { "format": "rich", "content": "Science answer 200" } },
+				{ "points": 300, "question": { "format": "rich", "content": "Science question 300" }, "answer": { "format": "rich", "content": "Science answer 300" } },
+				{ "points": 400, "question": { "format": "rich", "content": "Science question 400" }, "answer": { "format": "rich", "content": "Science answer 400" } },
+				{ "points": 500, "question": { "format": "rich", "content": "Science question 500" }, "answer": { "format": "rich", "content": "Science answer 500" } }
+			]
+		},
+		{
+			"title": "History",
+			"questions": [
+				{ "points": 100, "question": { "format": "rich", "content": "History question 100" }, "answer": { "format": "rich", "content": "History answer 100" } },
+				{ "points": 200, "question": { "format": "rich", "content": "History question 200" }, "answer": { "format": "rich", "content": "History answer 200" } },
+				{ "points": 300, "question": { "format": "rich", "content": "History question 300" }, "answer": { "format": "rich", "content": "History answer 300" } },
+				{ "points": 400, "question": { "format": "rich", "content": "History question 400" }, "answer": { "format": "rich", "content": "History answer 400" } },
+				{ "points": 500, "question": { "format": "rich", "content": "History question 500" }, "answer": { "format": "rich", "content": "History answer 500" } }
+			]
+		},
+		{
+			"title": "Words",
+			"questions": [
+				{ "points": 100, "question": { "format": "rich", "content": "Words question 100" }, "answer": { "format": "rich", "content": "Words answer 100" } },
+				{ "points": 200, "question": { "format": "rich", "content": "Words question 200" }, "answer": { "format": "rich", "content": "Words answer 200" } },
+				{ "points": 300, "question": { "format": "rich", "content": "Words question 300" }, "answer": { "format": "rich", "content": "Words answer 300" } },
+				{ "points": 400, "question": { "format": "rich", "content": "Words question 400" }, "answer": { "format": "rich", "content": "Words answer 400" } },
+				{ "points": 500, "question": { "format": "rich", "content": "Words question 500" }, "answer": { "format": "rich", "content": "Words answer 500" } }
+			]
+		},
+		{
+			"title": "Numbers",
+			"questions": [
+				{ "points": 100, "question": { "format": "rich", "content": "Numbers question 100" }, "answer": { "format": "rich", "content": "Numbers answer 100" } },
+				{ "points": 200, "question": { "format": "rich", "content": "Numbers question 200" }, "answer": { "format": "rich", "content": "Numbers answer 200" } },
+				{ "points": 300, "question": { "format": "rich", "content": "Numbers question 300" }, "answer": { "format": "rich", "content": "Numbers answer 300" } },
+				{ "points": 400, "question": { "format": "rich", "content": "Numbers question 400" }, "answer": { "format": "rich", "content": "Numbers answer 400" } },
+				{ "points": 500, "question": { "format": "rich", "content": "Numbers question 500" }, "answer": { "format": "rich", "content": "Numbers answer 500" } }
+			]
+		},
+		{
+			"title": "Final",
+			"questions": [
+				{ "points": 100, "question": { "format": "rich", "content": "Final question 100" }, "answer": { "format": "rich", "content": "Final answer 100" } },
+				{ "points": 200, "question": { "format": "rich", "content": "Final question 200" }, "answer": { "format": "rich", "content": "Final answer 200" } },
+				{ "points": 300, "question": { "format": "rich", "content": "Final question 300" }, "answer": { "format": "rich", "content": "Final answer 300" } },
+				{ "points": 400, "question": { "format": "rich", "content": "Final question 400" }, "answer": { "format": "rich", "content": "Final answer 400" } },
+				{ "points": 500, "question": { "format": "rich", "content": "Final question 500" }, "answer": { "format": "rich", "content": "Final answer 500" } }
+			]
+		}
+	]
+}

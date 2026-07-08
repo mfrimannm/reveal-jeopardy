@@ -1,0 +1,112 @@
+{
+	"id": "mit-kanuuntt",
+	"title": "Mit KanUUNTt",
+	"teams": [
+		"Red",
+		"Blue"
+	],
+	"categories": [
+		{
+			"title": "KanUUNTt",
+			"questions": [
+				{
+					"points": 100,
+					"question": {
+						"format": "rich",
+						"content": "KanUUNTt-spil bruger quiz_questions."
+					},
+					"answer": {
+						"format": "rich",
+						"content": "Start spillet som live quiz."
+					}
+				}
+			]
+		}
+	],
+	"quiz_questions": [
+		{
+			"type": "multiple-choice",
+			"prompt": "Spørgsmål 1 er dette hvad hvem er på billedet?\n\n![Billede](/uploads/sk-rmbillede-2026-06-24-031824-e1b5d20d.png)",
+			"answers": [
+				{
+					"id": "a",
+					"text": "![Billede](/uploads/sk-rmbillede-2026-06-24-031824-e1b5d20d.png)",
+					"correct": true
+				},
+				{
+					"id": "b",
+					"text": "Ikke MFM",
+					"correct": false
+				},
+				{
+					"id": "c",
+					"text": "Svar C",
+					"correct": false
+				},
+				{
+					"id": "d",
+					"text": "Svar D",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 30,
+			"points": 1000
+		},
+		{
+			"type": "multiple-choice",
+			"prompt": "Spørgsmål 2vdvewewv",
+			"answers": [
+				{
+					"id": "a",
+					"text": "Svar A",
+					"correct": true
+				},
+				{
+					"id": "b",
+					"text": "Svar B",
+					"correct": false
+				},
+				{
+					"id": "c",
+					"text": "Svar C",
+					"correct": false
+				},
+				{
+					"id": "d",
+					"text": "Svar D",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 30,
+			"points": 1000
+		},
+		{
+			"type": "multiple-choice",
+			"prompt": "Spørgsmål 3dwqdwqd",
+			"answers": [
+				{
+					"id": "a",
+					"text": "Svar A",
+					"correct": true
+				},
+				{
+					"id": "b",
+					"text": "Svar B",
+					"correct": false
+				},
+				{
+					"id": "c",
+					"text": "Svar C",
+					"correct": false
+				},
+				{
+					"id": "d",
+					"text": "Svar D",
+					"correct": false
+				}
+			],
+			"timeLimitSeconds": 30,
+			"points": 1000
+		}
+	]
+}
